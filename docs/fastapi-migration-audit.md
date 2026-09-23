@@ -1,9 +1,17 @@
 # FastAPI Migration Audit
 
-**Date:** 2026-09-23
+**Date:** 2026-09-23 (updated same day — see §16)
 **Scope of this audit:** the actual current state of `backend/` (Django) and `frontend/`, as
 inspected directly (migrations read, running Postgres schema queried with `\dt`, frontend source
 grepped for API calls) — not assumed from documentation.
+
+**Update note:** after this audit was first written, `git pull` merged in a complete Phase 5
+(Prometheus/Grafana observability) implementation for the Django backend, done in a separate
+concurrent session (see `OBSERVABILITY_IMPLEMENTATION_STATUS.md`, `FASTAPI_MIGRATION_STATUS.md`
+"Key decisions"). §15 below documents that addition and supersedes the "not implemented" notes
+about `/metrics` and Celery elsewhere in this file. Everything else in §1-§15 was re-verified
+after the merge (migrations still clean, 56/56 tests pass, full stack healthy) and remains
+accurate.
 
 ## 0. Discrepancy vs. the migration brief's assumptions
 
@@ -240,12 +248,72 @@ idle), `frontend` (Vite dev server). No `nginx`, `prometheus`, `grafana`, or exp
 6. Swap `backend/` → FastAPI, archive Django as `backend_django_legacy/`.
 7. Update docs, Makefile, and this audit's parity matrix to final state.
 
-## 15. API Parity Matrix
+## 15. Phase 5 observability (merged in from a concurrent session, post-audit)
+
+Verified directly (containers brought up, endpoints curled, Prometheus targets queried) after
+fixing an unrelated `.env` Postgres-credential drift that was blocking the other session's own
+runtime verification (see `FASTAPI_MIGRATION_STATUS.md`).
+
+- **`GET /metrics`** — wired via `django_prometheus.urls`, included at the URL root in
+  `config/urls.py`. Confirmed live: exposes both `django_http_*` (django-prometheus's own request
+  metrics) and `decisionforge_*` custom series.
+- **`GET /health`, `GET /ready`** — new aliases for the existing `/healthz`, `/readyz` (same view
+  functions, `apps/observability/urls.py`), added so the route names match Step 14 of the FastAPI
+  migration brief without breaking the original names anything else might already depend on.
+- **`apps/observability/metrics.py`** — hand-defined `prometheus_client` Counters/Histograms/Gauges
+  (not `django-prometheus`'s auto HTTP metrics, which come separately): `decisionforge_decisions_created_total`,
+  `decisionforge_ranking_calculations_total{status}` + `..._duration_seconds`,
+  `decisionforge_sensitivity_analyses_total{status}`, `decisionforge_scenario_comparisons_total{status}`,
+  `decisionforge_outcome_reviews_total`, and a full set of **AI metrics already defined ahead of
+  the AI feature existing** (`decisionforge_ai_requests_total{provider,analysis_type,status}`,
+  `..._request_duration_seconds`, `..._rate_limit_total`, `..._quota_rejections_total`,
+  `..._cache_operations_total{result}`, `..._circuit_breaker_open{provider}` gauge,
+  `..._token_usage_total{provider,token_type}`, `..._jobs_total{status}`, `..._job_duration_seconds`,
+  `..._fallback_total{reason}`), plus Celery task metrics
+  (`decisionforge_celery_tasks_total{task_name,status}`, `..._task_duration_seconds`,
+  `..._task_retries_total`, `..._task_failures_total{task_name,error_category}`) and generic cache
+  metrics. All label values are passed through a `bounded()` helper against small fixed allow-sets
+  (`ALLOWED_STATUS`, `ALLOWED_PROVIDER`, `ALLOWED_ANALYSIS_TYPE`, `ALLOWED_ERROR_CATEGORY`, etc.),
+  which is exactly the cardinality discipline `docs/08-prometheus-grafana-observability.md` §5/§20
+  requires — no user/decision IDs, no raw exception text, no prompts.
+- **`apps/observability/celery.py`** — Celery signal handlers (`task_prerun`/`task_success`/
+  `task_failure`/`task_retry`/`task_postrun`) feeding the Celery metrics above. Registered via an
+  import at the bottom of `config/celery.py`. No actual tasks exist yet to exercise this (Phase 3
+  AI jobs will be the first), but the instrumentation itself is live and harmless.
+- **`decisions/services.py` and `decisions/views.py`** — small targeted diffs (20 lines total)
+  wiring `record_decision_created()` and the `ranking_timer()` context manager into the existing
+  create-decision and ranking flows.
+- **Compose services added:** `postgres-exporter` (quay.io/prometheuscommunity/postgres-exporter),
+  `redis-exporter` (oliver006/redis_exporter), `prometheus` (prom/prometheus:v2.54.1),
+  `grafana` (grafana/grafana:11.2.0) — all confirmed `Up`/`healthy` after `docker compose up -d --build`.
+  Gunicorn's worker count was reduced from 3 to 1 in the `web` service's command specifically so
+  the plain (non-multiprocess) `prometheus_client` registry stays accurate — documented in
+  `OBSERVABILITY_IMPLEMENTATION_STATUS.md` and confirmed still the case in the current
+  `docker-compose.yml`.
+- **`infrastructure/prometheus/{prometheus.yml,recording-rules.yml,alerts.yml}`** and
+  **`infrastructure/grafana/provisioning/**`, `infrastructure/grafana/dashboards/*.json`** — real
+  config, not placeholders (the original audit's §11 note that these directories "did not contain
+  usable config files" is now stale). Prometheus confirmed actively scraping `decisionforge-web`
+  and `postgres-exporter` (`/api/v1/targets` → both `"health":"up"`).
+- **Tests:** `backend/tests/observability/test_metrics.py` (part of the 56 total backend tests now
+  passing).
+
+**FastAPI implication:** Step 15 of the migration brief (Prometheus metrics) now has real,
+verified Django behavior to preserve — not the "N/A, nothing built yet" status this audit
+originally recorded. The FastAPI implementation should reproduce the same metric names and label
+sets (via `prometheus-fastapi-instrumentator` for the generic HTTP layer, matching
+`django_http_*`-equivalent coverage, plus a straight port of `apps/observability/metrics.py`'s
+custom Counters/Histograms/Gauges — that module has zero Django-specific code itself, it's already
+framework-agnostic `prometheus_client` usage callable from anywhere). Grafana dashboards query by
+metric name, not by backend framework, so **no dashboard changes are needed** as long as the
+FastAPI port keeps the exact same metric names and label sets — which is the plan.
+
+## 16. API Parity Matrix
 
 | Feature | Existing endpoint | Method | Auth | Request contract | Response contract | FastAPI target | Status | Tests | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| Liveness | `/healthz` | GET | none | — | `{"status":"ok"}` | `/healthz` | Not started | — | |
-| Readiness | `/readyz` | GET | none | — | `{"status","checks":{db,redis}}` (200/503) | `/readyz` | Not started | — | |
+| Liveness | `/healthz`, `/health` | GET | none | — | `{"status":"ok"}` | `/healthz` + `/health` alias | Not started | — | Django now serves both names (§15) |
+| Readiness | `/readyz`, `/ready` | GET | none | — | `{"status","checks":{db,redis}}` (200/503) | `/readyz` + `/ready` alias | Not started | — | Django now serves both names (§15) |
 | CSRF seed | `/api/v1/auth/csrf` | GET | none | — | 204 + Set-Cookie `df_csrftoken` | same | Not started | — | Django-specific mechanism; FastAPI hand-rolled equivalent, see ADR |
 | Register | `/api/v1/auth/register` | POST | none | `{email,password}` | 201 `{user,access}` + Set-Cookie `df_refresh` | same | Not started | — | 409 on duplicate email |
 | Login | `/api/v1/auth/login` | POST | none | `{email,password}` | 200 `{user,access}` + Set-Cookie `df_refresh` | same | Not started | — | 401 on bad creds |
@@ -272,6 +340,6 @@ idle), `frontend` (Vite dev server). No `nginx`, `prometheus`, `grafana`, or exp
 | Ranking | `/api/v1/decisions/{id}/ranking` | GET | bearer | — | `{decision_id,deterministic,weights_normalized,ranking,sensitivity}` or 400 | same | Not started | — | AC-002/003/004 |
 | OpenAPI schema | `/api/schema/` | GET | none | — | OpenAPI 3.1 JSON | `/api/openapi.json` (FastAPI default) | Not started | — | |
 | Swagger UI | `/api/schema/swagger-ui/` | GET | none | — | HTML | `/docs` (FastAPI default) | Not started | — | |
-| Metrics | — (not implemented) | — | — | — | — | `/metrics` | N/A | — | Phase 5 work, not yet built in Django either |
-| AI analysis | — (not implemented) | — | — | — | — | Phase 3 work | N/A | — | Not yet built in Django either |
+| Metrics | `/metrics` (django-prometheus + custom `decisionforge_*` series) | GET | none | — | Prometheus text exposition | `/metrics` (`prometheus-fastapi-instrumentator` + ported `metrics.py`) | Not started (Django side verified live, §15) | — | `apps/observability/metrics.py` is already framework-agnostic — straight port |
+| AI analysis | — (not implemented) | — | — | — | — | Phase 3 work | N/A | — | Not yet built in Django either; metric definitions exist ahead of the feature (§15) |
 | Outcomes/commit | — (not implemented) | — | — | — | — | Phase 4 work | N/A | — | Not yet built in Django either |
