@@ -14,7 +14,7 @@ Source-of-truth hierarchy: BRD > DPR > this docs package > code. Conflicts/defau
 | Phase | Name | Status |
 |-------|------|--------|
 | 1 | Foundation & Auth | DONE (M1 walking skeleton) |
-| 2 | Decision Core (CRUD + deterministic engine) | NOT STARTED |
+| 2 | Decision Core (CRUD + deterministic engine) | DONE (M2 MVP core) |
 | 3 | Gemini Advisory Layer | NOT STARTED |
 | 4 | Outcomes & Calibration | NOT STARTED |
 | 5 | Observability (Prometheus/Grafana) | NOT STARTED |
@@ -96,6 +96,68 @@ already the `.env.example` default and nothing in Phase 1 depends on Gemini.
 (OQ-1/2/4/6/7/8) remain on their interim defaults and don't block Phase 2.
 
 **Exact next phase:** Phase 2 — Decision Core, starting DF-S-006 (Decision CRUD + ownership).
+
+## Phase 2 — Decision Core — DONE
+
+Stories: DF-S-006..011 (FR-003..008, BR-001..006, AC-002/003/004)
+
+**Files created (highlights):** `backend/apps/decisions/` — models (Decision with STT-DEC status
+enum, Alternative, Criterion, AlternativeScore, all constraints from docs/04 §4.3-4.6: unique
+names per decision, weight>0 check, score-range check, unique score cell), `selectors.py`
+(owner-scoped lookups -> 404), `services.py` (ORM <-> engine adapter + `refresh_decision_status`
+DRAFT<->SCORED bookkeeping + transactional `upsert_scores`), `serializers.py`, `views.py` (all
+API-08..24 endpoints), `urls.py`, `admin.py`, migration `0001_initial.py`. `backend/apps/scoring/
+engine.py` — the **pure** deterministic engine (weight normalization, benefit/cost score
+normalization, weighted-sum ranking with stable tie-breaking by input order, basic
+threshold-based sensitivity per docs/14 OQ-5 default) — zero Django/DRF/`apps.ai`/
+`apps.decisions` imports, enforced by a dedicated purity test. `backend/tests/scoring/`
+(`test_engine.py` — 16 hand-calculated unit tests, `test_purity.py`), `backend/tests/decisions/
+test_decisions_api.py` (20 API tests: ownership isolation, CRUD, duplicate-name rejection,
+score-range validation, status auto-transition, ranking success/AC-002/AC-004 failure paths).
+
+**Files changed:** `config/urls.py` (wired `apps.decisions.urls`), `tests/factories.py` (added
+Decision/Alternative/Criterion/AlternativeScore factories).
+
+**Commands run / results:**
+- `docker compose run web python manage.py makemigrations decisions` → generated `0001_initial.py`
+  (had to fix `CheckConstraint(condition=...)` → `check=...`; Django 5.0's kwarg, `condition=` only
+  exists from 5.1 — caught by actually running the migration generator, not assumed)
+- `docker compose run web python manage.py migrate` → applied cleanly
+- `docker compose run web python manage.py makemigrations --check --dry-run` → "No changes detected"
+- `docker compose run web pytest -q` → **49 passed** (13 accounts + 36 new: 16 engine + 1 purity +
+  20 API... note some are parametrized-by-name, exact count per file may shift slightly as tests
+  were added iteratively, but the final run is 49/49 green)
+- `docker compose run web ruff check .` → clean (fixed B904 raise-from, one unused import)
+- `docker compose run web black .` / `--check .` → clean
+- Restarted the live stack (`docker compose up -d --build web worker beat`) and ran a full live
+  curl smoke test: create decision → add 2 alternatives → add 2 weighted criteria (benefit+cost) →
+  PUT full score matrix → GET ranking. Result matched the hand-calculated test exactly: weights
+  0.6/0.4, "Offer A" total 0.6000 (rank 1), "Offer B" 0.4000 (rank 2), sensitivity "leader_stable":
+  true, margin 0.2 — confirming the API layer and the pure engine agree on real data, not just in
+  isolated unit tests.
+
+**Acceptance criteria verified:** AC-001 (create → owned data only), AC-002 (ranking with <2
+alternatives → 400, `fields.alternatives`), AC-003 (deterministic descending totals, verified both
+in engine unit tests and live), AC-004 (missing cells enumerated in both `PUT /scores` response
+and `GET /ranking` 400 response), AC-009 (cross-user access to decisions/alternatives → 404, no
+leak — tested directly, and structurally guaranteed by every view going through the owner-scoped
+selectors). BR-002/003/004/005/006 all covered by engine + API tests. BR-006 additionally has a
+structural test (`test_purity.py`) asserting the engine module imports nothing from Django or
+`apps.ai`, not just a code-review claim.
+
+**Degraded-mode check (Gemini off):** Full create → alternatives → criteria → scores → ranking
+flow (both in pytest and the live curl smoke test) required zero AI/Gemini code — there isn't any
+yet — so this is trivially satisfied; the real test of BR-011 comes in Phase 3 once `apps.ai`
+exists alongside this code.
+
+**Unresolved risks / open questions:** `POST /decisions/{id}/duplicate` (API-13, [REC]/OQ-10) was
+**not** implemented — it isn't required by any Phase 2 story (DF-S-006..011) and the roadmap's
+Must-have list doesn't include it either; deferred to Phase 6 hardening or on request.
+`ActivityEvent` audit logging ([REC], SRS §11) also deferred — the `apps.activity` app still has
+no models; will add alongside Phase 3 (natural point since AI requests are the first thing worth
+auditing) or Phase 4. Neither blocks any Must-have acceptance criterion.
+
+**Exact next phase:** Phase 3 — Gemini Advisory Layer, starting DF-S-012 (snapshot service).
 
 ## Notes
 
