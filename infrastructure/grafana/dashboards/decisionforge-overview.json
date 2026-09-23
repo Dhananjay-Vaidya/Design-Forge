@@ -1,0 +1,21 @@
+{
+  "uid": "decisionforge-overview",
+  "title": "DecisionForge Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": {"from": "now-6h", "to": "now"},
+  "tags": ["decisionforge", "overview"],
+  "panels": [
+    {"type": "stat", "title": "Backend Availability", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "up{job=\"decisionforge-web\"}", "legendFormat": "web"}], "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4}},
+    {"type": "timeseries", "title": "API Request Rate", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:api_request_rate5m", "legendFormat": "requests/s"}], "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4}},
+    {"type": "timeseries", "title": "API Error Ratio", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:api_5xx_ratio5m", "legendFormat": "5xx ratio"}], "fieldConfig": {"defaults": {"unit": "percentunit"}}, "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4}},
+    {"type": "timeseries", "title": "P95 API Latency", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:api_latency_p95", "legendFormat": "p95"}], "fieldConfig": {"defaults": {"unit": "s"}}, "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4}},
+    {"type": "stat", "title": "Decisions Created", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum(increase(decisionforge_decisions_created_total[6h]))", "legendFormat": "created"}], "gridPos": {"x": 0, "y": 4, "w": 6, "h": 4}},
+    {"type": "stat", "title": "Rankings Calculated", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum(increase(decisionforge_ranking_calculations_total[6h]))", "legendFormat": "rankings"}], "gridPos": {"x": 6, "y": 4, "w": 6, "h": 4}},
+    {"type": "timeseries", "title": "AI Requests", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (status) (rate(decisionforge_ai_requests_total[5m]))", "legendFormat": "{{status}}"}], "gridPos": {"x": 12, "y": 4, "w": 6, "h": 4}},
+    {"type": "timeseries", "title": "AI Cache Hit Ratio", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:ai_cache_hit_ratio5m", "legendFormat": "hit ratio"}], "fieldConfig": {"defaults": {"unit": "percentunit"}}, "gridPos": {"x": 18, "y": 4, "w": 6, "h": 4}},
+    {"type": "stat", "title": "PostgreSQL Availability", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "up{job=\"postgres-exporter\"}", "legendFormat": "postgres"}], "gridPos": {"x": 0, "y": 8, "w": 6, "h": 4}},
+    {"type": "stat", "title": "Redis Availability", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "up{job=\"redis-exporter\"}", "legendFormat": "redis"}], "gridPos": {"x": 6, "y": 8, "w": 6, "h": 4}}
+  ]
+}

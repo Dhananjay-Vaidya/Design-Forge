@@ -8,6 +8,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import transaction
 
+from apps.observability.metrics import ranking_timer
 from apps.scoring import engine
 
 from .models import AlternativeScore, Criterion, Decision
@@ -35,13 +36,14 @@ def _engine_inputs(decision: Decision):
 def calculate_ranking(decision: Decision) -> engine.RankingResult:
     """UC-07. Raises apps.scoring.engine.ScoringError subclasses on BR-002/003/005 guard failures."""
     alternatives, criteria, scores = _engine_inputs(decision)
-    return engine.calculate_ranking(
-        alternatives,
-        criteria,
-        scores,
-        score_min=Decimal(settings.SCORE_MIN),
-        score_max=Decimal(settings.SCORE_MAX),
-    )
+    with ranking_timer():
+        return engine.calculate_ranking(
+            alternatives,
+            criteria,
+            scores,
+            score_min=Decimal(settings.SCORE_MIN),
+            score_max=Decimal(settings.SCORE_MAX),
+        )
 
 
 def is_decision_scorable(decision: Decision) -> bool:

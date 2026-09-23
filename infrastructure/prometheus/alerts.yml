@@ -1,0 +1,112 @@
+groups:
+  - name: decisionforge.alerts
+    rules:
+      - alert: DecisionForgeBackendUnavailable
+        expr: up{job="decisionforge-web"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: DecisionForge backend is unavailable
+          description: Prometheus cannot scrape the backend metrics endpoint.
+          action: Check `docker compose logs web` and verify the web container health.
+
+      - alert: DecisionForgeHighHttp5xxRatio
+        expr: decisionforge:api_5xx_ratio5m > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High HTTP 5xx ratio
+          description: More than 5 percent of API responses are 5xx over five minutes.
+          action: Inspect backend logs by request_id and check database/Redis readiness.
+
+      - alert: DecisionForgeHighApiLatency
+        expr: decisionforge:api_latency_p95 > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: High API P95 latency
+          description: API P95 latency is above one second for ten minutes.
+          action: Check slow endpoints, database latency, and container resource pressure.
+
+      - alert: DecisionForgePostgresExporterUnavailable
+        expr: up{job="postgres-exporter"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: PostgreSQL exporter unavailable
+          description: Prometheus cannot scrape PostgreSQL exporter metrics.
+          action: Check `docker compose logs postgres-exporter` and database credentials.
+
+      - alert: DecisionForgeRedisExporterUnavailable
+        expr: up{job="redis-exporter"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: Redis exporter unavailable
+          description: Prometheus cannot scrape Redis exporter metrics.
+          action: Check `docker compose logs redis-exporter` and Redis connectivity.
+
+      - alert: DecisionForgeGeminiErrorSpike
+        expr: decisionforge:ai_error_ratio5m > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Gemini/AI error ratio is high
+          description: More than 20 percent of AI provider requests are failing or falling back.
+          action: Check AI provider logs, circuit breaker state, and configured Gemini credentials.
+
+      - alert: DecisionForgeGeminiRateLimitSpike
+        expr: sum(rate(decisionforge_ai_rate_limit_total{provider="gemini"}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Gemini rate limits detected
+          description: Gemini rate-limit events are occurring repeatedly.
+          action: Check quota usage and reduce request volume or switch to degraded mode.
+
+      - alert: DecisionForgeGeminiCircuitBreakerOpen
+        expr: decisionforge_ai_circuit_breaker_open{provider="gemini"} == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Gemini circuit breaker is open
+          description: The Gemini circuit breaker reports an open state.
+          action: Check recent provider failures and wait for the cooldown before retrying.
+
+      - alert: DecisionForgeAiQuotaRejections
+        expr: sum(rate(decisionforge_ai_quota_rejections_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: AI quota rejections detected
+          description: Users are being rejected by AI quota controls.
+          action: Review quota settings and expected traffic.
+
+      - alert: DecisionForgeCeleryTaskFailureSpike
+        expr: decisionforge:celery_failure_rate5m > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Celery task failures increased
+          description: Celery task failure rate is above threshold.
+          action: Check `docker compose logs worker` and inspect bounded error categories.
+
+      - alert: DecisionForgePrometheusRuleEvaluationFailures
+        expr: increase(prometheus_rule_evaluation_failures_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Prometheus rule evaluation failures
+          description: Prometheus has failed to evaluate one or more rules.
+          action: Run `make prometheus-check` and inspect Prometheus logs.

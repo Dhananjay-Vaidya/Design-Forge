@@ -41,8 +41,8 @@ flowchart TB
     subgraph Observability
         PR["Prometheus"]
         GF["Grafana"]
-        PGX["postgres_exporter"]
-        RDX["redis_exporter"]
+        PGX["postgres-exporter"]
+        RDX["redis-exporter"]
     end
     EXT["Google Gemini API<br/>(external)"]
 
@@ -225,8 +225,8 @@ Idempotency and retry policy per SRS §9 and NFR-011.
 flowchart LR
     API["Django /metrics"] -->|scrape| PR["Prometheus"]
     WK["Celery task metrics"] -->|scrape/pushgateway [REC]| PR
-    PGX["postgres_exporter"] --> PR
-    RDX["redis_exporter"] --> PR
+    PGX["postgres-exporter"] --> PR
+    RDX["redis-exporter"] --> PR
     PR -->|recording + alert rules| PR
     PR --> GF["Grafana dashboards"]
     PR --> AM["Alertmanager [REC]"]
@@ -279,5 +279,5 @@ Deterministic workflow is unaffected by any branch above (BR-011, NFR-003).
 
 ## 14. Deployment Topology
 
-- **MVP / portfolio:** single-host Docker Compose with services: `web` (API), `worker`, `beat`, `db`, `redis`, `prometheus`, `grafana`, `postgres_exporter`, `redis_exporter`, and optionally `nginx`. See `11-devops-deployment-runbook.md`.
+- **MVP / portfolio:** single-host Docker Compose with services: `web` (API), `worker`, `beat`, `db`, `redis`, `prometheus`, `grafana`, `postgres-exporter`, `redis-exporter`, and optionally `nginx`. See `11-devops-deployment-runbook.md`.
 - **Production hardening path [REC]:** managed Postgres, TLS at the edge, secrets manager, separate worker autoscaling, Alertmanager. Detailed in the runbook's production-hardening checklist. Not required for MVP acceptance.

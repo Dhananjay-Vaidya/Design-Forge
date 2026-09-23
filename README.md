@@ -42,6 +42,10 @@ curl -fsS http://localhost:8000/healthz
 Frontend dev server: http://localhost:5173 · API: http://localhost:8000/api/v1 ·
 OpenAPI/Swagger: http://localhost:8000/api/schema/swagger-ui/
 
+Observability: backend metrics at http://localhost:8000/metrics, Prometheus at
+http://localhost:9090, and Grafana at http://localhost:3001. See
+[`docs/observability-setup.md`](docs/observability-setup.md).
+
 Gemini is disabled by default (`GEMINI_ENABLED=0`); the whole product works without a Gemini API
 key. To enable live AI analysis, set `GEMINI_API_KEY`, `GEMINI_MODEL`, and `GEMINI_ENABLED=1` in
 `.env` and restart `worker`.
@@ -50,7 +54,7 @@ key. To enable live AI analysis, set `GEMINI_API_KEY`, `GEMINI_MODEL`, and `GEMI
 
 See the [`Makefile`](Makefile): `make setup`, `make up`, `make down`, `make logs`, `make migrate`,
 `make seed`, `make test`, `make lint`, `make format`, `make backend-shell`, `make frontend-shell`,
-`make clean`.
+`make clean`, `make observability-up`, `make prometheus-check`, `make test-observability`.
 
 ## License
 

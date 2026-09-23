@@ -50,8 +50,8 @@ Only `VITE_*` values reach the browser; **no secret is ever a `VITE_*`** (enforc
 | `redis` | Redis (broker + cache) |
 | `prometheus` | Prometheus server |
 | `grafana` | Grafana |
-| `postgres_exporter` | DB metrics |
-| `redis_exporter` | Redis metrics |
+| `postgres-exporter` | DB metrics |
+| `redis-exporter` | Redis metrics |
 | `nginx` [REC] | Reverse proxy / static serving / TLS termination |
 
 ## 4. Development Startup
@@ -61,7 +61,7 @@ cp .env.example .env        # then fill in values
 docker compose up -d --build
 docker compose ps           # all services healthy
 ```
-API: `http://localhost:8000`, Frontend: `http://localhost:5173` (dev) or via nginx, Grafana: `http://localhost:3000`, Prometheus: `http://localhost:9090`.
+API: `http://localhost:8000`, Frontend: `http://localhost:5173` (dev) or via nginx, Grafana: `http://localhost:3001`, Prometheus: `http://localhost:9090`.
 
 ## 5. Database Migration
 
@@ -97,14 +97,14 @@ Both start via Compose. Verify:
 ```bash
 curl -s localhost:8000/metrics | head        # backend metrics present
 open http://localhost:9090/targets            # all targets UP
-open http://localhost:3000                     # Grafana (login with GF_* creds)
+open http://localhost:3001                     # Grafana (login with GF_* creds)
 ```
 
 ## 10. Grafana Provisioning
 
 - Datasource + dashboards are provisioned as files (no click-ops), mounted read-only:
-  - `infra/grafana/provisioning/datasources/prometheus.yml`
-  - `infra/grafana/provisioning/dashboards/dashboards.yml` + JSON dashboards
+  - `infrastructure/grafana/provisioning/datasources/prometheus.yml`
+  - `infrastructure/grafana/provisioning/dashboards/dashboards.yml` + JSON dashboards
 - Dashboards: Application health, Gemini health, Worker health, Database health, Product overview (08 §16). They appear automatically on first start.
 
 ## 11. Backup and Restore
@@ -150,7 +150,7 @@ Logs are redacted (no secrets/tokens/prompts, SEC-08). Use the `request_id` from
 1. `http://localhost:9090/targets` — every target `UP`?
 2. Backend down as a target → check `web:8000/metrics` reachable on the Compose network.
 3. Worker metrics missing → verify worker scrape/Pushgateway config (08 §2/§10).
-4. Exporter down → check `postgres_exporter`/`redis_exporter` logs and credentials.
+4. Exporter down → check `postgres-exporter`/`redis-exporter` logs and credentials.
 5. Rules not firing → validate with `promtool check rules` and `promtool test rules` [REC].
 
 ## 16. Clean Shutdown

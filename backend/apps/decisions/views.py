@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.observability.metrics import record_decision_created
 from apps.scoring.engine import (
     InsufficientAlternativesError,
     MissingScoresError,
@@ -68,6 +69,7 @@ class DecisionListCreateView(generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         decision = serializer.save(owner=request.user)
+        record_decision_created()
         return Response(DecisionSerializer(decision).data, status=201)
 
 

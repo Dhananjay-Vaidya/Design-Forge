@@ -1,0 +1,16 @@
+{
+  "uid": "decisionforge-api",
+  "title": "DecisionForge API",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": {"from": "now-6h", "to": "now"},
+  "tags": ["decisionforge", "api"],
+  "panels": [
+    {"type": "timeseries", "title": "Request Rate by Method", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (method) (rate(django_http_requests_total_by_method_total[5m]))", "legendFormat": "{{method}}"}], "gridPos": {"x": 0, "y": 0, "w": 8, "h": 5}},
+    {"type": "timeseries", "title": "Status Distribution", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (status) (rate(django_http_responses_total_by_status_total[5m]))", "legendFormat": "{{status}}"}], "gridPos": {"x": 8, "y": 0, "w": 8, "h": 5}},
+    {"type": "timeseries", "title": "Latency Percentiles", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:api_latency_p50", "legendFormat": "p50"}, {"expr": "decisionforge:api_latency_p95", "legendFormat": "p95"}, {"expr": "decisionforge:api_latency_p99", "legendFormat": "p99"}], "fieldConfig": {"defaults": {"unit": "s"}}, "gridPos": {"x": 16, "y": 0, "w": 8, "h": 5}},
+    {"type": "timeseries", "title": "Request Rate by View", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (view) (rate(django_http_requests_total_by_view_transport_method_total[5m]))", "legendFormat": "{{view}}"}], "gridPos": {"x": 0, "y": 5, "w": 12, "h": 6}},
+    {"type": "timeseries", "title": "4xx and 5xx Rates", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum(rate(django_http_responses_total_by_status_total{status=~\"4..\"}[5m]))", "legendFormat": "4xx"}, {"expr": "sum(rate(django_http_responses_total_by_status_total{status=~\"5..\"}[5m]))", "legendFormat": "5xx"}], "gridPos": {"x": 12, "y": 5, "w": 12, "h": 6}}
+  ]
+}

@@ -1,4 +1,4 @@
-.PHONY: setup up down logs migrate seed test lint format backend-shell frontend-shell clean destroy-volumes
+.PHONY: setup up down logs migrate seed test lint format backend-shell frontend-shell clean observability-up observability-down observability-logs prometheus-check prometheus-targets test-observability grafana-restart destroy-volumes
 
 setup:
 	cp -n .env.example .env || true
@@ -42,6 +42,29 @@ frontend-shell:
 
 clean:
 	docker compose down --remove-orphans
+
+observability-up:
+	docker compose up -d --build prometheus grafana postgres-exporter redis-exporter
+	docker compose ps prometheus grafana postgres-exporter redis-exporter
+
+observability-down:
+	docker compose stop prometheus grafana postgres-exporter redis-exporter
+
+observability-logs:
+	docker compose logs -f prometheus grafana postgres-exporter redis-exporter
+
+prometheus-check:
+	docker run --rm --entrypoint promtool -v "$$(pwd)/infrastructure/prometheus:/etc/prometheus:ro" prom/prometheus:v2.54.1 check config /etc/prometheus/prometheus.yml
+	docker run --rm --entrypoint promtool -v "$$(pwd)/infrastructure/prometheus:/etc/prometheus:ro" prom/prometheus:v2.54.1 check rules /etc/prometheus/recording-rules.yml /etc/prometheus/alerts.yml
+
+prometheus-targets:
+	curl -fsS http://localhost:9090/api/v1/targets
+
+test-observability:
+	docker compose exec web pytest -q tests/observability
+
+grafana-restart:
+	docker compose restart grafana
 
 # Destructive: removes named volumes (database, redis, grafana, prometheus data).
 # Requires explicit confirmation; not aliased to `clean`.
