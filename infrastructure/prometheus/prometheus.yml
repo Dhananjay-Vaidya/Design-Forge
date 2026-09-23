@@ -16,6 +16,11 @@ scrape_configs:
     static_configs:
       - targets: ["web:8000"]
 
+  - job_name: decisionforge-worker
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["worker:9808"]
+
   - job_name: postgres-exporter
     static_configs:
       - targets: ["postgres-exporter:9187"]

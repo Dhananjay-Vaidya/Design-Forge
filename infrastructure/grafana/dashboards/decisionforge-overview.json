@@ -1,21 +1,805 @@
 {
   "uid": "decisionforge-overview",
   "title": "DecisionForge Overview",
+  "description": "Top-level health of the whole platform: availability, API, decisions, AI and background jobs.",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "15s",
-  "time": {"from": "now-6h", "to": "now"},
-  "tags": ["decisionforge", "overview"],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "tags": [
+    "decisionforge",
+    "overview"
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
   "panels": [
-    {"type": "stat", "title": "Backend Availability", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "up{job=\"decisionforge-web\"}", "legendFormat": "web"}], "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4}},
-    {"type": "timeseries", "title": "API Request Rate", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:api_request_rate5m", "legendFormat": "requests/s"}], "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4}},
-    {"type": "timeseries", "title": "API Error Ratio", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:api_5xx_ratio5m", "legendFormat": "5xx ratio"}], "fieldConfig": {"defaults": {"unit": "percentunit"}}, "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4}},
-    {"type": "timeseries", "title": "P95 API Latency", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:api_latency_p95", "legendFormat": "p95"}], "fieldConfig": {"defaults": {"unit": "s"}}, "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4}},
-    {"type": "stat", "title": "Decisions Created", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum(increase(decisionforge_decisions_created_total[6h]))", "legendFormat": "created"}], "gridPos": {"x": 0, "y": 4, "w": 6, "h": 4}},
-    {"type": "stat", "title": "Rankings Calculated", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum(increase(decisionforge_ranking_calculations_total[6h]))", "legendFormat": "rankings"}], "gridPos": {"x": 6, "y": 4, "w": 6, "h": 4}},
-    {"type": "timeseries", "title": "AI Requests", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (status) (rate(decisionforge_ai_requests_total[5m]))", "legendFormat": "{{status}}"}], "gridPos": {"x": 12, "y": 4, "w": 6, "h": 4}},
-    {"type": "timeseries", "title": "AI Cache Hit Ratio", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:ai_cache_hit_ratio5m", "legendFormat": "hit ratio"}], "fieldConfig": {"defaults": {"unit": "percentunit"}}, "gridPos": {"x": 18, "y": 4, "w": 6, "h": 4}},
-    {"type": "stat", "title": "PostgreSQL Availability", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "up{job=\"postgres-exporter\"}", "legendFormat": "postgres"}], "gridPos": {"x": 0, "y": 8, "w": 6, "h": 4}},
-    {"type": "stat", "title": "Redis Availability", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "up{job=\"redis-exporter\"}", "legendFormat": "redis"}], "gridPos": {"x": 6, "y": 8, "w": 6, "h": 4}}
+    {
+      "type": "stat",
+      "title": "Backend",
+      "description": "FastAPI metrics endpoint reachable by Prometheus.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "up{job=\"decisionforge-web\"}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "id": 1
+    },
+    {
+      "type": "stat",
+      "title": "Celery worker",
+      "description": "Celery worker metrics endpoint reachable.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "up{job=\"decisionforge-worker\"}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "id": 2
+    },
+    {
+      "type": "stat",
+      "title": "PostgreSQL",
+      "description": "postgres-exporter can reach the database.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "pg_up",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "id": 3
+    },
+    {
+      "type": "stat",
+      "title": "Redis",
+      "description": "redis-exporter can reach Redis.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "redis_up",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "id": 4
+    },
+    {
+      "type": "stat",
+      "title": "API requests/s",
+      "description": "Total HTTP request rate (5m).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:api_request_rate5m or vector(0)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "reqps",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "id": 5
+    },
+    {
+      "type": "stat",
+      "title": "API 5xx ratio",
+      "description": "Share of responses that are 5xx (5m). Alert above 5%.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:api_5xx_ratio5m or vector(0)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "id": 6
+    },
+    {
+      "type": "timeseries",
+      "title": "API request rate",
+      "description": "Requests per second, all routes.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(decisionforge_http_requests_total[5m]))",
+          "legendFormat": "requests/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "id": 7
+    },
+    {
+      "type": "timeseries",
+      "title": "P95 API latency",
+      "description": "95th percentile request duration. Yellow 0.5s, red 1s.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:api_latency_p95",
+          "legendFormat": "p95",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "id": 8
+    },
+    {
+      "type": "timeseries",
+      "title": "Decisions created and rankings",
+      "description": "Cumulative business activity in the selected range.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(decisionforge_decisions_created_total[$__interval]))",
+          "legendFormat": "decisions created",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(increase(decisionforge_ranking_calculations_total[$__interval]))",
+          "legendFormat": "rankings calculated",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "id": 9
+    },
+    {
+      "type": "timeseries",
+      "title": "AI requests by status",
+      "description": "Gemini/AI provider requests per second by outcome.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(decisionforge_ai_requests_total[5m]))",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 8,
+        "h": 7
+      },
+      "id": 10
+    },
+    {
+      "type": "timeseries",
+      "title": "AI error ratio",
+      "description": "Failed or fallback AI requests / all AI requests.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:ai_error_ratio5m",
+          "legendFormat": "error ratio",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.2
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 11,
+        "w": 8,
+        "h": 7
+      },
+      "id": 11
+    },
+    {
+      "type": "timeseries",
+      "title": "AI cache hit ratio",
+      "description": "Share of AI cache lookups served from cache.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:ai_cache_hit_ratio5m",
+          "legendFormat": "hit ratio",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 11,
+        "w": 8,
+        "h": 7
+      },
+      "id": 12
+    },
+    {
+      "type": "timeseries",
+      "title": "Gemini rate limits and quota rejections",
+      "description": "Provider 429 events and per-user quota rejections per second.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:ai_rate_limit_rate5m",
+          "legendFormat": "provider rate limits",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(decisionforge_ai_quota_rejections_total[5m]))",
+          "legendFormat": "quota rejections",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 8,
+        "h": 7
+      },
+      "id": 13
+    },
+    {
+      "type": "timeseries",
+      "title": "Celery tasks by status",
+      "description": "Task outcomes per second.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(decisionforge_celery_tasks_total[5m]))",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 18,
+        "w": 8,
+        "h": 7
+      },
+      "id": 14
+    },
+    {
+      "type": "timeseries",
+      "title": "Celery queue length",
+      "description": "Tasks waiting in the broker queue (redis key 'celery').",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:celery_queue_length",
+          "legendFormat": "queued",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 18,
+        "w": 8,
+        "h": 7
+      },
+      "id": 15
+    }
   ]
 }

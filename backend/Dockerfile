@@ -18,14 +18,16 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 COPY requirements/ requirements/
 ARG INSTALL_DEV=true
-RUN pip install --user -r requirements/dev.txt
+RUN if [ "$INSTALL_DEV" = "true" ]; then pip install --user -r requirements/dev.txt; else pip install --user -r requirements/base.txt; fi
 
 FROM base AS final
 COPY --from=build-deps /root/.local /home/app/.local
 ENV HOME=/home/app \
     PATH=/home/app/.local/bin:$PATH
 COPY . .
-RUN mkdir -p /app/staticfiles /app/media && chown -R app:app /app /home/app
+RUN chown -R app:app /app /home/app
 USER app
 EXPOSE 8000
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+COPY --chown=app:app entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
+CMD ["gunicorn", "app.main:app", "-c", "gunicorn.conf.py"]

@@ -2,12 +2,12 @@
 
 DecisionForge observability runs through Docker Compose:
 
-- Django/DRF backend exposes `/metrics` with `django-prometheus` and custom `decisionforge_` metrics.
+- The FastAPI backend exposes `/metrics` with `decisionforge_http_*` request metrics (a small ASGI middleware, labelled by route *template*) plus custom `decisionforge_` application metrics. Gunicorn runs several workers, so `prometheus_client` multiprocess mode is enabled (`PROMETHEUS_MULTIPROC_DIR`, set by `entrypoint.sh`).
 - Prometheus scrapes the backend, PostgreSQL exporter, Redis exporter, and itself.
 - Grafana reads Prometheus through the internal URL `http://prometheus:9090`.
 - Exporters are internal-only; Prometheus is exposed on `9090` and Grafana on `3001` for local development.
 
-The repository contains a partial `backend_fastapi/` migration scaffold, but the active Compose backend is `backend/` Django. Monitoring is therefore wired to the runnable Django service.
+The Django backend was replaced by FastAPI (see `docs/django-to-fastapi-migration-report.md`); `backend_django_legacy/` is kept only for rollback. The Prometheus job name `decisionforge-web` and target `web:8000` are unchanged.
 
 ## Environment
 
@@ -72,7 +72,15 @@ infrastructure/
 
 ## Metric Catalogue
 
-HTTP metrics are emitted by `django-prometheus`. Custom application metrics use the `decisionforge_` prefix:
+HTTP metrics (bounded labels: `method`, `route` template or `unmatched`, `status`):
+
+- `decisionforge_http_requests_total{method,route,status}`
+- `decisionforge_http_request_duration_seconds{method,route}` (histogram)
+- `decisionforge_http_requests_in_progress`
+
+Old -> new mapping (django-prometheus -> FastAPI): `django_http_requests_total_by_method_total`, `django_http_responses_total_by_status_total` and `django_http_requests_total_by_view_transport_method_total` -> `decisionforge_http_requests_total` (the `view` label became `route`); `django_http_requests_latency_seconds_by_view_method_bucket` -> `decisionforge_http_request_duration_seconds_bucket`.
+
+Custom application metrics use the `decisionforge_` prefix. Only `decisions_created_total` and `ranking_*` are emitted today; the `ai_*`, `celery_*`, sensitivity/scenario/outcome series are defined for the not-yet-built Gemini/Celery/scenario features and stay at zero until then:
 
 - `decisionforge_decisions_created_total`
 - `decisionforge_ranking_calculations_total{status}`
@@ -137,7 +145,7 @@ Use Prometheus to inspect high-cardinality series:
 
 ```promql
 topk(20, count by (__name__)({__name__=~".+"}))
-topk(20, count by (view) (django_http_requests_total_by_view_transport_method_total))
+topk(20, count by (route) (decisionforge_http_requests_total))
 ```
 
 ## Security

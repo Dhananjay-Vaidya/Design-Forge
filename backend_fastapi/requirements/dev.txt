@@ -1,6 +1,0 @@
--r base.txt
--r test.txt
-ruff==0.6.9
-black==24.10.0
-mypy==1.11.2
-ipython==8.28.0

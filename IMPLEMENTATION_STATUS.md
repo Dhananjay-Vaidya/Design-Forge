@@ -1,5 +1,7 @@
 # DecisionForge AI — Implementation Status
 
+> **Historical log.** This file records the original Django implementation. The backend has since been migrated to FastAPI - see `FASTAPI_MIGRATION_STATUS.md` and `docs/django-to-fastapi-migration-report.md`. Django-specific commands below no longer apply.
+
 Last updated: 2026-09-23
 
 ## How to read this file

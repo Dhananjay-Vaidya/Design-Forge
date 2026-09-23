@@ -312,34 +312,34 @@ FastAPI port keeps the exact same metric names and label sets — which is the p
 
 | Feature | Existing endpoint | Method | Auth | Request contract | Response contract | FastAPI target | Status | Tests | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| Liveness | `/healthz`, `/health` | GET | none | — | `{"status":"ok"}` | `/healthz` + `/health` alias | Not started | — | Django now serves both names (§15) |
-| Readiness | `/readyz`, `/ready` | GET | none | — | `{"status","checks":{db,redis}}` (200/503) | `/readyz` + `/ready` alias | Not started | — | Django now serves both names (§15) |
-| CSRF seed | `/api/v1/auth/csrf` | GET | none | — | 204 + Set-Cookie `df_csrftoken` | same | Not started | — | Django-specific mechanism; FastAPI hand-rolled equivalent, see ADR |
-| Register | `/api/v1/auth/register` | POST | none | `{email,password}` | 201 `{user,access}` + Set-Cookie `df_refresh` | same | Not started | — | 409 on duplicate email |
-| Login | `/api/v1/auth/login` | POST | none | `{email,password}` | 200 `{user,access}` + Set-Cookie `df_refresh` | same | Not started | — | 401 on bad creds |
-| Refresh | `/api/v1/auth/refresh` | POST | cookie+CSRF | — | 200 `{access}` + rotated Set-Cookie | same | Not started | — | 403 if CSRF header missing/invalid |
-| Logout | `/api/v1/auth/logout` | POST | bearer+CSRF | — | 204 + clears cookie | same | Not started | — | |
-| Current user | `/api/v1/me` | GET | bearer | — | `User` (id,email,created_at,profile) | same | Not started | — | |
-| Update profile | `/api/v1/me/profile` | PATCH | bearer | `{display_name?,timezone?,preferences?}` | `User` | same | Not started | — | |
-| Delete account | `/api/v1/me/delete` | POST | bearer | — | 204 | same | Not started | — | hard delete, ADR-0002 |
-| List decisions | `/api/v1/decisions` | GET | bearer | `?status=&category=&ordering=` | `{count,page,page_size,results}` | same | Not started | — | |
-| Create decision | `/api/v1/decisions` | POST | bearer | `{title,context?,category?,deadline?}` | 201 `Decision` | same | Not started | — | |
-| Get decision | `/api/v1/decisions/{id}` | GET | bearer | — | `Decision` | same | Not started | — | 404 if not owner |
-| Patch decision | `/api/v1/decisions/{id}` | PATCH | bearer | `{title?,context?,category?,deadline?,status?}` | `Decision` | same | Not started | — | `status` only settable to ARCHIVED |
-| Delete decision | `/api/v1/decisions/{id}` | DELETE | bearer | — | 204 | same | Not started | — | cascades |
-| List alternatives | `/api/v1/decisions/{id}/alternatives` | GET | bearer | — | `[Alternative]` | same | Not started | — | |
-| Create alternative | `/api/v1/decisions/{id}/alternatives` | POST | bearer | `{name,description?,position?}` | 201 `Alternative` | same | Not started | — | 400 on dup name |
-| Update alternative | `/api/v1/alternatives/{id}` | PATCH | bearer | partial `Alternative` | `Alternative` | same | Not started | — | |
-| Delete alternative | `/api/v1/alternatives/{id}` | DELETE | bearer | — | 204 | same | Not started | — | |
-| List criteria | `/api/v1/decisions/{id}/criteria` | GET | bearer | — | `[Criterion]` | same | Not started | — | |
-| Create criterion | `/api/v1/decisions/{id}/criteria` | POST | bearer | `{name,weight,direction,description?,is_active?}` | 201 `Criterion` | same | Not started | — | weight>0, direction enum |
-| Update criterion | `/api/v1/criteria/{id}` | PATCH | bearer | partial `Criterion` | `Criterion` | same | Not started | — | |
-| Delete criterion | `/api/v1/criteria/{id}` | DELETE | bearer | — | 204 | same | Not started | — | |
-| Get score matrix | `/api/v1/decisions/{id}/scores` | GET | bearer | — | `[AlternativeScore]` | same | Not started | — | |
-| Upsert scores | `/api/v1/decisions/{id}/scores` | PUT | bearer | `{scores:[{alternative_id,criterion_id,score,rationale?}]}` | `{updated,missing_cells}` | same | Not started | — | |
-| Ranking | `/api/v1/decisions/{id}/ranking` | GET | bearer | — | `{decision_id,deterministic,weights_normalized,ranking,sensitivity}` or 400 | same | Not started | — | AC-002/003/004 |
-| OpenAPI schema | `/api/schema/` | GET | none | — | OpenAPI 3.1 JSON | `/api/openapi.json` (FastAPI default) | Not started | — | |
-| Swagger UI | `/api/schema/swagger-ui/` | GET | none | — | HTML | `/docs` (FastAPI default) | Not started | — | |
-| Metrics | `/metrics` (django-prometheus + custom `decisionforge_*` series) | GET | none | — | Prometheus text exposition | `/metrics` (`prometheus-fastapi-instrumentator` + ported `metrics.py`) | Not started (Django side verified live, §15) | — | `apps/observability/metrics.py` is already framework-agnostic — straight port |
+| Liveness | `/healthz`, `/health` | GET | none | — | `{"status":"ok"}` | `/healthz` + `/health` alias | **Done** | test_observability::test_health_ok | Django now serves both names (§15) |
+| Readiness | `/readyz`, `/ready` | GET | none | — | `{"status","checks":{db,redis}}` (200/503) | `/readyz` + `/ready` alias | **Done** | test_observability::test_ready_reports_checks_without_secrets | Django now serves both names (§15) |
+| CSRF seed | `/api/v1/auth/csrf` | GET | none | — | 204 + Set-Cookie `df_csrftoken` | same | **Done** | test_auth (csrf via register flow), verify_e2e | Django-specific mechanism; FastAPI hand-rolled equivalent, see ADR |
+| Register | `/api/v1/auth/register` | POST | none | `{email,password}` | 201 `{user,access}` + Set-Cookie `df_refresh` | same | **Done** | test_auth::test_register_*, test_frontend_contract, verify_e2e | 409 on duplicate email |
+| Login | `/api/v1/auth/login` | POST | none | `{email,password}` | 200 `{user,access}` + Set-Cookie `df_refresh` | same | **Done** | test_auth::test_login_*, verify_e2e | 401 on bad creds |
+| Refresh | `/api/v1/auth/refresh` | POST | cookie+CSRF | — | 200 `{access}` + rotated Set-Cookie | same | **Done** | test_auth::test_refresh_*, verify_e2e | 403 if CSRF header missing/invalid |
+| Logout | `/api/v1/auth/logout` | POST | bearer+CSRF | — | 204 + clears cookie | same | **Done** | test_auth::test_logout_*, verify_e2e | |
+| Current user | `/api/v1/me` | GET | bearer | — | `User` (id,email,created_at,profile) | same | **Done** | test_auth::test_me_*, test_security | |
+| Update profile | `/api/v1/me/profile` | PATCH | bearer | `{display_name?,timezone?,preferences?}` | `User` | same | **Done** | test_auth::test_me_profile_patch_updates_display_name | |
+| Delete account | `/api/v1/me/delete` | POST | bearer | — | 204 | same | **Done** | test_auth::test_delete_account_removes_user | hard delete, ADR-0002 |
+| List decisions | `/api/v1/decisions` | GET | bearer | `?status=&category=&ordering=` | `{count,page,page_size,results}` | same | **Done** | test_decisions, test_security (pagination) | |
+| Create decision | `/api/v1/decisions` | POST | bearer | `{title,context?,category?,deadline?}` | 201 `Decision` | same | **Done** | test_decisions::test_create_decision_* | |
+| Get decision | `/api/v1/decisions/{id}` | GET | bearer | — | `Decision` | same | **Done** | test_decisions::test_cross_user_access_returns_404_not_403 | 404 if not owner |
+| Patch decision | `/api/v1/decisions/{id}` | PATCH | bearer | `{title?,context?,category?,deadline?,status?}` | `Decision` | same | **Done** | test_decisions::test_patch_decision_* | `status` only settable to ARCHIVED |
+| Delete decision | `/api/v1/decisions/{id}` | DELETE | bearer | — | 204 | same | **Done** | test_decisions::test_delete_decision_cascades | cascades |
+| List alternatives | `/api/v1/decisions/{id}/alternatives` | GET | bearer | `?page=&page_size=` | `{count,page,page_size,results:[Alternative]}` | same | **Done** | test_security (cross-user) | |
+| Create alternative | `/api/v1/decisions/{id}/alternatives` | POST | bearer | `{name,description?,position?}` | 201 `Alternative` | same | **Done** | test_decisions::test_add_alternative_* | 400 on dup name |
+| Update alternative | `/api/v1/alternatives/{id}` | PATCH | bearer | partial `Alternative` | `Alternative` | same | **Done** | test_security (cross-user) | |
+| Delete alternative | `/api/v1/alternatives/{id}` | DELETE | bearer | — | 204 | same | **Done** | test_decisions::test_delete_alternative_scoped_to_owner | |
+| List criteria | `/api/v1/decisions/{id}/criteria` | GET | bearer | `?page=&page_size=` | `{count,page,page_size,results:[Criterion]}` | same | **Done** | test_security (cross-user) | |
+| Create criterion | `/api/v1/decisions/{id}/criteria` | POST | bearer | `{name,weight,direction,description?,is_active?}` | 201 `Criterion` | same | **Done** | test_decisions::test_add_criterion_* | weight>0, direction enum |
+| Update criterion | `/api/v1/criteria/{id}` | PATCH | bearer | partial `Criterion` | `Criterion` | same | **Done** | test_security (cross-user) | |
+| Delete criterion | `/api/v1/criteria/{id}` | DELETE | bearer | — | 204 | same | **Done** | test_security (cross-user) | |
+| Get score matrix | `/api/v1/decisions/{id}/scores` | GET | bearer | — | `[AlternativeScore]` | same | **Done** | test_decisions::test_scores_upsert_and_missing_cells | |
+| Upsert scores | `/api/v1/decisions/{id}/scores` | PUT | bearer | `{scores:[{alternative_id,criterion_id,score,rationale?}]}` | `{updated,missing_cells}` | same | **Done** | test_decisions::test_scores_upsert_*, test_security | |
+| Ranking | `/api/v1/decisions/{id}/ranking` | GET | bearer | — | `{decision_id,deterministic,weights_normalized,ranking,sensitivity}` or 400 | same | **Done** | test_decisions::test_ranking_*, verify_e2e (hand-calculated totals) | AC-002/003/004 |
+| OpenAPI schema | `/api/schema/` | GET | none | — | OpenAPI 3.1 JSON | `/api/openapi.json` (path changed; frontend does not use it) | **Done** | test_openapi_snapshot, verify_e2e | |
+| Swagger UI | `/api/schema/swagger-ui/` | GET | none | — | HTML | `/docs` (FastAPI default) | **Done** | verify_e2e | |
+| Metrics | `/metrics` (`decisionforge_http_*` + custom `decisionforge_*`) | GET | none | — | Prometheus text exposition | `/metrics` (ASGI middleware + ported `metrics.py`, multiprocess mode) | **Done** | test_observability | Metric names changed: see docs/observability-setup.md mapping |
 | AI analysis | — (not implemented) | — | — | — | — | Phase 3 work | N/A | — | Not yet built in Django either; metric definitions exist ahead of the feature (§15) |
 | Outcomes/commit | — (not implemented) | — | — | — | — | Phase 4 work | N/A | — | Not yet built in Django either |

@@ -20,12 +20,20 @@ operations, per the migration brief's hard rules (#7-#10).
    `decisions_alternativescore` — via explicit `__tablename__` and `Column("...")` names matching
    the Django-generated schema, not FastAPI/SQLAlchemy naming conventions. This means an existing
    database (with data) can be pointed at the new backend with zero data migration.
-2. **`unique_lower_email`** (Django's `UniqueConstraint(Lower("email"))`) is reproduced as a raw
-   SQL functional unique index in the Alembic baseline migration
-   (`CREATE UNIQUE INDEX unique_lower_email ON accounts_user (lower(email))`), since SQLAlchemy's
-   declarative layer doesn't have a first-class functional-index construct — Alembic's
-   `op.execute()` is used for this one index, matching the constraint name exactly so a schema
-   diff shows no change on an existing DB.
+2. **`unique_lower_email`** (Django's `UniqueConstraint(Lower("email"))`) is reproduced as a plain
+   SQLAlchemy `Index("unique_lower_email", func.lower(column("email")), unique=True)` in
+   `app/models/user.py` — corrected after actually trying it: SQLAlchemy's `Index` construct
+   accepts arbitrary column expressions (including `func.lower(...)`), so this needs no raw SQL /
+   `op.execute()` at all, contrary to what an earlier draft of this ADR assumed. Verified against
+   the live DB (`\d accounts_user`) that the name and definition (`UNIQUE btree (lower(email))`)
+   match exactly.
+2b. **Naming convention gotcha (found by actually generating the migration, not assumed):**
+   SQLAlchemy's `naming_convention` rewrites a `CheckConstraint`'s name even when one is given
+   explicitly — every other constraint type only gets the convention applied when left unnamed.
+   The `"ck"` entry was therefore removed from `app/core/database.py`'s `NAMING_CONVENTION`, so
+   `criterion_weight_positive` and `score_within_configured_range` come out of autogenerate
+   exactly as named, matching the live DB, instead of being mangled into
+   `ck_decisions_criterion_criterion_weight_positive`.
 3. **Additive-only improvements**: two Postgres `CHECK` constraints Django never added
    (`decisions_decision.status IN (...)`, `decisions_criterion.direction IN (...)`) are added in a
    *separate*, clearly-labeled Alembic revision after the baseline — safe on existing data because

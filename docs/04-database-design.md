@@ -1,7 +1,7 @@
 # 04 — Database Design
 
 **Product:** DecisionForge AI · **Version:** 1.0 · **Date:** 2026-09-23
-**DB:** PostgreSQL · **ORM:** Django. Traces to DPR §Domain model, BRD §Data requirements. Additions tagged **[REC]**.
+**DB:** PostgreSQL · **ORM:** SQLAlchemy 2 (async) with Alembic migrations. The schema was originally created by Django; see docs/adr/ADR-fastapi-database-migration.md. Traces to DPR §Domain model, BRD §Data requirements. Additions tagged **[REC]**.
 
 ---
 
@@ -220,12 +220,12 @@ Conventions: PK = `uuid` (`gen_random_uuid()` / `default=uuid4`); all tables car
 |--------|------|-------------|
 | id | uuid | PK |
 | email | citext | **UNIQUE**, NOT NULL, format-validated |
-| password_hash | varchar(255) | NOT NULL (Django PBKDF2/Argon2) |
+| password_hash | varchar(255) | NOT NULL (Argon2id for new hashes; legacy Django PBKDF2 hashes still verify and are upgraded on login) |
 | is_active | boolean | NOT NULL default true |
 | is_staff | boolean | NOT NULL default false |
 | created_at / updated_at | timestamptz | NOT NULL |
 
-Django note: extend `AbstractBaseUser` with email as `USERNAME_FIELD`.
+Note: the `accounts_user` table keeps its Django-era name and columns (e.g. `password`) so existing data is adopted unchanged.
 
 ### 4.2 `user_profile` [REC]
 | Column | Type | Constraints |
@@ -401,7 +401,7 @@ Append-only (no UPDATE/DELETE in app). Index (actor_id, created_at); index (targ
 
 ## 7. Audit Fields
 
-Every table has `created_at`; mutable tables have `updated_at` (maintained by a Django base model / `auto_now`). Immutable tables (`decision_snapshot`, `ai_analysis_result`, `activity_event`, `scenario`) omit `updated_at` by design. Snapshots and results are never updated after insert (BR-007).
+Every table has `created_at`; mutable tables have `updated_at` (maintained by the ORM `TimestampMixin`: Python-side defaults; the database has no defaults). Immutable tables (`decision_snapshot`, `ai_analysis_result`, `activity_event`, `scenario`) omit `updated_at` by design. Snapshots and results are never updated after insert (BR-007).
 
 ## 8. JSONB Usage and Justification
 
@@ -413,7 +413,7 @@ Every table has `created_at`; mutable tables have `updated_at` (maintained by a 
 
 Core decision data (alternatives, criteria, scores, commitments) stays **relational** for integrity, constraints, and the deterministic engine — JSONB is used only where the payload is read as a unit and its schema is intentionally flexible.
 
-## 9. Suggested Django Model Relationships
+## 9. Suggested Model Relationships
 
 - `User` (custom) `1—1` `UserProfile` (OneToOne, `related_name='profile'`).
 - `User` `1—N` `Decision` (`owner`, `related_name='decisions'`).
@@ -433,7 +433,7 @@ Core decision data (alternatives, criteria, scores, commitments) stays **relatio
 3. `snapshots`, then `ai` (jobs/results/scenarios/usage), then `outcomes` (commitment/outcome), then `activity`.
 4. One migration per app per feature slice; never edit an applied migration — add a new one.
 5. Enable `pgcrypto`/`gen_random_uuid` (or rely on Python `uuid4`) in an initial migration.
-6. CI runs `manage.py makemigrations --check --dry-run` to fail on model/migration drift.
+6. CI runs `alembic check` to fail on model/migration drift.
 
 ## 11. Seed-Data Strategy
 

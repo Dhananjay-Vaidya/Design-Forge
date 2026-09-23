@@ -19,7 +19,7 @@ product-owner confirmation (OQ-3). SEC-04 requires protecting auth tokens; ADR-0
 - Refresh token: longer-lived JWT (`JWT_REFRESH_TOKEN_LIFETIME_DAYS`, default 7 days), set as an
   httpOnly, `SameSite=Lax` cookie (`Secure` in any non-local environment, controlled by
   `JWT_REFRESH_COOKIE_SECURE`). Never exposed to JavaScript.
-- `POST /auth/refresh` and `POST /auth/logout` are cookie-based and require the Django CSRF
+- `POST /auth/refresh` and `POST /auth/logout` are cookie-based and require the CSRF double-submit
   double-submit header (`X-CSRFToken`) since they are cookie-authenticated, state-changing requests.
   Bearer-authenticated endpoints (everything else) do not require CSRF, since they carry no
   ambient browser credential.

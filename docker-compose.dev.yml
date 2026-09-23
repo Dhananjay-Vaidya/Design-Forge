@@ -1,9 +1,8 @@
-# Dev override: hot-reloading Django dev server instead of gunicorn.
+# Dev override: auto-reloading Uvicorn instead of gunicorn.
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 services:
   web:
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py runserver 0.0.0.0:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     environment:
-      DJANGO_DEBUG: "1"
+      RUN_MIGRATIONS: "1"
+      ENVIRONMENT: development

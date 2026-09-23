@@ -101,6 +101,26 @@ groups:
           description: Celery task failure rate is above threshold.
           action: Check `docker compose logs worker` and inspect bounded error categories.
 
+      - alert: DecisionForgeCeleryWorkerUnavailable
+        expr: up{job="decisionforge-worker"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: Celery worker metrics endpoint is down
+          description: Prometheus cannot scrape the Celery worker; the worker may be stopped or crashed.
+          action: Check `docker compose ps worker` and `docker compose logs worker`.
+
+      - alert: DecisionForgeCeleryBacklog
+        expr: decisionforge:celery_queue_length > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Celery queue backlog
+          description: More than 50 tasks have been waiting in the broker queue for ten minutes.
+          action: Check worker health and concurrency; look for a stuck or slow task in `docker compose logs worker`.
+
       - alert: DecisionForgePrometheusRuleEvaluationFailures
         expr: increase(prometheus_rule_evaluation_failures_total[5m]) > 0
         for: 5m

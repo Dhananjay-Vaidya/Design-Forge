@@ -18,9 +18,9 @@ Repository ships **`.env.example`** with variable **names only** (no values, no 
 
 | Variable | Purpose |
 |----------|---------|
-| `DJANGO_SECRET_KEY` | Django cryptographic secret |
-| `DJANGO_DEBUG` | `0` in any shared environment |
-| `DJANGO_ALLOWED_HOSTS` | Comma-separated hosts |
+| `JWT_SECRET_KEY` | JWT signing key, >= 32 random chars (enforced when `ENVIRONMENT=production`) |
+| `DEBUG` | `0` in any shared environment (legacy `DJANGO_DEBUG` still read) |
+| `ALLOWED_HOSTS` | Comma-separated Host headers (legacy `DJANGO_ALLOWED_HOSTS` still read) |
 | `DATABASE_URL` | Postgres DSN (or discrete `POSTGRES_*`) |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | DB init |
 | `REDIS_URL` | Broker + cache |
@@ -42,7 +42,7 @@ Only `VITE_*` values reach the browser; **no secret is ever a `VITE_*`** (enforc
 
 | Service | Role |
 |---------|------|
-| `web` | Django REST API (`/api/v1`, `/metrics`, `/healthz`, `/readyz`) |
+| `web` | FastAPI API (`/api/v1`, `/metrics`, `/healthz`, `/readyz`) |
 | `worker` | Celery worker (AI jobs, reminders) |
 | `beat` | Celery beat scheduler |
 | `frontend` | Vite build served (or dev server) [REC nginx for prod-like] |
@@ -66,21 +66,21 @@ API: `http://localhost:8000`, Frontend: `http://localhost:5173` (dev) or via ngi
 ## 5. Database Migration
 
 ```bash
-docker compose exec web python manage.py migrate
-docker compose exec web python manage.py makemigrations --check --dry-run   # should report no changes
+docker compose exec web python -m scripts.db_migrate   # runs automatically on `web` start; safe to re-run
+docker compose exec web alembic check   # should report no new upgrade operations
 ```
 
 ## 6. Seed-Data Loading
 
 ```bash
-docker compose exec web python manage.py seed_demo   # idempotent; safe to re-run
+DF_DEMO_PASSWORD='...' docker compose exec -e DF_DEMO_PASSWORD web python -m scripts.seed_demo   # idempotent
 ```
 Loads one demo user + a fully-scored sample decision and a **mock** AI result (no live Gemini call), so dashboards/UI have data offline (see 04 §11).
 
 ## 7. Creating an Admin User
 
 ```bash
-docker compose exec web python manage.py createsuperuser
+DF_PASSWORD='...' docker compose exec -e DF_PASSWORD web python -m scripts.create_user you@example.com   # no admin UI exists
 ```
 
 ## 8. Starting Workers
@@ -131,7 +131,7 @@ Logs are redacted (no secrets/tokens/prompts, SEC-08). Use the `request_id` from
 | Symptom | Likely cause | Action |
 |---------|--------------|--------|
 | `web` unhealthy on boot | DB not ready | Wait for `db` healthcheck; `web` should retry; check `DATABASE_URL` |
-| 500s on all requests | Missing `DJANGO_SECRET_KEY` / migrations not run | Set env; run `migrate` (§5) |
+| 500s on all requests | Missing/weak `JWT_SECRET_KEY` (production) or migrations not run | Set env; run `migrate` (§5) |
 | AI jobs stuck QUEUED | Worker/Redis down | `docker compose ps`; restart `worker`/`redis`; check `REDIS_URL` |
 | AI always fails | Missing/invalid `GEMINI_API_KEY` or breaker open | App still works (degraded); fix key; check `ai_circuit_state` |
 | Frontend can't reach API | Wrong `VITE_API_BASE_URL` / CORS | Fix env; set `CORS_ALLOWED_ORIGINS` |
@@ -162,7 +162,7 @@ docker compose down -v         # stop AND remove volumes (DESTROYS data)
 
 ## 17. Production-Hardening Checklist [REC] (beyond MVP acceptance)
 
-- [ ] `DJANGO_DEBUG=0`, real `DJANGO_ALLOWED_HOSTS`, TLS at the edge (nginx/reverse proxy).
+- [ ] `ENVIRONMENT=production`, `DEBUG=0`, real `ALLOWED_HOSTS`, `JWT_REFRESH_COOKIE_SECURE=1`, TLS at the edge (nginx/reverse proxy).
 - [ ] Secrets from a secrets manager, not `.env` files.
 - [ ] Managed/hardened PostgreSQL (least-privilege user, TLS, encrypted backups).
 - [ ] Internal-only exposure of `/metrics`, DB, Redis, exporters.

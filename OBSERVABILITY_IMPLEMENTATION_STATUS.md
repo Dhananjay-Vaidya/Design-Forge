@@ -1,83 +1,57 @@
 # Observability Implementation Status
 
-## Repository Audit
+Last updated: 2026-09-24. (The earlier Django-era log of this file is in git history; the backend is
+now FastAPI, see `FASTAPI_MIGRATION_STATUS.md`.)
 
-- Active runtime backend: `backend/` Django + DRF served by Gunicorn through `docker-compose.yml`.
-- FastAPI status: `backend_fastapi/` exists as a partial migration scaffold, but it has no application entrypoint and is not used by Docker Compose.
-- Existing health endpoints: `GET /healthz` and `GET /readyz` in `backend/apps/observability/`.
-- Existing metrics support: `django-prometheus` is already listed in `backend/requirements/base.txt`, but it was not wired into `INSTALLED_APPS`, middleware, or URLs.
-- Existing Compose services: `db`, `redis`, `web`, `worker`, `beat`, and `frontend`.
-- Missing Compose services: Prometheus, Grafana, PostgreSQL exporter, Redis exporter.
-- Existing infrastructure directories: `infrastructure/prometheus/` and `infrastructure/grafana/` exist but did not contain usable config files.
-- Celery is configured in `backend/config/celery.py`; no project task modules are currently present.
-- Gemini integration code is not implemented yet in the active Django app; AI metrics will be provided as reusable instrumentation helpers until AI services land.
-- Current Gunicorn command uses three workers. Python Prometheus multiprocess mode would be required for perfectly aggregated per-process counters. For this local Compose stack, the command will be changed to one worker to keep metrics correct and simple; horizontal scaling can be done by adding containers later.
+## Audit (repository state before this pass)
 
-## Files To Be Changed
+**Already present and correct (reused, not duplicated):** ASGI HTTP metrics middleware
+(`decisionforge_http_*`, route-template labels, `/metrics` excluded), `app/observability/metrics.py`
+(all requested `decisionforge_*` series *defined*, bounded-label helpers), `/health`+`/healthz`,
+`/ready`+`/readyz` (Postgres+Redis, no secrets), Prometheus multiprocess mode for the 3 Gunicorn
+workers, Compose services `prometheus` (15d retention, named volume, :9090), `grafana` (named
+volume, :3001, provisioned datasource `http://prometheus:9090`), `postgres-exporter`,
+`redis-exporter`, 13 recording rules, 11 alert rules, 4 dashboards, Makefile targets, 7 monitoring
+tests, `docs/observability-setup.md`.
 
-- `.env.example`
-- `Makefile`
-- `README.md`
-- `docker-compose.yml`
-- `backend/config/settings/base.py`
-- `backend/config/urls.py`
-- `backend/config/celery.py`
-- `backend/apps/decisions/services.py`
-- `backend/apps/decisions/views.py`
-- `backend/apps/observability/views.py`
-- `IMPLEMENTATION_STATUS.md`
-- `docs/03-system-architecture.md`
-- `docs/11-devops-deployment-runbook.md`
+**Missing / weak (this pass):**
+1. Only `decisions_created` and `ranking_*` are emitted. Celery, cache, AI-request and sensitivity
+   series are defined but nothing records them. Celery has no signal instrumentation; there is no
+   AI-call wrapper; there is no cache helper with timing.
+2. No `ENABLE_METRICS` switch (only `PROMETHEUS_METRICS_ENABLED`); no response-size metric.
+3. `/ready` has no non-blocking Gemini state and no per-check timeout.
+4. Ranking counter records user-input rejections (HTTP 400) as `failure`.
+5. No Celery backlog signal/alert (redis exporter is not told to watch the queue key).
+6. Dashboards: overview lacks Gemini rate-limit and Celery panels; API dashboard lacks p99, slowest
+   routes, active requests, response size, health-route filtering; infrastructure lacks PG cache
+   hit ratio and Redis hits/misses; AI dashboard lacks job panels, cache ratio, error ratio.
+7. Dashboard queries have never been executed against Prometheus to prove they are valid.
+8. Tests do not cover cache, AI wrapper, Celery signals, /ready with a dependency down, PII/label
+   scanning, or rule-file structure.
+9. `promtool` never run successfully (Git Bash path mangling in the Makefile).
 
-## Files To Be Created
+**Not present and out of scope (no such code exists):** Gemini provider, fake AI provider, AI jobs,
+Celery tasks, scenario comparison, outcome reviews, snapshots. Their metrics are instrumented through
+reusable helpers/signal handlers so they light up when those features land; they cannot be
+*exercised end-to-end* today. No Alertmanager exists (documented as next step).
 
-- `backend/apps/observability/metrics.py`
-- `backend/apps/observability/celery.py`
-- `backend/tests/observability/test_metrics.py`
-- `infrastructure/prometheus/prometheus.yml`
-- `infrastructure/prometheus/recording-rules.yml`
-- `infrastructure/prometheus/alerts.yml`
-- `infrastructure/grafana/provisioning/datasources/prometheus.yml`
-- `infrastructure/grafana/provisioning/dashboards/dashboards.yml`
-- `infrastructure/grafana/dashboards/decisionforge-overview.json`
-- `infrastructure/grafana/dashboards/decisionforge-api.json`
-- `infrastructure/grafana/dashboards/decisionforge-ai.json`
-- `infrastructure/grafana/dashboards/decisionforge-infrastructure.json`
-- `docs/observability-setup.md`
+## Files to change
+`backend/app/observability/{metrics,http_metrics,health}.py`, `backend/app/main.py`,
+`backend/app/core/config.py`, `backend/app/tasks/celery_app.py`,
+`backend/app/api/v1/endpoints/rankings.py`, `docker-compose.yml`, `Makefile`, `.env.example`,
+`infrastructure/prometheus/{recording-rules,alerts}.yml`, the 4 dashboards, `docs/observability-setup.md`,
+`README.md`, `docs/11-devops-deployment-runbook.md`.
 
-## Identified Risks
+## Files to create
+`backend/app/observability/instrumentation.py` (Celery signals, AI/cache wrappers),
+`backend/scripts/check_dashboards.py` (executes every dashboard query against Prometheus),
+new tests under `backend/tests/`.
 
-- The user brief asks for FastAPI metrics, but the currently runnable backend is Django. Implementing against the inactive FastAPI scaffold would not monitor the running application.
-- Gunicorn multi-worker metrics are inaccurate without Prometheus multiprocess mode. The local Compose command will use one worker and documentation will capture the scaling decision.
-- AI/Gemini services are not yet implemented in the active backend. Metric helpers will exist now; service-level increments can be expanded when AI code lands.
-- Exporter metrics depend on Docker images being pullable in the local environment.
+## Risks
+- Multiprocess mode: per-process gauges need explicit modes; Celery worker is a separate process
+  and is *not* scraped by Prometheus (see plan: expose via the worker's own metrics port).
+- Windows/Git Bash path mangling for `promtool` docker mounts.
+- Label cardinality: task names must come from the Celery registry, never from arguments.
 
-## Implementation Checklist
-
-- [x] Audit active runtime and monitoring gaps.
-- [x] Wire Django Prometheus HTTP metrics and `/metrics`.
-- [x] Add DecisionForge custom metrics with bounded labels.
-- [x] Instrument ranking and decision creation metrics.
-- [x] Add Celery signal metrics.
-- [x] Add PostgreSQL and Redis exporters.
-- [x] Add Prometheus config, recording rules, and alert rules.
-- [x] Add Grafana provisioning and dashboards.
-- [x] Add Makefile commands.
-- [x] Add observability tests and documentation.
-- [x] Validate static configuration and tests where feasible.
-
-## Verification Checklist
-
-- [x] `docker compose config`
-- [x] Backend lint with Ruff
-- [x] Backend formatting with Black
-- [x] Observability static tests
-- [x] Prometheus config validation
-- [x] Prometheus rules validation
-- [x] Grafana YAML validation
-- [x] Grafana dashboard JSON validation
-- [ ] Full DB-backed observability tests: blocked by existing local Postgres volume credentials not matching current `.env`.
-- [ ] Docker Compose startup: pending after Postgres volume reset or credential alignment.
-- [ ] `/healthz`, `/readyz`, and `/metrics`: runtime check pending after Postgres volume reset or credential alignment.
-- [ ] Prometheus readiness and targets: runtime check pending after Postgres volume reset or credential alignment.
-- [ ] Grafana health: runtime check pending after Postgres volume reset or credential alignment.
+## Checklist / Verification
+Filled in at the end of this pass (only executed checks are marked).

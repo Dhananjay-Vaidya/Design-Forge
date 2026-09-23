@@ -1,138 +1,114 @@
 # FastAPI Migration Status
 
-Last updated: 2026-09-23
+Last updated: 2026-09-24
 
-This file tracks the Django → FastAPI backend migration so another session can resume from the
-exact verified state. Companion documents: `docs/fastapi-migration-audit.md` (inventory + parity
-matrix), `docs/adr/ADR-fastapi-database-migration.md`, `docs/adr/ADR-fastapi-authentication.md`.
+**State: the Django backend has been replaced by FastAPI and verified for everything Django
+actually implemented.** Nothing is committed yet: the working tree holds the whole migration and
+the git index is half-staged from the directory move (`git add -A` resolves it).
 
-**Read `docs/fastapi-migration-audit.md` §0 and §15 first.** The Django backend originally covered
-only Phases 1-2 (auth + decision CRUD/scoring) when this audit was first written. Partway through
-this migration, `git pull` merged in a **complete Phase 5 observability implementation**
-(Prometheus/Grafana/exporters/custom metrics/Celery-task metrics) built in a separate concurrent
-session — see `OBSERVABILITY_IMPLEMENTATION_STATUS.md`. That merge also surfaced a real, now-fixed
-blocker: `.env`'s Postgres credentials had drifted from what the already-initialized dev DB volume
-actually has. **Migration scope is now: auth + decisions/scoring + observability.** There is still
-no Gemini/Celery-*task* behavior to migrate (Celery task *metrics instrumentation* exists, but
-zero actual tasks are registered anywhere) and no CI.
+Companion documents: `docs/django-to-fastapi-migration-report.md` (what changed, parity evidence,
+rollback), `docs/fastapi-migration-audit.md` (inventory + parity matrix),
+`docs/fastapi-backend-guide.md`, `docs/fastapi-production-checklist.md`,
+`docs/frontend-fastapi-compatibility.md`, `docs/adr/ADR-fastapi-database-migration.md`,
+`docs/adr/ADR-fastapi-authentication.md`.
 
-## Strategy (Migration Safety Rules)
+## Layout now
 
-- FastAPI is being built in `backend_fastapi/`, alongside the untouched `backend/` (Django).
-- `backend/` is not modified or deleted during this work (the Phase 5 observability merge and the
-  `.env` credential fix are the only changes to `backend/`/root config, and both were verified
-  live before committing — see "Incident: concurrent-session merge" below).
-- No destructive database operations. The dev Postgres volume/data is left alone; verification
-  uses a throwaway `alembic upgrade head` against a fresh test database plus a *read-only*
-  baseline check against the real dev DB (`alembic stamp` dry-run / schema diff, not applied
-  destructively).
-- `backend/` is only replaced once FastAPI reaches verified parity for everything that currently
-  exists (see the parity matrix). Nothing is removed from Django prematurely.
+- `backend/` — FastAPI (active, what Compose builds and runs).
+- `backend_django_legacy/` — old Django/DRF backend, **not run by Compose**; kept only for
+  rollback and for `scripts/parity_django_vs_fastapi.py`. Delete it (`git rm -r`) once rollback is
+  no longer wanted; then delete that script too.
+- Compose: `web` (gunicorn + Uvicorn workers; migrates on start), `worker` (Celery), `db`, `redis`,
+  `frontend`, `prometheus`, `grafana`, `postgres-exporter`, `redis-exporter`. `beat` was removed
+  (no periodic tasks exist).
 
-## Incident: concurrent-session merge (2026-09-23)
+## Scope decision (important)
 
-While `backend_fastapi/app/models/user.py` was being written, `git pull` (run by the repo owner)
-merged in `origin/main`, which contained a full Phase 5 observability implementation for Django
-built in a separate session. Detected via file-changed-on-disk notices mid-turn. Investigated
-before continuing:
+The migration brief lists snapshots, scenarios, outcomes, dashboard, activity, duplication, Gemini
+analysis and AI jobs. **Django never built them** (the `apps/ai|outcomes|snapshots|activity`
+packages are empty). Migrated scope = what existed: auth, profile, decisions, alternatives,
+criteria, scores, deterministic ranking (+ sensitivity inside it), health/readiness, metrics.
+Steps 11–12 of the brief (Gemini provider, fake provider, quota, circuit breaker, Celery analysis
+tasks) are **not implemented**; that is new product work.
 
-- `git log` showed a merge commit (`247042b`) reconciling a README conflict; `grep` for leftover
-  `<<<<<<<`/`=======`/`>>>>>>>` markers across the repo found none — clean merge.
-- Found a real blocker: `.env` POSTGRES_USER/PASSWORD had been changed to `postgres`/`root`,
-  inconsistent with the already-initialized `decisionforge_postgres_data` Docker volume (created
-  under `decisionforge`/`decisionforge_dev_pw` during Phase 1). The other session's own
-  `OBSERVABILITY_IMPLEMENTATION_STATUS.md` flagged this exact mismatch as blocking its runtime
-  verification.
-- **Asked the user** (AskUserQuestion) how to resolve it and how to scope the migration given the
-  new observability code. Answers: fix `.env` to match the existing volume (not reset it), and
-  expand the FastAPI migration's scope to cover observability too.
-- Fixed `.env` (restored `decisionforge`/`decisionforge_dev_pw` everywhere it appears, including
-  the new `DATABASE_URL_ASYNC`/`DATABASE_URL_SYNC` vars this migration had already added).
-  Verified with `psql \dt` against the *existing* volume — all 23 original tables present, no data
-  loss, no volume reset performed.
-- Rebuilt (`docker compose build web worker beat`), ran `migrate` (0 new operations — schema
-  already current) and `makemigrations --check --dry-run` (clean), ran `pytest -q` → **56/56
-  passed** (49 from Phases 1-2 + 7 new observability tests).
-- Brought up the **full** stack (`docker compose up -d --build`) including the new
-  `postgres-exporter`, `redis-exporter`, `prometheus`, `grafana` services — all `Up`/`healthy`.
-  Verified live: `/healthz`+`/readyz` green, `curl /metrics` shows `decisionforge_*` series,
-  Prometheus `/api/v1/targets` shows `decisionforge-web` and `postgres-exporter` both `"up"`.
-- Committed the reconciled state (`39aa7c5`) together with the FastAPI scaffold work done so far,
-  so this checkpoint is durable regardless of what happens in any other concurrent session.
-
-**Takeaway for future sessions on this repo:** more than one agent/session may be working on this
-GitHub repo concurrently. Before trusting in-context memory of file contents, check `git log`,
-`git status`, and re-read files that matter — especially `.env`-adjacent state, since `.env` itself
-is gitignored and won't show up in `git diff` even when it's the actual source of a runtime
-failure.
-
-## Status by stage
+## Stage status
 
 | Stage | Status |
 |---|---|
-| Audit (`docs/fastapi-migration-audit.md`, incl. §15 observability update) | DONE |
-| ADR: database migration strategy | DONE |
-| ADR: authentication strategy | DONE |
-| Concurrent-session merge reconciled (`.env` fix, verified live) | DONE |
-| `backend_fastapi/` scaffold: config, async db engine/session, error envelope + exception hierarchy, request-ID/access-log middleware, security (JWT+password+CSRF), logging redaction | DONE |
-| `backend_fastapi/` models: `User`, `UserProfile`, `RefreshToken` (mapped to existing tables) | DONE |
-| `backend_fastapi/` models: `Decision`, `Alternative`, `Criterion`, `AlternativeScore` | NOT STARTED |
-| Domain scoring engine port (`app/domain/scoring/`) | NOT STARTED |
-| Pydantic schemas (auth + decisions) | NOT STARTED |
-| Repositories + services (auth + decisions) | NOT STARTED |
-| API routes + dependencies (auth + decisions) | NOT STARTED |
-| Observability port (`app/observability/metrics.py`, `/metrics`, `/health`, `/ready`) | NOT STARTED |
-| Alembic baseline against existing schema | NOT STARTED |
-| Docker Compose wiring (`web_fastapi` alongside `web`) | NOT STARTED |
-| Backend test suite (unit/integration/api) ported | NOT STARTED |
-| Frontend compatibility verification | NOT STARTED |
-| Swap `backend/` → FastAPI, archive Django | NOT STARTED |
-| Makefile / CI / docs updates | NOT STARTED |
-| Final verification report | NOT STARTED |
+| Audit + parity matrix | DONE (matrix rows all "Done" with test names) |
+| ADRs (database, authentication) | DONE |
+| FastAPI app: config (prod validation), async DB, exceptions/envelope, middleware, security | DONE |
+| Models, scoring engine port, schemas, repositories, services, routes | DONE |
+| Alembic: fresh create, Django-DB adoption, `alembic check` clean | DONE, verified |
+| Observability: `/health`, `/ready`, `/metrics`, HTTP middleware, multiprocess mode | DONE |
+| Prometheus rules + Grafana dashboard queries renamed | DONE, verified live |
+| Docker/Compose/Makefile/`.env.example`/CI workflow | DONE (CI not yet run on GitHub) |
+| Docs (README, 03, 04, 09, 11, observability-setup, new guides) | DONE |
+| Frontend | No changes needed; lint/tsc/tests/build pass |
+| Swap `backend/` → FastAPI, Django archived | DONE |
+| Delete `backend_django_legacy/` | NOT DONE (intentionally kept for rollback) |
+| Gemini / Celery tasks / snapshots / scenarios / outcomes / dashboard / activity | NOT BUILT (never existed) |
+| Auth rate limiting | NOT BUILT (never existed) |
 
-## Key decisions
+## Verification log (all actually executed, on the final code, 2026-09-23/24)
 
-- **CSRF**: reproduced as a hand-rolled double-submit-cookie check (no Django CSRF middleware
-  exists in FastAPI) — same cookie/header names the frontend already uses
-  (`df_csrftoken` / `X-CSRFToken`), so **zero frontend changes** are needed for this. See
-  `docs/adr/ADR-fastapi-authentication.md`.
-- **Refresh-token blacklist**: Django's `token_blacklist` app is replaced with an explicit
-  `refresh_tokens` table (jti, user_id, expires_at, revoked_at) under SQLAlchemy.
-- **Database adoption**: Alembic's initial revision is written to match the *current* Postgres
-  schema exactly (verified via `psql \dt` + column inspection, not guessed from Django source),
-  then `alembic stamp head` is used to adopt an existing dev database without re-running DDL.
-  Full detail in `docs/adr/ADR-fastapi-database-migration.md`.
-- **`Decision.status` / `Criterion.direction`**: Django never added Postgres `CHECK` constraints
-  for these (enum-like fields validated only at the serializer layer). FastAPI adds them as an
-  additive migration (safe: existing data already only contains valid values, since Django's own
-  choices validation has been enforcing this at the application layer).
-- **Django Admin**: not carried forward as a standing FastAPI admin UI — it had no real usage yet
-  (no documented admin workflow, no seed command exists). Revisit if/when a real need appears.
-  Documented in the audit §12.
+Backend (inside the Python 3.12 container):
+- Image build ✓ · `ruff check` ✓ · `ruff format --check` ✓ (Black dropped; Ruff is the formatter) ·
+  `mypy app scripts` ✓ (54 files) · `alembic check` ✓ (no drift on a fresh DB)
+- `pytest`: **144 passed** (unit, integration incl. schema-parity, API, security, contract,
+  observability) against real Postgres 16.
+- Fresh-DB migration ✓ (empty database → `scripts.db_migrate`).
+- Existing-schema adoption ✓ on a *copy* of the dev DB with Alembic bookkeeping removed: schema
+  verified, baseline stamped, two additive revisions applied, user row preserved.
+- Legacy password compatibility ✓: a hash generated by real Django logs in and is upgraded to Argon2id.
+- **Django-vs-FastAPI replay** (`scripts/parity_django_vs_fastapi.py`, Django run against a scratch
+  DB copy): 44/54 identical, 10 documented intentional differences, 0 unexpected.
+- Live E2E against the running stack (`scripts/verify_e2e.py`): health, ready (db+redis), OpenAPI,
+  Swagger, ReDoc, metrics, register→login→refresh→demo decision→alternatives/criteria/scores→
+  ranking (hand-calculated totals 0.6889 / 0.7778)→cross-user 404s→unauth 401→logout→refresh rejected. All PASS.
+- Seed/CLI scripts ✓ (`seed_demo` idempotent, `create_user` incl. duplicate/weak-password rejection).
 
-## Verification log
+Stack: `docker compose config` ✓ · all services Up; db/redis/web/prometheus/grafana/postgres-exporter
+healthy · Prometheus targets `decisionforge-web`, `postgres-exporter`, `redis-exporter`,
+`prometheus` all `up` · rewritten PromQL returns data · 25 rules healthy · Grafana provisioned all
+4 dashboards + datasource · Celery worker answers `inspect ping` · CORS preflight correct.
 
-- `docker compose build web worker beat` (post-merge) → success.
-- `docker compose run web python manage.py migrate` (post-merge, post `.env` fix) → "No migrations
-  to apply" (schema already current — confirms the merge added no new Django migrations, only
-  instrumentation code).
-- `docker compose run web python manage.py makemigrations --check --dry-run` → "No changes detected".
-- `docker compose run web pytest -q` → **56 passed**.
-- `docker compose up -d --build` (full stack incl. prometheus/grafana/exporters) → all 10 services
-  `Up`/`healthy`.
-- `curl localhost:8000/healthz`, `/readyz` → both green.
-- `curl localhost:8000/metrics` → `decisionforge_*` series present.
-- `curl localhost:9090/api/v1/targets` → `decisionforge-web` and `postgres-exporter` both `"up"`.
-- `grep` for merge-conflict markers across the repo → none found.
-- Committed as `39aa7c5`.
+Frontend (in its container): `npm run lint` ✓ · `tsc --noEmit` ✓ · `vitest` 9/9 ✓ · `npm run build` ✓.
 
-## Next session should resume at
+## NOT run / not verified (and how to run them)
 
-`backend_fastapi/app/models/decision.py` (Decision/Alternative/Criterion/AlternativeScore, mapped
-to the existing `decisions_*` tables per `docs/fastapi-migration-audit.md` §3), then
-`app/domain/scoring/engine.py` (straight port of `backend/apps/scoring/engine.py` — verify with
-`docs/fastapi-migration-audit.md` §9 that it's still framework-free before copying), then Pydantic
-schemas, then the auth domain end-to-end (schemas → repository → service → routes → tests) before
-moving to decisions, per the "Status by stage" table above. Before resuming, run `git log
---oneline -5` and `git status` first — do not assume the repo is in the state this file describes
-without checking, given the concurrent-session incident logged above.
+| Check | Why not | Command |
+|---|---|---|
+| GitHub Actions workflow | Cannot run GitHub CI from here; YAML validated only | push a branch and watch Actions |
+| `npm ci` (clean frontend install) | Existing `node_modules` used | `cd frontend && npm ci` |
+| Playwright/browser E2E | No E2E suite exists in the repo; flow verified at API level only | add a suite, then run it |
+| `make prometheus-check` (promtool) | Git Bash on Windows mangles the `-v` mount path; Prometheus itself loaded all rules OK | run from Linux/macOS/WSL |
+| Fake-AI analysis flow | No AI feature exists to run | n/a until Phase 3 |
+| Production-mode boot | Only the validator is unit-tested (7 cases) | `ENVIRONMENT=production` with real secrets, `docker compose up web` |
+| Rollback drill | Analysis only; see the password-hash caveat in the migration report | see report §Rollback |
+
+## Bugs found and fixed during final verification (worth remembering)
+
+1. Registration returned 500 against the real DB while all tests passed: the Django schema has no
+   server-side timestamp defaults but the Alembic baseline added them. Fixed (Python-side defaults;
+   baseline stripped; `test_schema_parity.py` guards it). **Lesson: tests must run on the
+   Django-shaped schema, and the replay/E2E against the real DB is not optional.**
+2. `.env` list values (`ALLOWED_HOSTS=a,b,c`) crashed startup (pydantic-settings JSON-decodes
+   `list[str]`); fixed with `NoDecode` (pydantic-settings 2.7.1).
+3. pytest-asyncio 0.24 ignored `asyncio_default_test_loop_scope`; upgraded to 0.26.
+4. Wire-contract drift found only by replaying against Django: `decision` vs `decision_id`,
+   `alternative`/`criterion` vs `*_id` on score rows, alternatives/criteria lists paginated,
+   pagination edge rules, `status` filter leniency, DRF wording. All fixed and covered by
+   `tests/api/test_legacy_contract.py`.
+5. Gunicorn multi-worker metrics were per-process; fixed with Prometheus multiprocess mode.
+
+## Resume checklist for the next session
+
+1. `git status` / `git log --oneline -5` first — other sessions have touched this repo before
+   (see the 2026-09-23 incident notes in git history of this file).
+2. `docker compose up -d --build`, then `make verify`.
+3. Commit the migration (nothing is committed): `git add -A` then review with `git status`.
+   `.env` is ignored and must never be committed.
+4. Decide: delete `backend_django_legacy/`; fix the password-hash rollback stance (report caveat).
+5. Next product work is Phase 3+ (Gemini, snapshots, scenarios, outcomes) — the Celery app, AI
+   metric definitions and Gemini config are already in place.

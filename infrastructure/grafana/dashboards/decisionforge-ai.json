@@ -1,17 +1,541 @@
 {
   "uid": "decisionforge-ai",
-  "title": "DecisionForge Gemini and AI Operations",
+  "title": "Gemini and AI Operations",
+  "description": "Gemini/AI provider reliability, cost signals and background job health. Series appear once AI traffic exists.",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "15s",
-  "time": {"from": "now-6h", "to": "now"},
-  "tags": ["decisionforge", "ai"],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "tags": [
+    "decisionforge",
+    "ai",
+    "gemini"
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
   "panels": [
-    {"type": "timeseries", "title": "Requests by Analysis Type", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (analysis_type) (rate(decisionforge_ai_requests_total[5m]))", "legendFormat": "{{analysis_type}}"}], "gridPos": {"x": 0, "y": 0, "w": 8, "h": 5}},
-    {"type": "timeseries", "title": "Requests by Status", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (status) (rate(decisionforge_ai_requests_total[5m]))", "legendFormat": "{{status}}"}], "gridPos": {"x": 8, "y": 0, "w": 8, "h": 5}},
-    {"type": "timeseries", "title": "Provider P95 Latency", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "histogram_quantile(0.95, sum by (le, provider) (rate(decisionforge_ai_request_duration_seconds_bucket[5m])))", "legendFormat": "{{provider}}"}], "fieldConfig": {"defaults": {"unit": "s"}}, "gridPos": {"x": 16, "y": 0, "w": 8, "h": 5}},
-    {"type": "timeseries", "title": "Rate Limits and Quota Rejections", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum(rate(decisionforge_ai_rate_limit_total[5m]))", "legendFormat": "rate limits"}, {"expr": "sum(rate(decisionforge_ai_quota_rejections_total[5m]))", "legendFormat": "quota rejections"}], "gridPos": {"x": 0, "y": 5, "w": 8, "h": 5}},
-    {"type": "timeseries", "title": "Circuit Breaker State", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge_ai_circuit_breaker_open", "legendFormat": "{{provider}}"}], "gridPos": {"x": 8, "y": 5, "w": 8, "h": 5}},
-    {"type": "timeseries", "title": "Fallbacks and Token Usage", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (reason) (rate(decisionforge_ai_fallback_total[5m]))", "legendFormat": "fallback {{reason}}"}, {"expr": "sum by (token_type) (rate(decisionforge_ai_token_usage_total[5m]))", "legendFormat": "tokens {{token_type}}"}], "gridPos": {"x": 16, "y": 5, "w": 8, "h": 5}}
+    {
+      "type": "timeseries",
+      "title": "Requests by analysis type",
+      "description": "Provider requests per second per analysis type.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (analysis_type) (rate(decisionforge_ai_requests_total[5m]))",
+          "legendFormat": "{{analysis_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "id": 1
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests by status",
+      "description": "success / failure / rejected / fallback.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(decisionforge_ai_requests_total[5m]))",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "id": 2
+    },
+    {
+      "type": "timeseries",
+      "title": "Provider P95 latency",
+      "description": "95th percentile provider call duration.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, provider) (rate(decisionforge_ai_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{provider}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "id": 3
+    },
+    {
+      "type": "timeseries",
+      "title": "Error ratio",
+      "description": "Non-success AI requests / all AI requests.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:ai_error_ratio5m",
+          "legendFormat": "error ratio",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.2
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "id": 4
+    },
+    {
+      "type": "timeseries",
+      "title": "Rate-limit events",
+      "description": "Provider 429s per second.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (provider) (rate(decisionforge_ai_rate_limit_total[5m]))",
+          "legendFormat": "{{provider}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "id": 5
+    },
+    {
+      "type": "timeseries",
+      "title": "Quota rejections",
+      "description": "Requests rejected by per-user quota per second.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(decisionforge_ai_quota_rejections_total[5m]))",
+          "legendFormat": "rejections",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "id": 6
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache hit ratio",
+      "description": "AI cache hits / lookups.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:ai_cache_hit_ratio5m",
+          "legendFormat": "hit ratio",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 8,
+        "h": 7
+      },
+      "id": 7
+    },
+    {
+      "type": "stat",
+      "title": "Circuit breaker",
+      "description": "1 = open (provider calls short-circuited to fallback).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "max by (provider) (decisionforge_ai_circuit_breaker_open) or vector(0)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 14,
+        "w": 4,
+        "h": 7
+      },
+      "id": 8
+    },
+    {
+      "type": "timeseries",
+      "title": "Fallbacks by reason",
+      "description": "Deterministic fallbacks served, by bounded reason.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (reason) (rate(decisionforge_ai_fallback_total[5m]))",
+          "legendFormat": "{{reason}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 8,
+        "h": 7
+      },
+      "id": 9
+    },
+    {
+      "type": "timeseries",
+      "title": "Token usage",
+      "description": "Provider-reported tokens per second (when the SDK reports usage).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (token_type) (rate(decisionforge_ai_token_usage_total[5m]))",
+          "legendFormat": "{{token_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 14,
+        "w": 4,
+        "h": 7
+      },
+      "id": 10
+    },
+    {
+      "type": "timeseries",
+      "title": "AI jobs by status",
+      "description": "Background analysis job outcomes per second.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(decisionforge_ai_jobs_total[5m]))",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 8,
+        "h": 7
+      },
+      "id": 11
+    },
+    {
+      "type": "timeseries",
+      "title": "AI job P95 duration",
+      "description": "95th percentile end-to-end analysis job duration.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, analysis_type) (rate(decisionforge_ai_job_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{analysis_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 21,
+        "w": 8,
+        "h": 7
+      },
+      "id": 12
+    }
   ]
 }

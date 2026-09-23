@@ -42,14 +42,17 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 1"
+    # Image CMD: gunicorn + Uvicorn workers. Migrations run via entrypoint (RUN_MIGRATIONS=1).
+    environment:
+      RUN_MIGRATIONS: "1"
     <<: *backend-env
     volumes:
       - ./backend:/app
-      - backend_static:/app/staticfiles
+      # Read-only, so the contract tests (OpenAPI snapshot, frontend calls, Grafana/Prometheus
+      # configs) can run inside the container exactly as they do in CI.
+      - ./docs:/docs:ro
+      - ./infrastructure:/infrastructure:ro
+      - ./frontend/src:/frontend/src:ro
     ports:
       - "8000:8000"
     healthcheck:
@@ -78,14 +81,11 @@ services:
     image: oliver006/redis_exporter:v1.63.0
     environment:
       REDIS_ADDR: redis://redis:6379
+      # Expose the Celery broker queue length as redis_key_size{key="celery"} (backlog alert).
+      REDIS_EXPORTER_CHECK_SINGLE_KEYS: db0=celery
     depends_on:
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9121/metrics"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks: [decisionforge]
 
   prometheus:
@@ -106,6 +106,8 @@ services:
       postgres-exporter:
         condition: service_started
       redis-exporter:
+        condition: service_started
+      worker:
         condition: service_started
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/ready"]
@@ -140,17 +142,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: celery -A config worker -l info --concurrency=2
-    <<: *backend-env
-    volumes:
-      - ./backend:/app
-    networks: [decisionforge]
-
-  beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    command: celery -A app.tasks.celery_app worker -l info --concurrency=2
     <<: *backend-env
     volumes:
       - ./backend:/app
@@ -179,6 +171,5 @@ networks:
 volumes:
   postgres_data:
   redis_data:
-  backend_static:
   prometheus_data:
   grafana_data:

@@ -10,7 +10,7 @@
 DecisionForge AI is a containerized web application with a clear separation of concerns (DPR §Recommended technical architecture):
 
 - **Frontend** — React + TypeScript + Vite SPA; decision workspace, charts, forms, responsive UI. Talks only to the backend REST API.
-- **Backend** — Django + Django REST Framework; business rules, validation, auth, deterministic scoring engine, REST API, `/metrics`. The **only** component that calls Gemini.
+- **Backend** — FastAPI (async SQLAlchemy 2, Pydantic v2); business rules, validation, auth, deterministic scoring engine, REST API, `/metrics`. The **only** component that calls Gemini.
 - **Database** — PostgreSQL; users, decisions, alternatives, criteria, scores, snapshots, AI results, outcomes, usage ledger, audit.
 - **Async** — Celery workers + Redis (broker/result backend + response cache); AI jobs, reminders, summaries.
 - **AI adapter** — Google Gen AI SDK behind a service interface; schemas, retries, cache, model selection, circuit breaker.
@@ -30,7 +30,7 @@ flowchart TB
         NX["Nginx [REC]<br/>static assets + reverse proxy"]
     end
     subgraph App
-        API["Django REST API<br/>(gunicorn/uvicorn)<br/>/api/v1, /metrics, /healthz"]
+        API["FastAPI<br/>(gunicorn + uvicorn workers)<br/>/api/v1, /metrics, /healthz"]
         WK["Celery Worker(s)"]
         BEAT["Celery Beat<br/>(scheduler)"]
     end
@@ -76,7 +76,7 @@ Only the **worker and API** reach Gemini; the browser never does (NFR-001). Ngin
 
 ## 4. Backend Module Architecture
 
-Django apps (bounded contexts), all under a versioned API:
+Backend modules (bounded contexts: api / schemas / services / repositories / models / domain), all under a versioned API:
 
 | App/module | Responsibility | Key SRS refs |
 |------------|----------------|--------------|
@@ -97,7 +97,7 @@ The **scoring engine is a pure library** with no I/O, so it is trivially unit-te
 ```mermaid
 flowchart LR
     U["User"] --> FE["React SPA"]
-    FE -->|"REST /api/v1"| API["Django REST"]
+    FE -->|"REST /api/v1"| API["FastAPI"]
     API -->|read/write| PG[("PostgreSQL")]
     API -->|"ranking = pure fn"| ENG["Scoring engine<br/>(in-process)"]
     ENG --> API
@@ -115,7 +115,7 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant FE as React SPA
-    participant API as Django REST
+    participant API as FastAPI
     participant DB as PostgreSQL
     FE->>API: POST /auth/login {email, password}
     API->>DB: verify credentials (hashed)
@@ -223,7 +223,7 @@ Idempotency and retry policy per SRS §9 and NFR-011.
 
 ```mermaid
 flowchart LR
-    API["Django /metrics"] -->|scrape| PR["Prometheus"]
+    API["FastAPI /metrics"] -->|scrape| PR["Prometheus"]
     WK["Celery task metrics"] -->|scrape/pushgateway [REC]| PR
     PGX["postgres-exporter"] --> PR
     RDX["redis-exporter"] --> PR

@@ -17,7 +17,8 @@ source-of-truth hierarchy. Build progress is tracked in
 ## Repository layout
 
 ```
-backend/          Django + DRF API, Celery workers, deterministic scoring engine
+backend/          FastAPI API (async SQLAlchemy, Alembic), Celery worker, deterministic scoring engine
+backend_django_legacy/  Previous Django/DRF backend, kept only for rollback (not run by Compose)
 frontend/         React + TypeScript + Vite SPA
 infrastructure/   Prometheus, Grafana, Nginx configuration (added in the observability phase)
 docs/             Full requirements/architecture/API/DB/AI/observability/security/testing docs

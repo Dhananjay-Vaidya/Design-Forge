@@ -25,7 +25,7 @@ Traces to BRD NFR-001/002/010, BR-008/014/015, DPR §Security and privacy. Addit
 
 ## 2. Authentication Strategy (FR-002)
 
-- Email + password; passwords hashed with Django's default strong hasher (PBKDF2, or Argon2 [REC]) — never stored or logged in plaintext.
+- Email + password; passwords hashed with Argon2id (legacy PBKDF2 hashes are verified and upgraded on login) — never stored or logged in plaintext.
 - JWT access token (short TTL) + rotating refresh token; logout revokes the refresh token (server-side deny-list or rotation invalidation).
 - HTTPS everywhere in any non-local deployment (SEC-04).
 - Login throttling to resist brute force (§6).
@@ -35,7 +35,7 @@ Traces to BRD NFR-001/002/010, BR-008/014/015, DPR §Security and privacy. Addit
 - Every object endpoint filters by `owner == request.user` **before** any read/write; nested resources verify the chain up to the owning decision.
 - Cross-user access → **404** (not 403) to avoid existence leakage (AC-009). 403 only for authenticated-but-forbidden operations.
 - Operator/admin has ops access (health, config) but **not** routine access to users' private decision content [REC policy — 14/OQ-7].
-- Permissions are centralized in a reusable DRF permission/queryset mixin so no endpoint can forget the check (tested for isolation — see 10).
+- Permissions are centralized in owner-scoped repository queries (a non-owned object is indistinguishable from a missing one: 404) so no endpoint can forget the check (tested for isolation — see 10).
 
 ## 4. Password Security
 
@@ -52,8 +52,8 @@ Traces to BRD NFR-001/002/010, BR-008/014/015, DPR §Security and privacy. Addit
 ## 6. CSRF and CORS
 
 - **CORS:** allow only the known frontend origin(s) via env `CORS_ALLOWED_ORIGINS`; no wildcard with credentials.
-- **CSRF:** if refresh uses cookies (§5), enforce CSRF protection (double-submit token or Django CSRF) on state-changing requests; if pure bearer-in-memory, CSRF risk is minimal but CORS still locked down.
-- **Rate limiting:** per-IP and per-user throttles on auth and write endpoints (DRF throttling); AI additionally quota-limited (BR-013). Thresholds are [REC] — 14/OQ-6.
+- **CSRF:** if refresh uses cookies (§5), enforce CSRF protection (double-submit cookie token: `df_csrftoken` cookie + `X-CSRFToken` header) on state-changing requests; if pure bearer-in-memory, CSRF risk is minimal but CORS still locked down.
+- **Rate limiting:** per-IP and per-user throttles on auth and write endpoints (planned - not implemented in the FastAPI backend yet); AI additionally quota-limited (BR-013). Thresholds are [REC] — 14/OQ-6.
 
 ## 7. Input Validation (SEC-05)
 
@@ -65,7 +65,7 @@ Traces to BRD NFR-001/002/010, BR-008/014/015, DPR §Security and privacy. Addit
 
 - Secrets only via environment variables / a secrets manager; never committed. Repository ships `.env.example` with **names only**, no values.
 - `.env` is git-ignored; CI has its own secret store.
-- Required secrets: `GEMINI_API_KEY`, `DJANGO_SECRET_KEY`, DB creds, Redis creds (if any), Grafana admin creds.
+- Required secrets: `GEMINI_API_KEY`, `JWT_SECRET_KEY`, DB creds, Redis creds (if any), Grafana admin creds.
 
 ## 9. API-Key Protection (NFR-001, AC-012)
 

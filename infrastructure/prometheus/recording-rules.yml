@@ -3,22 +3,22 @@ groups:
     interval: 15s
     rules:
       - record: decisionforge:api_request_rate5m
-        expr: sum(rate(django_http_requests_total_by_method_total[5m]))
+        expr: sum(rate(decisionforge_http_requests_total[5m]))
 
       - record: decisionforge:api_5xx_rate5m
-        expr: sum(rate(django_http_responses_total_by_status_total{status=~"5.."}[5m]))
+        expr: sum(rate(decisionforge_http_requests_total{status=~"5.."}[5m]))
 
       - record: decisionforge:api_5xx_ratio5m
-        expr: sum(rate(django_http_responses_total_by_status_total{status=~"5.."}[5m])) / clamp_min(sum(rate(django_http_responses_total_by_status_total[5m])), 1)
+        expr: sum(rate(decisionforge_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(decisionforge_http_requests_total[5m])), 1)
 
       - record: decisionforge:api_latency_p50
-        expr: histogram_quantile(0.50, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket[5m])) by (le))
+        expr: histogram_quantile(0.50, sum(rate(decisionforge_http_request_duration_seconds_bucket[5m])) by (le))
 
       - record: decisionforge:api_latency_p95
-        expr: histogram_quantile(0.95, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket[5m])) by (le))
+        expr: histogram_quantile(0.95, sum(rate(decisionforge_http_request_duration_seconds_bucket[5m])) by (le))
 
       - record: decisionforge:api_latency_p99
-        expr: histogram_quantile(0.99, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket[5m])) by (le))
+        expr: histogram_quantile(0.99, sum(rate(decisionforge_http_request_duration_seconds_bucket[5m])) by (le))
 
       - record: decisionforge:ai_request_rate5m
         expr: sum(rate(decisionforge_ai_requests_total[5m]))
@@ -34,6 +34,21 @@ groups:
 
       - record: decisionforge:ranking_calculation_rate5m
         expr: sum(rate(decisionforge_ranking_calculations_total[5m]))
+
+      - record: decisionforge:api_request_rate5m_by_route
+        expr: sum by (route) (rate(decisionforge_http_requests_total{route!~"/health|/healthz|/ready|/readyz|/docs|/redoc|/api/openapi.json|unmatched"}[5m]))
+
+      - record: decisionforge:api_latency_p95_by_route
+        expr: histogram_quantile(0.95, sum by (le, route) (rate(decisionforge_http_request_duration_seconds_bucket[5m])))
+
+      - record: decisionforge:ai_rate_limit_rate5m
+        expr: sum(rate(decisionforge_ai_rate_limit_total[5m]))
+
+      - record: decisionforge:celery_task_rate5m
+        expr: sum(rate(decisionforge_celery_tasks_total[5m]))
+
+      - record: decisionforge:celery_queue_length
+        expr: max(redis_key_size{key="celery"})
 
       - record: decisionforge:celery_failure_rate5m
         expr: sum(rate(decisionforge_celery_task_failures_total[5m]))

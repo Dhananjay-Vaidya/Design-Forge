@@ -1,16 +1,445 @@
 {
   "uid": "decisionforge-api",
-  "title": "DecisionForge API",
+  "title": "FastAPI Performance",
+  "description": "HTTP performance by method, normalized route and status. Route panels exclude health, docs and unmatched paths.",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "15s",
-  "time": {"from": "now-6h", "to": "now"},
-  "tags": ["decisionforge", "api"],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "tags": [
+    "decisionforge",
+    "api"
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
   "panels": [
-    {"type": "timeseries", "title": "Request Rate by Method", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (method) (rate(django_http_requests_total_by_method_total[5m]))", "legendFormat": "{{method}}"}], "gridPos": {"x": 0, "y": 0, "w": 8, "h": 5}},
-    {"type": "timeseries", "title": "Status Distribution", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (status) (rate(django_http_responses_total_by_status_total[5m]))", "legendFormat": "{{status}}"}], "gridPos": {"x": 8, "y": 0, "w": 8, "h": 5}},
-    {"type": "timeseries", "title": "Latency Percentiles", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "decisionforge:api_latency_p50", "legendFormat": "p50"}, {"expr": "decisionforge:api_latency_p95", "legendFormat": "p95"}, {"expr": "decisionforge:api_latency_p99", "legendFormat": "p99"}], "fieldConfig": {"defaults": {"unit": "s"}}, "gridPos": {"x": 16, "y": 0, "w": 8, "h": 5}},
-    {"type": "timeseries", "title": "Request Rate by View", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum by (view) (rate(django_http_requests_total_by_view_transport_method_total[5m]))", "legendFormat": "{{view}}"}], "gridPos": {"x": 0, "y": 5, "w": 12, "h": 6}},
-    {"type": "timeseries", "title": "4xx and 5xx Rates", "datasource": {"type": "prometheus", "uid": "decisionforge-prometheus"}, "targets": [{"expr": "sum(rate(django_http_responses_total_by_status_total{status=~\"4..\"}[5m]))", "legendFormat": "4xx"}, {"expr": "sum(rate(django_http_responses_total_by_status_total{status=~\"5..\"}[5m]))", "legendFormat": "5xx"}], "gridPos": {"x": 12, "y": 5, "w": 12, "h": 6}}
+    {
+      "type": "timeseries",
+      "title": "Request rate by method",
+      "description": "Requests per second per HTTP method.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (method) (rate(decisionforge_http_requests_total[5m]))",
+          "legendFormat": "{{method}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "id": 1
+    },
+    {
+      "type": "timeseries",
+      "title": "Request rate by route",
+      "description": "Business routes only (route template, never raw paths).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (route) (rate(decisionforge_http_requests_total{route!~\"/health|/healthz|/ready|/readyz|/docs|/redoc|/api/openapi.json|unmatched\"}[5m]))",
+          "legendFormat": "{{route}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "id": 2
+    },
+    {
+      "type": "timeseries",
+      "title": "Status distribution",
+      "description": "Responses per second by exact status code.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(decisionforge_http_requests_total[5m]))",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "id": 3
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency P50 / P95 / P99",
+      "description": "Request duration percentiles over all routes.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "decisionforge:api_latency_p50",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "decisionforge:api_latency_p95",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "decisionforge:api_latency_p99",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "id": 4
+    },
+    {
+      "type": "bargauge",
+      "title": "Slowest routes (P95)",
+      "description": "Top 10 route templates by 95th percentile latency, business routes only.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "topk(10, histogram_quantile(0.95, sum by (le, route) (rate(decisionforge_http_request_duration_seconds_bucket{route!~\"/health|/healthz|/ready|/readyz|/docs|/redoc|/api/openapi.json|unmatched\"}[5m]))))",
+          "legendFormat": "{{route}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "id": 5
+    },
+    {
+      "type": "timeseries",
+      "title": "Active requests",
+      "description": "Requests currently being handled (all workers).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(decisionforge_http_requests_in_progress)",
+          "legendFormat": "in progress",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 7,
+        "w": 8,
+        "h": 7
+      },
+      "id": 6
+    },
+    {
+      "type": "timeseries",
+      "title": "Response size",
+      "description": "Average and P95 response body size.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(decisionforge_http_response_size_bytes_sum[5m])) / clamp_min(sum(rate(decisionforge_http_response_size_bytes_count[5m])), 1)",
+          "legendFormat": "average",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(decisionforge_http_response_size_bytes_bucket[5m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 8,
+        "h": 7
+      },
+      "id": 7
+    },
+    {
+      "type": "timeseries",
+      "title": "4xx rate",
+      "description": "Client-error responses per second (validation, auth, not found).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(decisionforge_http_requests_total{status=~\"4..\"}[5m]))",
+          "legendFormat": "4xx",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 14,
+        "w": 8,
+        "h": 7
+      },
+      "id": 8
+    },
+    {
+      "type": "timeseries",
+      "title": "5xx rate",
+      "description": "Server-error responses per second. Anything above zero deserves a look.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "decisionforge-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(decisionforge_http_requests_total{status=~\"5..\"}[5m]))",
+          "legendFormat": "5xx",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 0.01
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 14,
+        "w": 8,
+        "h": 7
+      },
+      "id": 9
+    }
   ]
 }
