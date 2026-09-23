@@ -1,0 +1,8 @@
+-r base.txt
+-r test.txt
+ruff==0.6.9
+black==24.10.0
+mypy==1.11.2
+django-stubs==5.1.0
+djangorestframework-stubs==3.15.1
+ipython==8.28.0

@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens — docs/07-frontend-ux-specification.md §10/§11 */
+:root {
+  --color-bg: 250 250 252;
+  --color-surface: 255 255 255;
+  --color-text: 23 23 28;
+  --color-primary: 79 70 229; /* indigo-600 */
+  --color-success: 22 163 74;
+  --color-warning: 217 119 6;
+  --color-danger: 220 38 38;
+  --color-ai: 147 51 234; /* violet — visually distinct from deterministic results (AIR-06) */
+}
+
+.dark {
+  --color-bg: 15 15 18;
+  --color-surface: 24 24 29;
+  --color-text: 237 237 240;
+  --color-primary: 129 140 248;
+  --color-success: 74 222 128;
+  --color-warning: 251 191 36;
+  --color-danger: 248 113 113;
+  --color-ai: 192 132 252;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
