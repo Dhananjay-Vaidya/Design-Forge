@@ -1,20 +1,22 @@
 import { Link } from "react-router-dom";
 
+import { AuthLayout } from "@/components/AuthLayout";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 
 export function RegisterPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 px-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Create your account</h1>
-        <p className="mt-1 text-sm text-text/60">
+    <AuthLayout
+      title="Create your account"
+      subtitle={
+        <>
           Already have one?{" "}
-          <Link to="/login" className="text-primary underline">
+          <Link to="/login" className="font-medium text-primary underline-offset-4 hover:underline">
             Sign in
           </Link>
-        </p>
-      </div>
+        </>
+      }
+    >
       <RegisterForm />
-    </main>
+    </AuthLayout>
   );
 }

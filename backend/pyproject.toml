@@ -11,7 +11,7 @@ ignore = ["E501", "B008"]  # B008: FastAPI's Depends()/Query() in defaults is th
 known-first-party = ["app"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 ignore_missing_imports = true
 exclude = "alembic/versions"
 

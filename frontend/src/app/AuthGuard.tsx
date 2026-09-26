@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
+import { LogoMark } from "@/components/Logo";
 import { useAuthStore } from "@/stores/authStore";
 
 export function AuthGuard({ children }: PropsWithChildren) {
@@ -10,8 +11,8 @@ export function AuthGuard({ children }: PropsWithChildren) {
 
   if (isBootstrapping) {
     return (
-      <div className="flex min-h-screen items-center justify-center" role="status" aria-live="polite">
-        <span className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4" role="status" aria-live="polite">
+        <LogoMark className="h-10 w-10 animate-pulse" />
         <span className="sr-only">Loading…</span>
       </div>
     );

@@ -1,20 +1,22 @@
 import { Link } from "react-router-dom";
 
+import { AuthLayout } from "@/components/AuthLayout";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 
 export function LoginPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 px-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Sign in</h1>
-        <p className="mt-1 text-sm text-text/60">
+    <AuthLayout
+      title="Welcome back"
+      subtitle={
+        <>
           New here?{" "}
-          <Link to="/register" className="text-primary underline">
+          <Link to="/register" className="font-medium text-primary underline-offset-4 hover:underline">
             Create an account
           </Link>
-        </p>
-      </div>
+        </>
+      }
+    >
       <LoginForm />
-    </main>
+    </AuthLayout>
   );
 }
