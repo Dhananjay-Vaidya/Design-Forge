@@ -2,6 +2,7 @@ import { Calculator, ShieldCheck, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
+import { AmbientBackground } from "./fx/AmbientBackground";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -20,7 +21,8 @@ interface AuthLayoutProps {
 export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_1.05fr]">
-      <div className="flex flex-col px-5 py-6 sm:px-10">
+      <div className="relative isolate flex flex-col px-5 py-6 sm:px-10">
+        <AmbientBackground />
         <div className="flex items-center justify-between">
           <Link to="/" aria-label="DecisionForge AI — home" className="rounded-lg">
             <Logo />
@@ -28,7 +30,7 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
           <ThemeToggle />
         </div>
         <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-12">
-          <div className="animate-rise">
+          <div className="glass animate-rise rounded-2xl p-6 sm:p-8">
             <h1 className="text-[28px] font-semibold tracking-tight">{title}</h1>
             <p className="mt-2 text-[15px] text-muted">{subtitle}</p>
             <div className="mt-8">{children}</div>

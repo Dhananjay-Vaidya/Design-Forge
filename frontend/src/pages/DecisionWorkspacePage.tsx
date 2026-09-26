@@ -14,6 +14,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
+import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import { Link, NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 
@@ -165,15 +166,29 @@ function WorkspaceTabs({ readiness }: { readiness: Readiness }) {
             <NavLink
               to={tab.to}
               className={({ isActive }) =>
-                `relative -mb-px inline-flex h-11 items-center gap-2 border-b-2 px-3 text-sm font-medium transition-colors ${
-                  isActive ? "border-primary text-text" : "border-transparent text-muted hover:text-text"
+                `group relative -mb-px inline-flex h-11 items-center gap-2 px-3 text-sm font-medium transition-colors ${
+                  isActive ? "text-text" : "text-muted hover:text-text"
                 }`
               }
             >
-              <tab.icon className="h-4 w-4" aria-hidden="true" />
-              {tab.label}
-              {!readiness.isLoading && tab.badge}
-              <span className="sr-only">({tab.sr})</span>
+              {({ isActive }) => (
+                <>
+                  <tab.icon
+                    className={`h-4 w-4 transition-transform duration-base group-hover:-translate-y-0.5 ${isActive ? "text-primary" : ""}`}
+                    aria-hidden="true"
+                  />
+                  {tab.label}
+                  {!readiness.isLoading && tab.badge}
+                  <span className="sr-only">({tab.sr})</span>
+                  {isActive && (
+                    <motion.span
+                      layoutId="workspace-tab"
+                      className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary shadow-[0_0_12px_rgb(var(--color-primary)/0.8)]"
+                      transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                    />
+                  )}
+                </>
+              )}
             </NavLink>
             {i < tabs.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-border-strong" aria-hidden="true" />}
           </li>

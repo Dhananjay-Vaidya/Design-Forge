@@ -12,13 +12,13 @@ groups:
           action: Check `docker compose logs web` and verify the web container health.
 
       - alert: DecisionForgeHighHttp5xxRatio
-        expr: decisionforge:api_5xx_ratio5m > 0.05
+        expr: decisionforge:api_5xx_ratio5m > 0.05 and decisionforge:api_request_rate5m > 0.05
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: High HTTP 5xx ratio
-          description: More than 5 percent of API responses are 5xx over five minutes.
+          description: More than 5 percent of /api/v1 responses are 5xx over five minutes (only evaluated with at least ~3 requests/minute of traffic).
           action: Inspect backend logs by request_id and check database/Redis readiness.
 
       - alert: DecisionForgeHighApiLatency
@@ -30,6 +30,26 @@ groups:
           summary: High API P95 latency
           description: API P95 latency is above one second for ten minutes.
           action: Check slow endpoints, database latency, and container resource pressure.
+
+      - alert: DecisionForgePostgresUnavailable
+        expr: decisionforge:postgres_available == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: PostgreSQL is unreachable
+          description: The PostgreSQL exporter is running but cannot connect to the database (pg_up == 0).
+          action: Check `docker compose ps db` and `docker compose logs db`; then `curl localhost:8000/ready`.
+
+      - alert: DecisionForgeRedisUnavailable
+        expr: decisionforge:redis_available == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Redis is unreachable
+          description: The Redis exporter is running but cannot connect to Redis (redis_up == 0).
+          action: Check `docker compose ps redis` and `docker compose logs redis`; then `curl localhost:8000/ready`.
 
       - alert: DecisionForgePostgresExporterUnavailable
         expr: up{job="postgres-exporter"} == 0
@@ -130,3 +150,13 @@ groups:
           summary: Prometheus rule evaluation failures
           description: Prometheus has failed to evaluate one or more rules.
           action: Run `make prometheus-check` and inspect Prometheus logs.
+
+      - alert: DecisionForgePrometheusConfigReloadFailed
+        expr: prometheus_config_last_reload_successful == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Prometheus configuration reload failed
+          description: The last Prometheus configuration reload was rejected; Prometheus keeps running the previous configuration.
+          action: Run `make prometheus-check` and fix the reported error, then reload.

@@ -19,7 +19,7 @@ Source-of-truth hierarchy: BRD > DPR > this docs package > code. Conflicts/defau
 | 2 | Decision Core (CRUD + deterministic engine) | DONE (M2 MVP core) |
 | 3 | Gemini Advisory Layer | NOT STARTED |
 | 4 | Outcomes & Calibration | NOT STARTED |
-| 5 | Observability (Prometheus/Grafana) | PARTIAL (local stack + metrics wired) |
+| 5 | Observability (Prometheus/Grafana) | DONE for existing features; AI/cache metrics wired but idle until Phase 3 (see `OBSERVABILITY_IMPLEMENTATION_STATUS.md`) |
 | 6 | Hardening & Portfolio | NOT STARTED |
 
 ## Key decisions taken while implementing (beyond doc defaults)
@@ -40,10 +40,10 @@ Source-of-truth hierarchy: BRD > DPR > this docs package > code. Conflicts/defau
   case-insensitive email uniqueness is implemented as `UniqueConstraint(Lower("email"))` plus a
   standard `unique=True` on the field (required for Django's `auth.E003` system check), rather than
   the `citext` column type shown in `docs/04-database-design.md` §4.1. Functionally equivalent.
-- Observability targets the active `backend/` Django runtime. `backend_fastapi/` exists as a partial
-  migration scaffold, but it is not currently launched by Docker Compose. The local Compose backend
-  uses one Gunicorn worker so Prometheus Python client metrics remain correct without multiprocess
-  setup.
+- Observability targets the FastAPI backend in `backend/` (the Django backend now lives only in
+  `backend_django_legacy/` for rollback). Gunicorn runs 3 Uvicorn workers with `prometheus_client`
+  multiprocess mode, and the Celery worker serves its own metrics endpoint on `:9808`. Details in
+  `docs/observability-setup.md`.
 
 ## Phase 1 — Foundation & Auth — DONE
 

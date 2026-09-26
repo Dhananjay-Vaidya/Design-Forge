@@ -1,7 +1,8 @@
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-exclude = ["alembic/versions"]
+# extend-exclude keeps ruff's defaults (.venv, build dirs, ...); plain `exclude` would replace them.
+extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]

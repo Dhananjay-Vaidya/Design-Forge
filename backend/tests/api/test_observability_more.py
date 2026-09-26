@@ -101,7 +101,10 @@ async def test_metrics_contain_no_user_data_or_secrets(
     ]
     for item in forbidden:
         assert item not in text, f"{item!r} leaked into /metrics"
-    assert not re.search(r"user_id|decision_id|email|token=|prompt", text)
+    # No label may be *named* after an identifier or free text. (Route templates such as
+    # "/api/v1/decisions/{decision_id}" legitimately contain the placeholder name, not a value.)
+    assert not re.search(r'(user_id|decision_id|email|token|prompt)="', text)
+    assert "token=" not in text
 
 
 async def test_http_label_values_are_bounded(client: AsyncClient):
@@ -144,7 +147,9 @@ async def test_ready_is_503_when_redis_is_down(client: AsyncClient, monkeypatch)
     assert "redis://" not in r.text
 
 
-@pytest.mark.parametrize("enabled,key", [(True, ""), (True, "k"), (False, "")])
+@pytest.mark.parametrize(
+    "enabled,key", [(True, ""), (True, "AIza-fake-test-key-not-real"), (False, "")]
+)
 async def test_gemini_state_never_affects_readiness(
     client: AsyncClient, monkeypatch, enabled: bool, key: str
 ):
@@ -152,7 +157,6 @@ async def test_gemini_state_never_affects_readiness(
     monkeypatch.setattr(health.settings, "gemini_api_key", key)
     r = await client.get("/ready")
     assert r.status_code == 200
-    assert "k" != r.json()["optional"]["gemini"]  # the key itself is never echoed
     assert key == "" or key not in r.text
 
 
@@ -234,3 +238,28 @@ def test_grafana_datasource_is_default_and_uses_docker_dns():
         for panel in json.loads(f.read_text(encoding="utf-8"))["panels"]:
             assert panel["datasource"]["uid"] == uid, (f.name, panel["title"])
             assert panel.get("description"), (f.name, panel["title"])
+
+
+async def test_ready_bounds_a_hanging_dependency(client: AsyncClient, monkeypatch):
+    """A dependency that hangs (not refuses) must still yield a prompt 503, not a stuck probe."""
+    import asyncio
+    import time
+
+    class _HangingConnection:
+        async def __aenter__(self):
+            await asyncio.sleep(30)
+
+        async def __aexit__(self, *exc):
+            return False
+
+    class _HangingEngine:
+        def connect(self):
+            return _HangingConnection()
+
+    monkeypatch.setattr(health, "CHECK_TIMEOUT_SECONDS", 0.2)
+    monkeypatch.setattr(health, "get_engine", lambda: _HangingEngine())
+    started = time.perf_counter()
+    r = await client.get("/ready")
+    assert r.status_code == 503
+    assert r.json()["checks"]["database"] is False
+    assert time.perf_counter() - started < 5

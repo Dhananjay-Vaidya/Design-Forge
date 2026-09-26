@@ -151,8 +151,14 @@ def test_error_categories_are_bounded():
         assert metrics.categorize_error(exc) in metrics.ALLOWED_ERROR_CATEGORY
 
 
-def test_celery_signals_record_success_failure_retry_and_bounded_names():
+def test_celery_signals_record_success_failure_retry_and_bounded_names(monkeypatch):
+    import logging
+
     from celery import Celery
+
+    # Celery's eager "Task succeeded" record is %-formatted with a mapping that pytest's log
+    # capture on Python 3.13 cannot format; it is unrelated to the metrics under test.
+    monkeypatch.setattr(logging.getLogger("celery.app.trace"), "disabled", True)
 
     app = Celery("t")
 

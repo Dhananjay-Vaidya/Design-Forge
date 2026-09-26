@@ -14,7 +14,7 @@ DecisionForge AI is a containerized web application with a clear separation of c
 - **Database** — PostgreSQL; users, decisions, alternatives, criteria, scores, snapshots, AI results, outcomes, usage ledger, audit.
 - **Async** — Celery workers + Redis (broker/result backend + response cache); AI jobs, reminders, summaries.
 - **AI adapter** — Google Gen AI SDK behind a service interface; schemas, retries, cache, model selection, circuit breaker.
-- **Observability** — Prometheus scrapes backend + exporters; Grafana dashboards.
+- **Observability** — Prometheus scrapes the FastAPI `/metrics`, the Celery worker (`:9808`), and the PostgreSQL/Redis exporters; Grafana dashboards are provisioned from files. See `observability-setup.md`.
 - **Runtime** — Docker Compose for consistent local dev (and reference deployment).
 
 **Load-bearing decisions:** deterministic engine is independent of AI (BR-006/011); Gemini is backend-only and env-configured (NFR-001, AIR-01); AI calls are async and non-blocking (AC-005); metrics are low-cardinality (BR-015).
@@ -279,5 +279,5 @@ Deterministic workflow is unaffected by any branch above (BR-011, NFR-003).
 
 ## 14. Deployment Topology
 
-- **MVP / portfolio:** single-host Docker Compose with services: `web` (API), `worker`, `beat`, `db`, `redis`, `prometheus`, `grafana`, `postgres-exporter`, `redis-exporter`, and optionally `nginx`. See `11-devops-deployment-runbook.md`.
+- **MVP / portfolio:** single-host Docker Compose with services: `web` (API), `worker`, `db`, `redis`, `prometheus`, `grafana`, `postgres-exporter`, `redis-exporter`, and `frontend` (dev). A `beat` scheduler and `nginx` are not deployed yet: no periodic tasks exist. See `11-devops-deployment-runbook.md`.
 - **Production hardening path [REC]:** managed Postgres, TLS at the edge, secrets manager, separate worker autoscaling, Alertmanager. Detailed in the runbook's production-hardening checklist. Not required for MVP acceptance.

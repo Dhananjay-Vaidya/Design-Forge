@@ -389,7 +389,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(decisionforge_http_requests_total[5m]))",
+          "expr": "decisionforge:api_request_rate5m",
           "legendFormat": "requests/s",
           "refId": "A"
         }

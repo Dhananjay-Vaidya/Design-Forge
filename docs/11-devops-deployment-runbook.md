@@ -34,7 +34,10 @@ Repository ships **`.env.example`** with variable **names only** (no values, no 
 | `GEMINI_CACHE_TTL_SECONDS` | AI cache TTL (AC-011) |
 | `GEMINI_BREAKER_THRESHOLD` / `GEMINI_BREAKER_COOLDOWN_SECONDS` | Circuit breaker |
 | `VITE_API_BASE_URL` | Frontend → API base (public, non-secret) |
-| `GF_SECURITY_ADMIN_USER` / `GF_SECURITY_ADMIN_PASSWORD` | Grafana admin |
+| `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` | Grafana admin (`GF_SECURITY_ADMIN_*` accepted as fallback) |
+| `ENABLE_METRICS` | Expose `/metrics` (default `true`) |
+| `CELERY_METRICS_PORT` | Celery worker metrics port scraped by Prometheus (default `9808`) |
+| `REDIS_PASSWORD` | Only if Redis AUTH is enabled; passed to `redis-exporter` |
 
 Only `VITE_*` values reach the browser; **no secret is ever a `VITE_*`** (enforced by review + bundle scan, AC-012).
 
@@ -97,15 +100,18 @@ Both start via Compose. Verify:
 ```bash
 curl -s localhost:8000/metrics | head        # backend metrics present
 open http://localhost:9090/targets            # all targets UP
-open http://localhost:3001                     # Grafana (login with GF_* creds)
+open http://localhost:3001                     # Grafana (GRAFANA_ADMIN_USER / GRAFANA_ADMIN_PASSWORD)
+make verify-observability                      # promtool, compose config, every dashboard query, all targets up
 ```
+
+Full reference: [`observability-setup.md`](observability-setup.md).
 
 ## 10. Grafana Provisioning
 
 - Datasource + dashboards are provisioned as files (no click-ops), mounted read-only:
   - `infrastructure/grafana/provisioning/datasources/prometheus.yml`
   - `infrastructure/grafana/provisioning/dashboards/dashboards.yml` + JSON dashboards
-- Dashboards: Application health, Gemini health, Worker health, Database health, Product overview (08 §16). They appear automatically on first start.
+- Dashboards (folder **DecisionForge**): DecisionForge Overview, FastAPI Performance, Gemini and AI Operations, PostgreSQL and Redis Infrastructure. They appear automatically on first start and are read-only in the UI; edit the JSON files instead.
 
 ## 11. Backup and Restore
 
@@ -149,9 +155,10 @@ Logs are redacted (no secrets/tokens/prompts, SEC-08). Use the `request_id` from
 
 1. `http://localhost:9090/targets` — every target `UP`?
 2. Backend down as a target → check `web:8000/metrics` reachable on the Compose network.
-3. Worker metrics missing → verify worker scrape/Pushgateway config (08 §2/§10).
+3. Worker metrics missing → the worker serves its own endpoint on `worker:9808` (`CELERY_METRICS_PORT`); check `docker compose logs worker` for "Celery worker metrics served".
 4. Exporter down → check `postgres-exporter`/`redis-exporter` logs and credentials.
-5. Rules not firing → validate with `promtool check rules` and `promtool test rules` [REC].
+5. Rules not firing → `make prometheus-check`, then `curl -X POST localhost:9090/-/reload`.
+6. `web` exits immediately with `set: Illegal option -` (Windows checkouts) → `entrypoint.sh` has CRLF endings; `.gitattributes` now forces LF, see observability-setup.md §5.
 
 ## 16. Clean Shutdown
 

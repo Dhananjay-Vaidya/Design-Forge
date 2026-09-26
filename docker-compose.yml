@@ -65,8 +65,13 @@ services:
 
   postgres-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    # Credentials are passed separately (not embedded in a URL) so passwords with special
+    # characters need no URL-encoding. Values come from .env; nothing is hardcoded here.
     environment:
-      DATA_SOURCE_NAME: postgresql://${POSTGRES_USER:-decisionforge}:${POSTGRES_PASSWORD:-decisionforge}@db:5432/${POSTGRES_DB:-decisionforge}?sslmode=disable
+      DATA_SOURCE_URI: db:5432/${POSTGRES_DB:-decisionforge}?sslmode=disable
+      DATA_SOURCE_USER: ${POSTGRES_USER:-decisionforge}
+      DATA_SOURCE_PASS: ${POSTGRES_PASSWORD:-decisionforge}
+    # Internal only (no `ports:`); Prometheus scrapes postgres-exporter:9187 on the Compose network.
     depends_on:
       db:
         condition: service_healthy
@@ -78,14 +83,23 @@ services:
     networks: [decisionforge]
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.63.0
+    # -alpine variant: same exporter, but ships wget so a health check is possible.
+    image: oliver006/redis_exporter:v1.63.0-alpine
     environment:
       REDIS_ADDR: redis://redis:6379
+      # Empty today (Redis runs without AUTH); set REDIS_PASSWORD in .env if you enable it.
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       # Expose the Celery broker queue length as redis_key_size{key="celery"} (backlog alert).
       REDIS_EXPORTER_CHECK_SINGLE_KEYS: db0=celery
     depends_on:
       redis:
         condition: service_healthy
+    # Internal only (no `ports:`); Prometheus scrapes redis-exporter:9121.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9121/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks: [decisionforge]
 
   prometheus:
@@ -156,6 +170,9 @@ services:
     command: npm run dev -- --host 0.0.0.0 --port 5173
     env_file:
       - .env
+    environment:
+      # File-change events don't cross Docker Desktop bind mounts; poll so edits hot-reload.
+      VITE_USE_POLLING: "true"
     volumes:
       - ./frontend:/app
       - /app/node_modules

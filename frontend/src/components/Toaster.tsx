@@ -24,7 +24,7 @@ export function Toaster() {
         return (
           <div
             key={t.id}
-            className="pointer-events-auto flex w-full max-w-sm animate-rise items-start gap-3 rounded-xl border border-border bg-surface p-4 shadow-lift"
+            className="glass-strong pointer-events-auto flex w-full max-w-sm animate-rise items-start gap-3 rounded-xl p-4"
           >
             <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${className}`} aria-hidden="true" />
             <div className="min-w-0 flex-1">

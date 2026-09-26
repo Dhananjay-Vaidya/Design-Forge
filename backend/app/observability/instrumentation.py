@@ -134,7 +134,7 @@ _installed = False
 def _task_name(sender: Any, registry: Any) -> str:
     """Only names registered with the Celery app are used; anything else collapses to 'unknown'."""
     name = getattr(sender, "name", None)
-    return name if name in registry else "unknown"
+    return name if isinstance(name, str) and name in registry else "unknown"
 
 
 def install_celery_metrics(celery_app: Any) -> None:

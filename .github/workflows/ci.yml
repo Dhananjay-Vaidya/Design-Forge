@@ -59,6 +59,10 @@ jobs:
         run: alembic check
       - name: Tests (unit, integration, API, contract, observability)
         run: pytest -q
+      - name: Observability tests (explicit, for a clear signal in the job log)
+        run: >-
+          pytest -q tests/api/test_observability.py tests/api/test_observability_more.py
+          tests/api/test_observability_config.py tests/unit/test_instrumentation.py
       - name: OpenAPI generation
         run: python -m scripts.export_openapi /tmp/openapi.json
 
@@ -79,6 +83,37 @@ jobs:
       - run: npm run typecheck
       - run: npm run test -- --run
       - run: npm run build
+
+  observability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: promtool - Prometheus configuration
+        run: >-
+          docker run --rm --entrypoint promtool
+          -v "$PWD/infrastructure/prometheus:/etc/prometheus:ro" prom/prometheus:v2.54.1
+          check config /etc/prometheus/prometheus.yml
+      - name: promtool - recording and alert rules
+        run: >-
+          docker run --rm --entrypoint promtool
+          -v "$PWD/infrastructure/prometheus:/etc/prometheus:ro" prom/prometheus:v2.54.1
+          check rules /etc/prometheus/recording-rules.yml /etc/prometheus/alerts.yml
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Grafana provisioning YAML and dashboard JSON parse
+        run: |
+          pip install pyyaml
+          python - <<'PY'
+          import json, pathlib, yaml
+          root = pathlib.Path("infrastructure/grafana")
+          for f in root.glob("provisioning/**/*.yml"):
+              yaml.safe_load(f.read_text()); print("ok", f)
+          for f in root.glob("dashboards/*.json"):
+              d = json.loads(f.read_text()); assert d["panels"], f; print("ok", f)
+          PY
+      # Behavioural observability tests (metrics, labels, readiness, rules/dashboards guards)
+      # run inside the backend job's `pytest -q`, which has the Postgres/Redis services.
 
   compose:
     runs-on: ubuntu-latest

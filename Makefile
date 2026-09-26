@@ -1,6 +1,6 @@
 .PHONY: setup up down logs migrate migration db-status seed test test-backend test-frontend lint format typecheck \
 	backend-shell frontend-shell openapi verify clean destroy-volumes \
-	observability-up observability-down observability-logs prometheus-check prometheus-targets test-observability grafana-restart
+	observability-up observability-down observability-logs prometheus-check prometheus-targets test-observability grafana-restart verify-observability
 
 # All backend commands run inside the `web` container (FastAPI, Python 3.12).
 
@@ -90,15 +90,26 @@ observability-down:
 observability-logs:
 	docker compose logs -f prometheus grafana postgres-exporter redis-exporter
 
+# MSYS_NO_PATHCONV stops Git Bash on Windows rewriting the container paths; harmless elsewhere.
+PROMTOOL = MSYS_NO_PATHCONV=1 docker run --rm --entrypoint promtool -v "$(CURDIR)/infrastructure/prometheus:/etc/prometheus:ro" prom/prometheus:v2.54.1
+
 prometheus-check:
-	docker run --rm --entrypoint promtool -v "$$(pwd)/infrastructure/prometheus:/etc/prometheus:ro" prom/prometheus:v2.54.1 check config /etc/prometheus/prometheus.yml
-	docker run --rm --entrypoint promtool -v "$$(pwd)/infrastructure/prometheus:/etc/prometheus:ro" prom/prometheus:v2.54.1 check rules /etc/prometheus/recording-rules.yml /etc/prometheus/alerts.yml
+	$(PROMTOOL) check config /etc/prometheus/prometheus.yml
+	$(PROMTOOL) check rules /etc/prometheus/recording-rules.yml /etc/prometheus/alerts.yml
 
 prometheus-targets:
 	curl -fsS http://localhost:9090/api/v1/targets
 
 test-observability:
-	docker compose exec web pytest -q tests/api/test_observability.py
+	docker compose exec web pytest -q tests/api/test_observability.py tests/api/test_observability_more.py tests/api/test_observability_config.py tests/unit/test_instrumentation.py
+
+# Static + live checks: rule/config syntax, Compose resolution, every dashboard query executed
+# against the running Prometheus, and every scrape target reporting up.
+verify-observability: prometheus-check
+	docker compose config -q
+	docker compose exec web python -m scripts.check_dashboards http://prometheus:9090 /infrastructure/grafana/dashboards
+	@curl -fsS http://localhost:9090/api/v1/targets | python -c "import json,sys; t=json.load(sys.stdin)['data']['activeTargets']; [print(f\"{x['labels']['job']:22} {x['health']}\") for x in t]; sys.exit(0 if all(x['health']=='up' for x in t) else 1)"
+	@curl -fsS http://localhost:3001/api/health
 
 grafana-restart:
 	docker compose restart grafana

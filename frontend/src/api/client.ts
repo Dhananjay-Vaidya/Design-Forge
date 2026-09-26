@@ -17,6 +17,10 @@ export const apiClient = axios.create({
   withCredentials: true,
   xsrfCookieName: "df_csrftoken",
   xsrfHeaderName: "X-CSRFToken",
+  // The SPA (:5173) and API (:8000) are different origins; since axios 1.6 the CSRF header is only
+  // attached cross-origin when this is set. Without it the silent refresh on page load gets a 403
+  // and every reload signs the user out. Safe: this client only ever talks to API_BASE_URL.
+  withXSRFToken: true,
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {

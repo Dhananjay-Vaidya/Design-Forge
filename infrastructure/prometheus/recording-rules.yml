@@ -1,48 +1,56 @@
+# API rules cover business endpoints only (route template under /api/v1/). /health, /ready,
+# /docs, /redoc, /api/openapi.json and unmatched paths are classified separately so probes and
+# docs traffic never dilute latency or error ratios. Ratios use clamp_min(denominator, 0.001) so
+# a quiet period yields 0 instead of NaN without distorting low-traffic ratios the way 1 would.
 groups:
   - name: decisionforge.recording
     interval: 15s
     rules:
       - record: decisionforge:api_request_rate5m
-        expr: sum(rate(decisionforge_http_requests_total[5m]))
+        expr: sum(rate(decisionforge_http_requests_total{route=~"/api/v1/.+"}[5m]))
 
       - record: decisionforge:api_5xx_rate5m
-        expr: sum(rate(decisionforge_http_requests_total{status=~"5.."}[5m]))
+        expr: sum(rate(decisionforge_http_requests_total{route=~"/api/v1/.+",status=~"5.."}[5m])) or vector(0)
+
+      - record: decisionforge:api_4xx_rate5m
+        expr: sum(rate(decisionforge_http_requests_total{route=~"/api/v1/.+",status=~"4.."}[5m])) or vector(0)
 
       - record: decisionforge:api_5xx_ratio5m
-        expr: sum(rate(decisionforge_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(decisionforge_http_requests_total[5m])), 1)
+        expr: (sum(rate(decisionforge_http_requests_total{route=~"/api/v1/.+",status=~"5.."}[5m])) or vector(0)) / clamp_min(sum(rate(decisionforge_http_requests_total{route=~"/api/v1/.+"}[5m])) or vector(0), 0.001)
 
       - record: decisionforge:api_latency_p50
-        expr: histogram_quantile(0.50, sum(rate(decisionforge_http_request_duration_seconds_bucket[5m])) by (le))
+        expr: histogram_quantile(0.50, sum by (le) (rate(decisionforge_http_request_duration_seconds_bucket{route=~"/api/v1/.+"}[5m])))
 
       - record: decisionforge:api_latency_p95
-        expr: histogram_quantile(0.95, sum(rate(decisionforge_http_request_duration_seconds_bucket[5m])) by (le))
+        expr: histogram_quantile(0.95, sum by (le) (rate(decisionforge_http_request_duration_seconds_bucket{route=~"/api/v1/.+"}[5m])))
 
       - record: decisionforge:api_latency_p99
-        expr: histogram_quantile(0.99, sum(rate(decisionforge_http_request_duration_seconds_bucket[5m])) by (le))
+        expr: histogram_quantile(0.99, sum by (le) (rate(decisionforge_http_request_duration_seconds_bucket{route=~"/api/v1/.+"}[5m])))
 
       - record: decisionforge:ai_request_rate5m
         expr: sum(rate(decisionforge_ai_requests_total[5m]))
 
       - record: decisionforge:ai_error_ratio5m
-        expr: sum(rate(decisionforge_ai_requests_total{status!="success"}[5m])) / clamp_min(sum(rate(decisionforge_ai_requests_total[5m])), 1)
+        expr: (sum(rate(decisionforge_ai_requests_total{status!="success"}[5m])) or vector(0)) / clamp_min(sum(rate(decisionforge_ai_requests_total[5m])) or vector(0), 0.001)
 
       - record: decisionforge:ai_latency_p95
         expr: histogram_quantile(0.95, sum(rate(decisionforge_ai_request_duration_seconds_bucket[5m])) by (le))
 
       - record: decisionforge:ai_cache_hit_ratio5m
-        expr: sum(rate(decisionforge_ai_cache_operations_total{result="hit"}[5m])) / clamp_min(sum(rate(decisionforge_ai_cache_operations_total[5m])), 1)
+        # No cache traffic -> no data (a 0% hit ratio would falsely suggest every lookup missed).
+        expr: sum(rate(decisionforge_ai_cache_operations_total{result="hit"}[5m])) / clamp_min(sum(rate(decisionforge_ai_cache_operations_total[5m])), 0.001)
 
       - record: decisionforge:ranking_calculation_rate5m
         expr: sum(rate(decisionforge_ranking_calculations_total[5m]))
 
       - record: decisionforge:api_request_rate5m_by_route
-        expr: sum by (route) (rate(decisionforge_http_requests_total{route!~"/health|/healthz|/ready|/readyz|/docs|/redoc|/api/openapi.json|unmatched"}[5m]))
+        expr: sum by (route) (rate(decisionforge_http_requests_total{route=~"/api/v1/.+"}[5m]))
 
       - record: decisionforge:api_latency_p95_by_route
-        expr: histogram_quantile(0.95, sum by (le, route) (rate(decisionforge_http_request_duration_seconds_bucket[5m])))
+        expr: histogram_quantile(0.95, sum by (le, route) (rate(decisionforge_http_request_duration_seconds_bucket{route=~"/api/v1/.+"}[5m])))
 
       - record: decisionforge:ai_rate_limit_rate5m
-        expr: sum(rate(decisionforge_ai_rate_limit_total[5m]))
+        expr: sum(rate(decisionforge_ai_rate_limit_total[5m])) or vector(0)
 
       - record: decisionforge:celery_task_rate5m
         expr: sum(rate(decisionforge_celery_tasks_total[5m]))
@@ -51,10 +59,11 @@ groups:
         expr: max(redis_key_size{key="celery"})
 
       - record: decisionforge:celery_failure_rate5m
-        expr: sum(rate(decisionforge_celery_task_failures_total[5m]))
+        expr: sum(rate(decisionforge_celery_task_failures_total[5m])) or vector(0)
 
+      # The database itself (exporter can connect), not merely the exporter process.
       - record: decisionforge:postgres_available
-        expr: up{job="postgres-exporter"}
+        expr: max(pg_up)
 
       - record: decisionforge:redis_available
-        expr: up{job="redis-exporter"}
+        expr: max(redis_up)

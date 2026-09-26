@@ -19,7 +19,11 @@ def main() -> int:
     prom = (sys.argv[1] if len(sys.argv) > 1 else "http://prometheus:9090").rstrip("/")
     root = Path(sys.argv[2] if len(sys.argv) > 2 else "/infrastructure/grafana/dashboards")
     invalid = empty = ok = 0
-    for path in sorted(root.glob("*.json")):
+    paths = sorted(root.glob("*.json"))
+    if not paths:
+        print(f"No dashboards found in {root}")
+        return 1
+    for path in paths:
         dashboard = json.loads(path.read_text(encoding="utf-8"))
         print(f"== {dashboard['title']} ({path.name})")
         for panel in dashboard["panels"]:

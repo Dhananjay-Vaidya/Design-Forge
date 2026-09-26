@@ -40,7 +40,7 @@ export function Dialog({ open, onClose, title, description, children, footer }: 
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-border bg-surface p-0 text-text shadow-lift open:animate-scale-in"
+      className="glass-strong w-[calc(100%-2rem)] max-w-md rounded-2xl p-0 text-text open:animate-scale-in"
     >
       {open && (
         <div className="p-6">

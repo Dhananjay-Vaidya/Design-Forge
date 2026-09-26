@@ -1,7 +1,7 @@
 {
   "uid": "decisionforge-api",
   "title": "FastAPI Performance",
-  "description": "HTTP performance by method, normalized route and status. Route panels exclude health, docs and unmatched paths.",
+  "description": "Business API traffic only (route templates under /api/v1/). Health, readiness and docs endpoints are excluded so probes never skew rates or latency.",
   "schemaVersion": 39,
   "version": 2,
   "refresh": "15s",
@@ -31,7 +31,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (method) (rate(decisionforge_http_requests_total[5m]))",
+          "expr": "sum by (method) (rate(decisionforge_http_requests_total{route=~\"/api/v1/.+\"}[5m]))",
           "legendFormat": "{{method}}",
           "refId": "A"
         }
@@ -72,7 +72,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (route) (rate(decisionforge_http_requests_total{route!~\"/health|/healthz|/ready|/readyz|/docs|/redoc|/api/openapi.json|unmatched\"}[5m]))",
+          "expr": "sum by (route) (rate(decisionforge_http_requests_total{route=~\"/api/v1/.+\"}[5m]))",
           "legendFormat": "{{route}}",
           "refId": "A"
         }
@@ -113,7 +113,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (status) (rate(decisionforge_http_requests_total[5m]))",
+          "expr": "sum by (status) (rate(decisionforge_http_requests_total{route=~\"/api/v1/.+\"}[5m]))",
           "legendFormat": "{{status}}",
           "refId": "A"
         }
@@ -224,7 +224,7 @@
       },
       "targets": [
         {
-          "expr": "topk(10, histogram_quantile(0.95, sum by (le, route) (rate(decisionforge_http_request_duration_seconds_bucket{route!~\"/health|/healthz|/ready|/readyz|/docs|/redoc|/api/openapi.json|unmatched\"}[5m]))))",
+          "expr": "topk(10, histogram_quantile(0.95, sum by (le, route) (rate(decisionforge_http_request_duration_seconds_bucket{route=~\"/api/v1/.+\"}[5m]))))",
           "legendFormat": "{{route}}",
           "refId": "A",
           "instant": true
@@ -311,12 +311,12 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(decisionforge_http_response_size_bytes_sum[5m])) / clamp_min(sum(rate(decisionforge_http_response_size_bytes_count[5m])), 1)",
+          "expr": "sum(rate(decisionforge_http_response_size_bytes_sum{route=~\"/api/v1/.+\"}[5m])) / clamp_min(sum(rate(decisionforge_http_response_size_bytes_count{route=~\"/api/v1/.+\"}[5m])), 1)",
           "legendFormat": "average",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(decisionforge_http_response_size_bytes_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(decisionforge_http_response_size_bytes_bucket{route=~\"/api/v1/.+\"}[5m])))",
           "legendFormat": "p95",
           "refId": "B"
         }
@@ -357,7 +357,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(decisionforge_http_requests_total{status=~\"4..\"}[5m]))",
+          "expr": "sum(rate(decisionforge_http_requests_total{route=~\"/api/v1/.+\",status=~\"4..\"}[5m]))",
           "legendFormat": "4xx",
           "refId": "A"
         }
@@ -398,7 +398,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(decisionforge_http_requests_total{status=~\"5..\"}[5m]))",
+          "expr": "sum(rate(decisionforge_http_requests_total{route=~\"/api/v1/.+\",status=~\"5..\"}[5m]))",
           "legendFormat": "5xx",
           "refId": "A"
         }

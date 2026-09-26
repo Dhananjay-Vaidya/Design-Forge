@@ -15,6 +15,7 @@ import { Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YA
 
 import { ApiError } from "@/api/client";
 import { Button } from "@/components/Button";
+import { CountUp } from "@/components/fx/CountUp";
 import { ErrorState, Skeleton } from "@/components/States";
 import { timeAgo, toPoints } from "@/lib/format";
 import { useTokenColor } from "@/lib/useTokenColor";
@@ -113,7 +114,8 @@ function RankingChart({ ranking }: { ranking: Ranking["ranking"] }) {
               dataKey="points"
               position="right"
               formatter={(v: number) => v.toFixed(1)}
-              style={{ fill: muted, fontSize: 12, fontFamily: "Geist Mono Variable, monospace" }}
+              fillOpacity={1}
+              style={{ fill: muted, fillOpacity: 1, fontSize: 12, fontFamily: "Geist Mono Variable, monospace" }}
             />
           </Bar>
         </BarChart>
@@ -215,7 +217,7 @@ export function RankingTab() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-        <section aria-labelledby="leader-heading" className="card relative overflow-hidden p-6">
+        <section aria-labelledby="leader-heading" className="glass relative overflow-hidden rounded-2xl p-6">
           <div className="grid-texture absolute inset-0 opacity-50 [mask-image:linear-gradient(to_bottom_left,black,transparent_60%)]" aria-hidden="true" />
           <div className="relative">
             <p className="eyebrow flex items-center gap-1.5">
@@ -226,9 +228,11 @@ export function RankingTab() {
               {leader.name}
             </h2>
             <p className="mt-4 flex items-baseline gap-1.5">
-              <span className="font-mono text-5xl font-semibold tabular-nums tracking-tight text-primary">
-                {toPoints(leader.total)}
-              </span>
+              <CountUp
+                value={Number(toPoints(leader.total))}
+                decimals={1}
+                className="font-mono text-5xl font-semibold tabular-nums tracking-tight text-primary"
+              />
               <span className="text-sm text-muted">/ 100</span>
             </p>
             {margin !== null && (
@@ -261,7 +265,7 @@ export function RankingTab() {
           </div>
         </section>
 
-        <section aria-labelledby="chart-heading" className="card p-6">
+        <section aria-labelledby="chart-heading" className="glass rounded-2xl p-6">
           <h2 id="chart-heading" className="text-sm font-semibold">
             All options
           </h2>

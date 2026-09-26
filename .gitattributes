@@ -1,0 +1,3 @@
+# Files executed inside Linux containers must keep LF endings even on Windows checkouts
+# (core.autocrlf=true turns entrypoint.sh into CRLF and `sh` then fails: "set: Illegal option -").
+*.sh text eol=lf

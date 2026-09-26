@@ -97,9 +97,25 @@ Automate the checklist in `09-security-and-privacy.md` §17: ownership isolation
 
 ## 14. Observability Tests
 
-- `/metrics` exposes the documented metrics (FR-018) and **no** forbidden labels (BR-015) — assert label sets programmatically.
-- Recording/alert rule unit tests via `promtool test rules` [REC].
-- `/healthz` and `/readyz` behave (readiness 503 when a dependency is down).
+Implemented in `backend/tests/api/test_observability.py`, `test_observability_more.py`,
+`test_observability_config.py` and `backend/tests/unit/test_instrumentation.py`
+(`make test-observability`):
+
+- `/metrics` returns 200 with the Prometheus content type, is not in OpenAPI, and never measures itself.
+- HTTP labels are route templates; raw paths, IDs and query strings never appear (BR-015). Real
+  user/decision data is created and then searched for in the scrape output.
+- Decision creation and ranking counters move; unrankable input is `rejected`, not `failure`.
+- AI call/job, cache, circuit-breaker, quota, token and fallback helpers, driven by a stub provider
+  (no Gemini SDK, no quota consumed); unknown label values collapse to bounded defaults.
+- Celery success/failure/retry via real signals on an eager throwaway app.
+- `/health` stays 200 when dependencies are down; `/ready` is 503 when PostgreSQL or Redis is
+  down, 200 regardless of Gemini state, and never echoes hosts, URLs or keys.
+- Static guards: rule and dashboard files reference only metrics the app registers; required rules
+  and alerts exist; API rules exclude probe routes; every panel uses the provisioned datasource;
+  Compose monitoring services are pinned, health-checked, internal, and have no hardcoded password.
+- CI additionally runs `promtool check config` / `check rules` and parses all Grafana YAML/JSON.
+- Live query validation: `python -m scripts.check_dashboards` executes every dashboard query
+  against a running Prometheus (part of `make verify-observability`).
 
 ## 15. Test Fixtures
 
