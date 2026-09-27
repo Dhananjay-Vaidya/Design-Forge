@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Check, Plus, X } from "lucide-react";
-import { type FormEvent, useId, useRef, useState } from "react";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -9,9 +9,17 @@ import { ApiError } from "@/api/client";
 import { Button } from "@/components/Button";
 import { FormField, TextAreaField } from "@/components/FormField";
 import * as api from "@/features/decisions/api";
-import { DirectionToggle, WeightBar, WeightStepper } from "@/features/decisions/components/CriterionControls";
+import {
+  DirectionToggle,
+  WeightBar,
+  WeightStepper,
+} from "@/features/decisions/components/CriterionControls";
 import { decisionKeys } from "@/features/decisions/hooks";
-import { CATEGORY_SUGGESTIONS, type DecisionDetailsValues, decisionDetailsSchema } from "@/schemas/decision";
+import {
+  CATEGORY_SUGGESTIONS,
+  type DecisionDetailsValues,
+  decisionDetailsSchema,
+} from "@/schemas/decision";
 import { toast } from "@/stores/toastStore";
 import type { Direction } from "@/types/decision";
 
@@ -39,7 +47,11 @@ function Stepper({ current }: { current: number }) {
         const done = i < current;
         const active = i === current;
         return (
-          <li key={label} className="flex flex-1 items-center gap-2 last:flex-none" aria-current={active ? "step" : undefined}>
+          <li
+            key={label}
+            className="flex flex-1 items-center gap-2 last:flex-none"
+            aria-current={active ? "step" : undefined}
+          >
             <span
               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
                 done
@@ -51,12 +63,17 @@ function Stepper({ current }: { current: number }) {
             >
               {done ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : i + 1}
             </span>
-            <span className={`text-sm font-medium ${active ? "text-text" : "text-muted"} max-sm:sr-only`}>
+            <span
+              className={`text-sm font-medium ${active ? "text-text" : "text-muted"} max-sm:sr-only`}
+            >
               {label}
               {done && <span className="sr-only"> (completed)</span>}
             </span>
             {i < STEPS.length - 1 && (
-              <span className={`mx-1 h-px flex-1 ${done ? "bg-primary" : "bg-border"}`} aria-hidden="true" />
+              <span
+                className={`mx-1 h-px flex-1 ${done ? "bg-primary" : "bg-border"}`}
+                aria-hidden="true"
+              />
             )}
           </li>
         );
@@ -77,10 +94,18 @@ function DetailsStep({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<DecisionDetailsValues>({ resolver: zodResolver(decisionDetailsSchema), defaultValues: initial });
+  } = useForm<DecisionDetailsValues>({
+    resolver: zodResolver(decisionDetailsSchema),
+    defaultValues: initial,
+  });
 
   return (
-    <form id="wizard-step" onSubmit={handleSubmit(onNext)} className="flex flex-col gap-5" noValidate>
+    <form
+      id="wizard-details"
+      onSubmit={handleSubmit(onNext)}
+      className="flex flex-col gap-5"
+      noValidate
+    >
       <FormField
         label="What are you deciding?"
         placeholder="e.g. Which job offer should I accept?"
@@ -150,7 +175,7 @@ function OptionsStep({
   };
 
   return (
-    <form id="wizard-step" onSubmit={submit} className="flex flex-col gap-5" noValidate>
+    <form id="wizard-options" onSubmit={submit} className="flex flex-col gap-5" noValidate>
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <FormField
@@ -158,7 +183,6 @@ function OptionsStep({
             label="Add an option"
             placeholder="e.g. Offer A — enterprise"
             value={name}
-            autoFocus
             error={inputError ?? undefined}
             onChange={(e) => {
               setName(e.target.value);
@@ -181,7 +205,10 @@ function OptionsStep({
       {options.length > 0 ? (
         <ul className="flex flex-col gap-2" aria-label="Options">
           {options.map((opt, i) => (
-            <li key={opt.key} className="flex animate-rise items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2.5">
+            <li
+              key={opt.key}
+              className="flex animate-rise items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2.5"
+            >
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface-2 font-mono text-xs text-muted">
                 {i + 1}
               </span>
@@ -232,7 +259,10 @@ function CriteriaStep({
     if (criteria.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
       return setInputError("You've already added that criterion.");
     }
-    setCriteria([...criteria, { key: nextKey(), name: trimmed.slice(0, 200), weight: "3", direction: "benefit" }]);
+    setCriteria([
+      ...criteria,
+      { key: nextKey(), name: trimmed.slice(0, 200), weight: "3", direction: "benefit" },
+    ]);
     setName("");
     setInputError(null);
     inputRef.current?.focus();
@@ -243,7 +273,7 @@ function CriteriaStep({
 
   return (
     <form
-      id="wizard-step"
+      id="wizard-criteria"
       onSubmit={(e) => {
         e.preventDefault();
         onNext();
@@ -258,7 +288,6 @@ function CriteriaStep({
             label="Add a criterion"
             placeholder="e.g. Salary, commute, growth"
             value={name}
-            autoFocus
             error={inputError ?? undefined}
             onChange={(e) => {
               setName(e.target.value);
@@ -288,7 +317,9 @@ function CriteriaStep({
                   key={c.key}
                   className="flex animate-rise flex-wrap items-center gap-x-3 gap-y-2.5 rounded-lg border border-border bg-surface px-3 py-2.5"
                 >
-                  <span className="min-w-0 flex-1 basis-40 truncate text-sm font-medium">{c.name}</span>
+                  <span className="min-w-0 flex-1 basis-40 truncate text-sm font-medium">
+                    {c.name}
+                  </span>
                   <DirectionToggle
                     size="sm"
                     label={`${c.name} direction`}
@@ -315,7 +346,13 @@ function CriteriaStep({
           </ul>
           <div className="rounded-lg bg-surface-2/70 p-4">
             <p className="mb-3 text-xs font-medium text-muted">How much each criterion counts</p>
-            <WeightBar items={criteria.map((c) => ({ key: c.key, name: c.name, weight: Number(c.weight) || 0 }))} />
+            <WeightBar
+              items={criteria.map((c) => ({
+                key: c.key,
+                name: c.name,
+                weight: Number(c.weight) || 0,
+              }))}
+            />
           </div>
         </>
       ) : (
@@ -333,9 +370,18 @@ function CriteriaStep({
 }
 
 const STEP_COPY = [
-  { title: "Frame the decision", text: "Start with the question. You can refine everything later." },
-  { title: "List your options", text: "The real alternatives on the table. You need at least two to rank." },
-  { title: "Choose your criteria", text: "What should the options be judged on, and how much does each matter?" },
+  {
+    title: "Frame the decision",
+    text: "Start with the question. You can refine everything later.",
+  },
+  {
+    title: "List your options",
+    text: "The real alternatives on the table. You need at least two to rank.",
+  },
+  {
+    title: "Choose your criteria",
+    text: "What should the options be judged on, and how much does each matter?",
+  },
 ];
 
 /** docs/07 §5 — decision creation wizard (FR-003, BR-002/003). */
@@ -343,11 +389,20 @@ export function NewDecisionPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [step, setStep] = useState(0);
-  const [details, setDetails] = useState<DecisionDetailsValues>({ title: "", context: "", category: "", deadline: "" });
+  const [details, setDetails] = useState<DecisionDetailsValues>({
+    title: "",
+    context: "",
+    category: "",
+    deadline: "",
+  });
   const [options, setOptions] = useState<DraftOption[]>([]);
   const [criteria, setCriteria] = useState<DraftCriterion[]>([]);
   const [stepError, setStepError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (step > 0) headingRef.current?.focus({ preventScroll: true });
+  }, [step]);
 
   const goToOptions = (values: DecisionDetailsValues) => {
     setDetails(values);
@@ -362,7 +417,8 @@ export function NewDecisionPage() {
 
   const create = async () => {
     if (criteria.length < 1) return setStepError("Add at least one criterion.");
-    if (criteria.some((c) => !(Number(c.weight) > 0))) return setStepError("Every weight must be greater than zero.");
+    if (criteria.some((c) => !(Number(c.weight) > 0)))
+      return setStepError("Every weight must be greater than zero.");
     setStepError(null);
     setIsCreating(true);
 
@@ -391,7 +447,8 @@ export function NewDecisionPage() {
       navigate(`/app/decisions/${decision.id}/scores`);
     } catch (error) {
       setIsCreating(false);
-      const message = error instanceof ApiError ? error.message : "Check your connection and try again.";
+      const message =
+        error instanceof ApiError ? error.message : "Check your connection and try again.";
       if (decisionId) {
         // The decision exists but setup was partial — hand over to the workspace to finish it.
         await qc.invalidateQueries({ queryKey: decisionKeys.all });
@@ -405,7 +462,10 @@ export function NewDecisionPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link to="/app" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-text">
+      <Link
+        to="/app"
+        className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-text"
+      >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Dashboard
       </Link>
@@ -415,20 +475,49 @@ export function NewDecisionPage() {
       </div>
 
       <div className="card mt-6 p-6 shadow-soft sm:p-8">
-        <div key={step} className="animate-rise">
+        <div>
           <p className="eyebrow">
             Step {step + 1} of {STEPS.length}
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight">{STEP_COPY[step].title}</h1>
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="mt-2 text-2xl font-semibold tracking-tight outline-none"
+          >
+            {STEP_COPY[step].title}
+          </h1>
           <p className="mt-1.5 text-[15px] text-muted">{STEP_COPY[step].text}</p>
           <div className="mt-7">
-            {step === 0 && <DetailsStep initial={details} onNext={goToOptions} />}
-            {step === 1 && (
-              <OptionsStep options={options} setOptions={setOptions} onNext={goToCriteria} error={stepError} />
-            )}
-            {step === 2 && (
-              <CriteriaStep criteria={criteria} setCriteria={setCriteria} onNext={create} error={stepError} />
-            )}
+            <div hidden={step !== 0}>
+              <DetailsStep initial={details} onNext={goToOptions} />
+            </div>
+            <div hidden={step !== 1}>
+              <OptionsStep
+                options={options}
+                setOptions={setOptions}
+                onNext={goToCriteria}
+                error={stepError}
+              />
+            </div>
+            <div hidden={step !== 2}>
+              <CriteriaStep
+                criteria={criteria}
+                setCriteria={setCriteria}
+                onNext={create}
+                error={stepError}
+              />
+              <section
+                aria-label="Setup review"
+                className="mt-6 rounded-xl border border-primary/20 bg-primary-soft/40 p-4"
+              >
+                <h2 className="text-sm font-semibold">Ready for the scoring table</h2>
+                <p className="mt-2 text-sm">{details.title}</p>
+                <p className="mt-1 text-xs text-muted">
+                  {options.length} options · {criteria.length} criteria. You can refine these in the
+                  workspace.
+                </p>
+              </section>
+            </div>
           </div>
         </div>
 
@@ -450,7 +539,11 @@ export function NewDecisionPage() {
               Back
             </Button>
           )}
-          <Button type="submit" form="wizard-step" isLoading={isCreating}>
+          <Button
+            type="submit"
+            form={["wizard-details", "wizard-options", "wizard-criteria"][step]}
+            isLoading={isCreating}
+          >
             {step === 2 ? (isCreating ? "Creating…" : "Create decision") : "Continue"}
             {step < 2 && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
           </Button>

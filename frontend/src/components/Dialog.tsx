@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef } from "react";
 
 import { Button } from "./Button";
+import { trapDialogTab } from "@/lib/dialogKeyboard";
 
 interface DialogProps {
   open: boolean;
@@ -10,13 +11,22 @@ interface DialogProps {
   description?: ReactNode;
   children?: ReactNode;
   footer?: ReactNode;
+  placement?: "center" | "drawer";
 }
 
 /**
  * Native <dialog> gives focus trapping, Esc-to-close and focus return for free (docs/07 §12).
  * Clicking the backdrop also closes it.
  */
-export function Dialog({ open, onClose, title, description, children, footer }: DialogProps) {
+export function Dialog({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  footer,
+  placement = "center",
+}: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descId = useId();
@@ -28,9 +38,19 @@ export function Dialog({ open, onClose, title, description, children, footer }: 
     if (!open && el.open) el.close?.();
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
   return (
     <dialog
       ref={ref}
+      onKeyDown={trapDialogTab}
       aria-labelledby={titleId}
       aria-describedby={description ? descId : undefined}
       onCancel={(e) => {
@@ -40,7 +60,7 @@ export function Dialog({ open, onClose, title, description, children, footer }: 
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className="glass-strong w-[calc(100%-2rem)] max-w-md rounded-2xl p-0 text-text open:animate-scale-in"
+      className={`glass-strong overflow-y-auto p-0 text-text open:animate-scale-in ${placement === "drawer" ? "fixed inset-y-0 left-0 right-auto m-0 h-dvh max-h-none w-[min(20rem,calc(100%-2rem))] rounded-r-2xl" : "max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md rounded-2xl"}`}
     >
       {open && (
         <div className="p-6">
@@ -63,7 +83,11 @@ export function Dialog({ open, onClose, title, description, children, footer }: 
             </div>
           )}
           {children && <div className="mt-5">{children}</div>}
-          {footer && <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">{footer}</div>}
+          {footer && (
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              {footer}
+            </div>
+          )}
         </div>
       )}
     </dialog>

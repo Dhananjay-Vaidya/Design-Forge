@@ -1,4 +1,12 @@
-import { Calculator, RotateCcw, ShieldCheck, TrendingDown, TrendingUp, TriangleAlert, Trophy } from "lucide-react";
+import {
+  Calculator,
+  RotateCcw,
+  ShieldCheck,
+  TrendingDown,
+  TrendingUp,
+  TriangleAlert,
+  Trophy,
+} from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useId, useMemo, useState } from "react";
 
@@ -87,7 +95,9 @@ export function LiveDemo() {
               key={c.name}
               criterion={c}
               share={totalWeight ? c.weight / totalWeight : 0}
-              onChange={(weight) => setCriteria(criteria.map((x, j) => (j === i ? { ...x, weight } : x)))}
+              onChange={(weight) =>
+                setCriteria(criteria.map((x, j) => (j === i ? { ...x, weight } : x)))
+              }
             />
           ))}
         </div>
@@ -106,7 +116,9 @@ export function LiveDemo() {
         </div>
 
         {allZero ? (
-          <p className="mt-10 text-center text-sm text-muted">Give at least one criterion some weight.</p>
+          <p className="mt-10 text-center text-sm text-muted">
+            Give at least one criterion some weight.
+          </p>
         ) : (
           <>
             <LayoutGroup>
@@ -117,7 +129,9 @@ export function LiveDemo() {
                     key={row.name}
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     className={`rounded-xl border p-3.5 transition-colors ${
-                      i === 0 ? "border-primary/40 bg-primary-soft/60" : "border-border bg-surface/60"
+                      i === 0
+                        ? "border-primary/40 bg-primary-soft/60"
+                        : "border-border bg-surface/60"
                     }`}
                   >
                     <div className="flex items-center justify-between text-sm">
@@ -141,8 +155,8 @@ export function LiveDemo() {
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
                       <motion.div
-                        className={`h-full rounded-full ${i === 0 ? "bg-primary" : "bg-primary/40"}`}
-                        animate={{ width: `${row.total * 100}%` }}
+                        className={`h-full origin-left rounded-full ${i === 0 ? "bg-primary" : "bg-primary/40"}`}
+                        animate={{ scaleX: row.total }}
                         transition={{ type: "spring", stiffness: 200, damping: 30 }}
                       />
                     </div>
@@ -162,7 +176,10 @@ export function LiveDemo() {
               {stable ? (
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
               ) : (
-                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+                <TriangleAlert
+                  className="mt-0.5 h-4 w-4 shrink-0 text-warning"
+                  aria-hidden="true"
+                />
               )}
               <p>
                 <span className={`font-medium ${stable ? "text-success" : "text-warning"}`}>
@@ -170,8 +187,14 @@ export function LiveDemo() {
                 </span>
                 <span className="text-muted">
                   {" "}
-                  — ahead by <span className="font-mono tabular-nums text-text">{(margin * 100).toFixed(1)}</span> pts.{" "}
-                  {stable ? "Small changes wouldn't flip it." : "A small shift in weights could flip the winner."}
+                  — ahead by{" "}
+                  <span className="font-mono tabular-nums text-text">
+                    {(margin * 100).toFixed(1)}
+                  </span>{" "}
+                  pts.{" "}
+                  {stable
+                    ? "Small changes wouldn't flip it."
+                    : "A small shift in weights could flip the winner."}
                 </span>
               </p>
             </motion.div>

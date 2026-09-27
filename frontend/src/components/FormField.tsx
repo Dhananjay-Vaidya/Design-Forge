@@ -23,7 +23,11 @@ function describedBy(id: string, error?: string, hint?: string) {
 function FieldMessages({ id, error, hint }: { id: string; error?: string; hint?: string }) {
   if (error) {
     return (
-      <p id={`${id}-error`} role="alert" className="text-[13px] font-medium text-danger">
+      <p
+        id={`${id}-error`}
+        role="alert"
+        className="animate-fade-in text-[13px] font-medium text-danger"
+      >
         {error}
       </p>
     );
@@ -38,9 +42,20 @@ function FieldMessages({ id, error, hint }: { id: string; error?: string; hint?:
   return null;
 }
 
-function FieldLabel({ htmlFor, label, optional }: { htmlFor: string; label: string; optional?: boolean }) {
+function FieldLabel({
+  htmlFor,
+  label,
+  optional,
+}: {
+  htmlFor: string;
+  label: string;
+  optional?: boolean;
+}) {
   return (
-    <label htmlFor={htmlFor} className="flex items-baseline justify-between text-sm font-medium text-text">
+    <label
+      htmlFor={htmlFor}
+      className="flex items-baseline justify-between text-sm font-medium text-text"
+    >
       {label}
       {optional && <span className="text-xs font-normal text-muted">Optional</span>}
     </label>

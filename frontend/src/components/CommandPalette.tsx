@@ -1,4 +1,13 @@
-import { CornerDownLeft, FileText, LayoutDashboard, type LucideIcon, Moon, Plus, Search, Sun } from "lucide-react";
+import {
+  CornerDownLeft,
+  FileText,
+  LayoutDashboard,
+  type LucideIcon,
+  Moon,
+  Plus,
+  Search,
+  Sun,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { useDecisions } from "@/features/decisions/hooks";
 import { statusMeta } from "@/features/decisions/status";
 import { useThemeStore } from "@/stores/themeStore";
+import { trapDialogTab } from "@/lib/dialogKeyboard";
 
 interface Command {
   id: string;
@@ -30,6 +40,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const restoreFocus = useRef<HTMLElement | null>(null);
   const listId = useId();
 
@@ -39,8 +50,20 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       navigate(to);
     };
     const actions: Command[] = [
-      { id: "new", label: "New decision", icon: Plus, group: "Actions", run: go("/app/decisions/new") },
-      { id: "dash", label: "Go to dashboard", icon: LayoutDashboard, group: "Actions", run: go("/app") },
+      {
+        id: "new",
+        label: "New decision",
+        icon: Plus,
+        group: "Actions",
+        run: go("/app/decisions/new"),
+      },
+      {
+        id: "dash",
+        label: "Go to dashboard",
+        icon: LayoutDashboard,
+        group: "Actions",
+        run: go("/app"),
+      },
       {
         id: "theme",
         label: theme === "dark" ? "Switch to light mode" : "Switch to dark mode",
@@ -64,22 +87,26 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   }, [data, navigate, onClose, theme, toggleTheme]);
 
   const q = query.trim().toLowerCase();
-  const results = q ? commands.filter((c) => c.label.toLowerCase().includes(q)) : commands.slice(0, 9);
+  const results = q
+    ? commands.filter((c) => c.label.toLowerCase().includes(q))
+    : commands.slice(0, 9);
 
   useEffect(() => {
     if (open) {
       restoreFocus.current = document.activeElement as HTMLElement | null;
+      if (dialogRef.current && !dialogRef.current.open) dialogRef.current.showModal();
       setQuery("");
       setActive(0);
       requestAnimationFrame(() => inputRef.current?.focus());
     } else {
+      dialogRef.current?.close();
       restoreFocus.current?.focus?.();
     }
   }, [open]);
 
   useEffect(() => setActive(0), [query]);
 
-  const onKeyDown = (e: KeyboardEvent) => {
+  const onKeyDown = (e: KeyboardEvent<HTMLDialogElement>) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActive((i) => Math.min(i + 1, results.length - 1));
@@ -89,9 +116,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     } else if (e.key === "Enter") {
       e.preventDefault();
       results[active]?.run();
-    } else if (e.key === "Escape" || e.key === "Tab") {
+    } else if (e.key === "Escape") {
       e.preventDefault();
       onClose();
+    } else if (e.key === "Tab") {
+      trapDialogTab(e);
     }
   };
 
@@ -108,11 +137,16 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           transition={{ duration: 0.15 }}
           onMouseDown={(e) => e.target === e.currentTarget && onClose()}
         >
-          <motion.div
+          <motion.dialog
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Command palette"
-            className="glass-strong w-full max-w-xl overflow-hidden rounded-2xl"
+            className="glass-strong fixed inset-x-4 top-[12vh] m-auto w-[calc(100%-2rem)] max-w-xl overflow-hidden rounded-2xl p-0 text-text"
+            onCancel={(event) => {
+              event.preventDefault();
+              onClose();
+            }}
             initial={{ opacity: 0, scale: 0.96, y: -8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: -4 }}
@@ -130,20 +164,37 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 aria-label="Search decisions and commands"
                 aria-expanded="true"
                 aria-controls={listId}
-                aria-activedescendant={results[active] ? `${listId}-${results[active].id}` : undefined}
+                aria-activedescendant={
+                  results[active] ? `${listId}-${results[active].id}` : undefined
+                }
                 className="h-14 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted/80"
               />
-              <kbd className="rounded-md border border-border-strong px-1.5 py-0.5 font-mono text-[11px] text-muted">Esc</kbd>
+              <kbd className="rounded-md border border-border-strong px-1.5 py-0.5 font-mono text-[11px] text-muted">
+                Esc
+              </kbd>
             </div>
-            <ul id={listId} role="listbox" aria-label="Results" className="max-h-[50vh] overflow-y-auto p-2">
-              {results.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted">No matches for “{query}”.</li>}
+            <ul
+              id={listId}
+              role="listbox"
+              aria-label="Results"
+              className="max-h-[50vh] overflow-y-auto p-2"
+            >
+              {results.length === 0 && (
+                <li className="px-3 py-8 text-center text-sm text-muted">
+                  No matches for “{query}”.
+                </li>
+              )}
               {results.map((cmd, i) => {
                 const header = cmd.group !== lastGroup ? cmd.group : null;
                 lastGroup = cmd.group;
                 const selected = i === active;
                 return (
                   <li key={cmd.id} role="presentation">
-                    {header && <p className="px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wider text-muted">{header}</p>}
+                    {header && (
+                      <p className="px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wider text-muted">
+                        {header}
+                      </p>
+                    )}
                     <div
                       id={`${listId}-${cmd.id}`}
                       role="option"
@@ -161,10 +212,18 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                           transition={{ type: "spring", stiffness: 500, damping: 38 }}
                         />
                       )}
-                      <cmd.icon className={`relative h-4 w-4 shrink-0 ${selected ? "text-primary" : ""}`} aria-hidden="true" />
+                      <cmd.icon
+                        className={`relative h-4 w-4 shrink-0 ${selected ? "text-primary" : ""}`}
+                        aria-hidden="true"
+                      />
                       <span className="relative flex-1 truncate">{cmd.label}</span>
                       {cmd.hint && <span className="relative text-xs text-muted">{cmd.hint}</span>}
-                      {selected && <CornerDownLeft className="relative h-3.5 w-3.5 text-muted" aria-hidden="true" />}
+                      {selected && (
+                        <CornerDownLeft
+                          className="relative h-3.5 w-3.5 text-muted"
+                          aria-hidden="true"
+                        />
+                      )}
                     </div>
                   </li>
                 );
@@ -181,7 +240,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 <kbd className="font-mono">Esc</kbd> close
               </span>
             </div>
-          </motion.div>
+          </motion.dialog>
         </motion.div>
       )}
     </AnimatePresence>

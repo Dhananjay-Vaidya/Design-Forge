@@ -52,12 +52,18 @@ export async function listAlternatives(decisionId: string): Promise<Alternative[
   return data.results;
 }
 
-export async function createAlternative(decisionId: string, body: AlternativeInput): Promise<Alternative> {
+export async function createAlternative(
+  decisionId: string,
+  body: AlternativeInput,
+): Promise<Alternative> {
   const { data } = await apiClient.post<Alternative>(`/decisions/${decisionId}/alternatives`, body);
   return data;
 }
 
-export async function updateAlternative(id: string, body: Partial<AlternativeInput>): Promise<Alternative> {
+export async function updateAlternative(
+  id: string,
+  body: Partial<AlternativeInput>,
+): Promise<Alternative> {
   const { data } = await apiClient.patch<Alternative>(`/alternatives/${id}`, body);
   return data;
 }
@@ -73,12 +79,18 @@ export async function listCriteria(decisionId: string): Promise<Criterion[]> {
   return data.results;
 }
 
-export async function createCriterion(decisionId: string, body: CriterionInput): Promise<Criterion> {
+export async function createCriterion(
+  decisionId: string,
+  body: CriterionInput,
+): Promise<Criterion> {
   const { data } = await apiClient.post<Criterion>(`/decisions/${decisionId}/criteria`, body);
   return data;
 }
 
-export async function updateCriterion(id: string, body: Partial<CriterionInput>): Promise<Criterion> {
+export async function updateCriterion(
+  id: string,
+  body: Partial<CriterionInput>,
+): Promise<Criterion> {
   const { data } = await apiClient.patch<Criterion>(`/criteria/${id}`, body);
   return data;
 }
@@ -92,8 +104,13 @@ export async function getScores(decisionId: string): Promise<ScoreCell[]> {
   return data;
 }
 
-export async function putScores(decisionId: string, scores: ScoreCellInput[]): Promise<ScoreUpsertResponse> {
-  const { data } = await apiClient.put<ScoreUpsertResponse>(`/decisions/${decisionId}/scores`, { scores });
+export async function putScores(
+  decisionId: string,
+  scores: ScoreCellInput[],
+): Promise<ScoreUpsertResponse> {
+  const { data } = await apiClient.put<ScoreUpsertResponse>(`/decisions/${decisionId}/scores`, {
+    scores,
+  });
   return data;
 }
 

@@ -52,7 +52,10 @@ export function LoginForm() {
       noValidate
     >
       {formError && (
-        <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-danger/25 bg-danger/5 px-3.5 py-3 text-sm text-danger">
+        <div
+          role="alert"
+          className="flex items-start gap-2.5 rounded-lg border border-danger/25 bg-danger/5 px-3.5 py-3 text-sm text-danger"
+        >
           <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           {formError}
         </div>

@@ -22,6 +22,13 @@ export default {
         warning: token("warning"),
         danger: token("danger"),
         ai: token("ai"),
+        info: token("info"),
+        scenario: token("scenario"),
+        gold: token("gold"),
+        silver: token("silver"),
+        bronze: token("bronze"),
+        elevated: token("elevated"),
+        floating: token("floating"),
       },
       fontFamily: {
         sans: ['"Geist Variable"', "ui-sans-serif", "system-ui", "sans-serif"],
@@ -31,8 +38,8 @@ export default {
         11: "2.75rem",
       },
       transitionDuration: {
-        fast: "140ms",
-        base: "220ms",
+        fast: "var(--dur-fast)",
+        base: "var(--dur-base)",
       },
       transitionTimingFunction: {
         out: "cubic-bezier(0.16, 1, 0.3, 1)",

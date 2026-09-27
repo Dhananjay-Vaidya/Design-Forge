@@ -2,7 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 import { ApiError } from "@/api/client";
-import type { AlternativeInput, CriterionInput, DecisionInput, DecisionStatus } from "@/types/decision";
+import type {
+  AlternativeInput,
+  CriterionInput,
+  DecisionInput,
+  DecisionStatus,
+} from "@/types/decision";
 
 import * as api from "./api";
 
@@ -18,7 +23,8 @@ export const decisionKeys = {
 
 /** Validation/not-found errors are deterministic — retrying them only delays the message. */
 const retryTransientOnly = (failureCount: number, error: unknown) =>
-  !(error instanceof ApiError && error.status !== undefined && error.status < 500) && failureCount < 1;
+  !(error instanceof ApiError && error.status !== undefined && error.status < 500) &&
+  failureCount < 1;
 
 export function useDecisions() {
   return useQuery({ queryKey: decisionKeys.list(), queryFn: api.listDecisions });
@@ -33,7 +39,10 @@ export function useDecision(id: string) {
 }
 
 export function useAlternatives(id: string) {
-  return useQuery({ queryKey: decisionKeys.alternatives(id), queryFn: () => api.listAlternatives(id) });
+  return useQuery({
+    queryKey: decisionKeys.alternatives(id),
+    queryFn: () => api.listAlternatives(id),
+  });
 }
 
 export function useCriteria(id: string) {
@@ -69,7 +78,8 @@ function useInvalidateDecision(id: string) {
 export function useUpdateDecision(id: string) {
   const invalidate = useInvalidateDecision(id);
   return useMutation({
-    mutationFn: (body: Partial<DecisionInput> & { status?: DecisionStatus }) => api.updateDecision(id, body),
+    mutationFn: (body: Partial<DecisionInput> & { status?: DecisionStatus }) =>
+      api.updateDecision(id, body),
     onSuccess: invalidate,
   });
 }
@@ -119,7 +129,10 @@ export function useReorderAlternatives(id: string) {
 
 export function useDeleteAlternative(id: string) {
   const invalidate = useInvalidateDecision(id);
-  return useMutation({ mutationFn: (altId: string) => api.deleteAlternative(altId), onSuccess: invalidate });
+  return useMutation({
+    mutationFn: (altId: string) => api.deleteAlternative(altId),
+    onSuccess: invalidate,
+  });
 }
 
 export function useCreateCriterion(id: string) {
@@ -141,7 +154,10 @@ export function useUpdateCriterion(id: string) {
 
 export function useDeleteCriterion(id: string) {
   const invalidate = useInvalidateDecision(id);
-  return useMutation({ mutationFn: (critId: string) => api.deleteCriterion(critId), onSuccess: invalidate });
+  return useMutation({
+    mutationFn: (critId: string) => api.deleteCriterion(critId),
+    onSuccess: invalidate,
+  });
 }
 
 export function useSaveScores(id: string) {
@@ -194,5 +210,12 @@ export function useReadiness(id: string): Readiness {
       isScored,
       isReady: hasAlternatives && hasCriteria && isScored,
     };
-  }, [alternatives.data, alternatives.isLoading, criteria.data, criteria.isLoading, scores.data, scores.isLoading]);
+  }, [
+    alternatives.data,
+    alternatives.isLoading,
+    criteria.data,
+    criteria.isLoading,
+    scores.data,
+    scores.isLoading,
+  ]);
 }

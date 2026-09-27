@@ -43,7 +43,10 @@ export function AssistantText({ text }: { text: string }) {
             <ul key={gi} className="space-y-1.5">
               {g.lines.map((l, li) => (
                 <li key={li} className="flex gap-2">
-                  <span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-ai" aria-hidden="true" />
+                  <span
+                    className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-ai"
+                    aria-hidden="true"
+                  />
                   <span>{inline(l.replace(BULLET, ""))}</span>
                 </li>
               ))}

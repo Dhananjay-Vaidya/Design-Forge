@@ -25,12 +25,32 @@
   --color-danger: 196 30 30;
   --color-ai: 124 58 237;
 
-  --glass-alpha: 0.66;
+  --glass-alpha: 0.96;
   --glass-edge: 255 255 255;
   --glass-highlight: 0.7;
   --aurora-1: 45 212 191;
   --aurora-2: 139 92 246;
-  --aurora-opacity: 0.22;
+  --aurora-opacity: 0.08;
+
+  --color-elevated: var(--color-surface);
+  --color-floating: var(--color-surface);
+  --color-secondary: var(--color-muted);
+  --color-focus: var(--color-primary);
+  --color-info: 37 99 180;
+  --color-scenario: 109 71 173;
+  --color-gold: 138 94 19;
+  --color-silver: 88 105 126;
+  --color-bronze: 150 82 44;
+  --radius-control: 0.5rem;
+  --radius-panel: 1rem;
+  --space-unit: 0.25rem;
+  --blur-chrome: 8px;
+  --shadow-panel: 0 2px 4px rgb(15 23 42 / 0.025), 0 16px 40px -28px rgb(15 23 42 / 0.22);
+  --shadow-floating: 0 20px 64px -24px rgb(15 23 42 / 0.28);
+  --z-chrome: 30;
+  --z-overlay: 40;
+  --z-dialog: 50;
+  --dur-page: 320ms;
 
   --dur-fast: 140ms;
   --dur-base: 220ms;
@@ -39,9 +59,9 @@
 
 .dark {
   color-scheme: dark;
-  --color-bg: 10 13 18;
-  --color-surface: 17 21 28;
-  --color-surface-2: 25 30 39;
+  --color-bg: 12 18 29;
+  --color-surface: 19 27 40;
+  --color-surface-2: 27 37 52;
   --color-text: 231 235 240;
   --color-muted: 150 161 176;
   --color-border: 37 44 55;
@@ -55,10 +75,15 @@
   --color-danger: 248 113 113;
   --color-ai: 167 139 250;
 
-  --glass-alpha: 0.58;
+  --glass-alpha: 0.96;
   --glass-edge: 148 163 184;
   --glass-highlight: 0.06;
-  --aurora-opacity: 0.16;
+  --aurora-opacity: 0.07;
+  --color-info: 137 183 246;
+  --color-scenario: 192 165 245;
+  --color-gold: 228 195 117;
+  --color-silver: 178 193 214;
+  --color-bronze: 218 165 129;
 }
 
 @layer base {
@@ -71,6 +96,32 @@
   body {
     @apply bg-bg font-sans text-text;
     font-feature-settings: "ss01", "cv11";
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    overflow-wrap: anywhere;
+  }
+  main,
+  section,
+  article,
+  fieldset {
+    min-width: 0;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+  section[id] {
+    scroll-margin-top: 6rem;
   }
 
   ::selection {
@@ -95,6 +146,7 @@
 @layer components {
   .card {
     @apply rounded-xl border border-border bg-surface;
+    box-shadow: var(--shadow-panel);
   }
 
   .eyebrow {
@@ -131,17 +183,17 @@
    */
   .glass {
     background: rgb(var(--color-surface) / var(--glass-alpha));
-    border: 1px solid rgb(var(--glass-edge) / 0.55);
+    border: 1px solid rgb(var(--color-border));
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / var(--glass-highlight)),
       0 1px 2px rgb(15 23 32 / 0.04),
       0 12px 40px -16px rgb(15 23 32 / 0.18);
-    -webkit-backdrop-filter: blur(18px) saturate(160%);
-    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--blur-chrome));
+    backdrop-filter: blur(var(--blur-chrome));
   }
   .glass-strong {
     @apply glass;
-    --glass-alpha: 0.86;
+    --glass-alpha: 0.98;
   }
 
   /* Cursor-following highlight; --mx/--my are set by <SpotlightCard>. */
@@ -201,7 +253,7 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    animation: gradient-pan 8s linear infinite;
+    /* Static accent: headings remain calm while users read. */
   }
 
   .marquee {
@@ -242,27 +294,84 @@
 }
 
 @keyframes aurora-a {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(8%, 6%, 0) scale(1.15); }
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(8%, 6%, 0) scale(1.15);
+  }
 }
 @keyframes aurora-b {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1.1); }
-  50% { transform: translate3d(-10%, 4%, 0) scale(0.95); }
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(-10%, 4%, 0) scale(0.95);
+  }
 }
 @keyframes float-y {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .aurora-blob {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(80px);
-  will-change: transform;
+  background: radial-gradient(ellipse, rgb(var(--aurora-1) / 0.35), transparent 70%) !important;
 }
-.aurora-a { animation: aurora-a 22s ease-in-out infinite; }
-.aurora-b { animation: aurora-b 28s ease-in-out infinite; }
-.float-y { animation: float-y 6s ease-in-out infinite; }
+.aurora-a,
+.aurora-b {
+  animation: none;
+}
+.float-y {
+  animation: float-y 6s ease-in-out 1;
+}
+
+.lab-path {
+  stroke-dasharray: 6 10;
+  animation: path-flow 3s linear 2;
+}
+@keyframes path-flow {
+  to {
+    stroke-dashoffset: -64;
+  }
+}
+.winner-panel {
+  border-color: rgb(var(--color-gold) / 0.45);
+  box-shadow:
+    var(--shadow-panel),
+    inset 0 3px rgb(var(--color-gold) / 0.5);
+}
+[data-matrix] tbody tr:focus-within {
+  background: rgb(var(--color-primary) / 0.06);
+}
+[data-matrix] td:focus-within {
+  box-shadow: inset 0 -2px rgb(var(--color-primary));
+}
+html[data-effects-paused] *,
+html[data-effects-paused] *::after {
+  animation-play-state: paused !important;
+}
+@media (hover: none), (max-width: 767px) {
+  button,
+  a[aria-label] {
+    min-height: 44px;
+  }
+  .glass {
+    backdrop-filter: none;
+  }
+  .float-y,
+  .marquee-track {
+    animation: none;
+  }
+}
 
 dialog::backdrop {
   background: rgb(5 8 12 / 0.55);
@@ -270,10 +379,16 @@ dialog::backdrop {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .spotlight::before,
+  .spotlight::after {
+    display: none;
   }
 }

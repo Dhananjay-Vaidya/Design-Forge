@@ -26,7 +26,17 @@ const FAQ = [
   },
 ];
 
-function Item({ q, a, open, onToggle }: { q: string; a: string; open: boolean; onToggle: () => void }) {
+function Item({
+  q,
+  a,
+  open,
+  onToggle,
+}: {
+  q: string;
+  a: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const id = useId();
   return (
     <li className="border-b border-border last:border-0">
@@ -39,7 +49,11 @@ function Item({ q, a, open, onToggle }: { q: string; a: string; open: boolean; o
           className="flex w-full cursor-pointer items-center justify-between gap-6 py-5 text-left font-medium transition-colors hover:text-primary"
         >
           {q}
-          <motion.span animate={{ rotate: open ? 45 : 0 }} transition={{ duration: 0.2 }} className="shrink-0 text-muted">
+          <motion.span
+            animate={{ rotate: open ? 45 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="shrink-0 text-muted"
+          >
             <Plus className="h-4 w-4" aria-hidden="true" />
           </motion.span>
         </button>
@@ -68,7 +82,12 @@ export function Faq() {
   return (
     <ul className="glass rounded-2xl px-6">
       {FAQ.map((item, i) => (
-        <Item key={item.q} {...item} open={open === i} onToggle={() => setOpen(open === i ? null : i)} />
+        <Item
+          key={item.q}
+          {...item}
+          open={open === i}
+          onToggle={() => setOpen(open === i ? null : i)}
+        />
       ))}
     </ul>
   );

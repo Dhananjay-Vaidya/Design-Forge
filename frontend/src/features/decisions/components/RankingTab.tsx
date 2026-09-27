@@ -11,7 +11,17 @@ import {
   Trophy,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
-import { Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useReducedMotion } from "motion/react";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  LabelList,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { ApiError } from "@/api/client";
 import { Button } from "@/components/Button";
@@ -39,7 +49,9 @@ function NotReady({ fields }: { fields: Record<string, string[]> }) {
         </span>
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold tracking-tight">Not ready to rank yet</h2>
-          <p className="mt-1 text-sm text-muted">Finish these and the ranking will calculate instantly.</p>
+          <p className="mt-1 text-sm text-muted">
+            Finish these and the ranking will calculate instantly.
+          </p>
           <ul className="mt-5 flex flex-col gap-3">
             {Object.entries(fields).map(([field, messages]) => {
               const link = FIELD_LINKS[field];
@@ -52,7 +64,10 @@ function NotReady({ fields }: { fields: Record<string, string[]> }) {
                       {link?.label ?? field}
                     </span>
                     {link && (
-                      <Link to={link.to} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                      <Link
+                        to={link.to}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                      >
                         Fix
                         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                       </Link>
@@ -62,7 +77,9 @@ function NotReady({ fields }: { fields: Record<string, string[]> }) {
                     {shown.map((m) => (
                       <li key={m}>{m}</li>
                     ))}
-                    {messages.length > shown.length && <li>…and {messages.length - shown.length} more.</li>}
+                    {messages.length > shown.length && (
+                      <li>…and {messages.length - shown.length} more.</li>
+                    )}
                   </ul>
                 </li>
               );
@@ -75,16 +92,28 @@ function NotReady({ fields }: { fields: Record<string, string[]> }) {
 }
 
 function RankingChart({ ranking }: { ranking: Ranking["ranking"] }) {
+  const reduced = useReducedMotion();
   const primary = useTokenColor("primary");
   const muted = useTokenColor("muted");
   const surface2 = useTokenColor("surface-2");
   const data = ranking.map((r) => ({ name: r.name, points: Number(toPoints(r.total)) }));
-  const summary = ranking.map((r) => `${r.rank}. ${r.name}: ${toPoints(r.total)} points`).join("; ");
+  const summary = ranking
+    .map((r) => `${r.rank}. ${r.name}: ${toPoints(r.total)} points`)
+    .join("; ");
 
   return (
-    <div role="img" aria-label={`Ranking chart. ${summary}`} style={{ height: Math.max(160, data.length * 52 + 24) }}>
+    <div
+      role="img"
+      aria-label={`Ranking chart. ${summary}`}
+      style={{ height: Math.max(160, data.length * 52 + 24) }}
+    >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 48, bottom: 4, left: 4 }} barCategoryGap={10}>
+        <BarChart
+          data={data}
+          layout="vertical"
+          margin={{ top: 4, right: 48, bottom: 4, left: 4 }}
+          barCategoryGap={10}
+        >
           <XAxis type="number" domain={[0, 100]} hide />
           <YAxis
             type="category"
@@ -101,12 +130,19 @@ function RankingChart({ ranking }: { ranking: Ranking["ranking"] }) {
               active && payload?.length ? (
                 <div className="rounded-lg border border-border bg-surface px-3 py-2 text-sm shadow-lift">
                   <p className="font-medium">{payload[0].payload.name}</p>
-                  <p className="font-mono tabular-nums text-muted">{Number(payload[0].value).toFixed(1)} / 100</p>
+                  <p className="font-mono tabular-nums text-muted">
+                    {Number(payload[0].value).toFixed(1)} / 100
+                  </p>
                 </div>
               ) : null
             }
           />
-          <Bar dataKey="points" radius={[0, 6, 6, 0]} animationDuration={600} isAnimationActive={!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches}>
+          <Bar
+            dataKey="points"
+            radius={[0, 6, 6, 0]}
+            animationDuration={320}
+            isAnimationActive={!reduced}
+          >
             {data.map((entry, i) => (
               <Cell key={entry.name} fill={primary} fillOpacity={i === 0 ? 1 : 0.4} />
             ))}
@@ -115,7 +151,12 @@ function RankingChart({ ranking }: { ranking: Ranking["ranking"] }) {
               position="right"
               formatter={(v: number) => v.toFixed(1)}
               fillOpacity={1}
-              style={{ fill: muted, fillOpacity: 1, fontSize: 12, fontFamily: "Geist Mono Variable, monospace" }}
+              style={{
+                fill: muted,
+                fillOpacity: 1,
+                fontSize: 12,
+                fontFamily: "Geist Mono Variable, monospace",
+              }}
             />
           </Bar>
         </BarChart>
@@ -129,18 +170,28 @@ function BreakdownTable({ ranking, criteria }: { ranking: Ranking; criteria: Cri
   const byId = new Map(criteria.map((c) => [c.id, c]));
 
   return (
-    <div className="card overflow-x-auto">
+    <div
+      className="card overflow-x-auto"
+      role="region"
+      aria-label="Criterion contribution table; scroll for all criteria"
+      tabIndex={0}
+    >
       <table className="w-full border-collapse text-sm">
         <caption className="px-5 pt-4 text-left">
           <span className="block font-semibold">Score breakdown</span>
           <span className="block text-xs font-normal text-muted">
-            Points each criterion contributed to the total (out of 100). Weights shown under each criterion.
+            Points each criterion contributed to the total (out of 100). Weights shown under each
+            criterion.
           </span>
         </caption>
         <thead>
           <tr className="border-b border-border text-muted">
-            <th scope="col" className="w-12 px-5 py-3 text-left font-medium">#</th>
-            <th scope="col" className="px-3 py-3 text-left font-medium">Option</th>
+            <th scope="col" className="w-12 px-5 py-3 text-left font-medium">
+              #
+            </th>
+            <th scope="col" className="px-3 py-3 text-left font-medium">
+              Option
+            </th>
             {order.map((id) => (
               <th key={id} scope="col" className="px-3 py-3 text-right font-medium">
                 <span className="block text-text">{byId.get(id)?.name ?? "Criterion"}</span>
@@ -149,17 +200,24 @@ function BreakdownTable({ ranking, criteria }: { ranking: Ranking; criteria: Cri
                 </span>
               </th>
             ))}
-            <th scope="col" className="px-5 py-3 text-right font-medium text-text">Total</th>
+            <th scope="col" className="px-5 py-3 text-right font-medium text-text">
+              Total
+            </th>
           </tr>
         </thead>
         <tbody>
           {ranking.ranking.map((r) => (
-            <tr key={r.alternative_id} className={`border-b border-border last:border-0 ${r.rank === 1 ? "bg-primary-soft/50" : ""}`}>
+            <tr
+              key={r.alternative_id}
+              className={`border-b border-border last:border-0 ${r.rank === 1 ? "bg-primary-soft/50" : ""}`}
+            >
               <td className="px-5 py-3 font-mono tabular-nums text-muted">{r.rank}</td>
               <th scope="row" className="px-3 py-3 text-left font-medium">
                 <span className="inline-flex items-center gap-1.5">
                   {r.name}
-                  {r.rank === 1 && <Trophy className="h-3.5 w-3.5 text-primary" aria-label="Leader" />}
+                  {r.rank === 1 && (
+                    <Trophy className="h-3.5 w-3.5 text-primary" aria-label="Leader" />
+                  )}
                 </span>
               </th>
               {order.map((id) => (
@@ -167,7 +225,9 @@ function BreakdownTable({ ranking, criteria }: { ranking: Ranking; criteria: Cri
                   {toPoints(r.breakdown[id] ?? 0)}
                 </td>
               ))}
-              <td className="px-5 py-3 text-right font-mono font-semibold tabular-nums">{toPoints(r.total)}</td>
+              <td className="px-5 py-3 text-right font-mono font-semibold tabular-nums">
+                {toPoints(r.total)}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -194,9 +254,17 @@ export function RankingTab() {
   if (error instanceof ApiError && error.status === 400 && error.fields) {
     return <NotReady fields={error.fields} />;
   }
-  if (error || !ranking) return <ErrorState title="Couldn't calculate the ranking" error={error} onRetry={() => refetch()} />;
+  if (error || !ranking)
+    return (
+      <ErrorState title="Couldn't calculate the ranking" error={error} onRetry={() => refetch()} />
+    );
 
   const [leader, runnerUp] = ranking.ranking;
+  if (!leader) return <ErrorState title="No ranked options returned" onRetry={() => refetch()} />;
+  const tiedLeaders = ranking.ranking.filter(
+    (entry) => Number(entry.total) === Number(leader.total),
+  );
+  const tied = tiedLeaders.length > 1;
   const margin = runnerUp ? toPoints(Number(leader.total) - Number(runnerUp.total)) : null;
   const stable = ranking.sensitivity.leader_stable;
 
@@ -210,22 +278,31 @@ export function RankingTab() {
         <div className="flex items-center gap-3 text-xs text-muted">
           <span>Computed {timeAgo(ranking.computed_at)}</span>
           <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} aria-hidden="true" />
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`}
+              aria-hidden="true"
+            />
             Recalculate
           </Button>
         </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-        <section aria-labelledby="leader-heading" className="glass relative overflow-hidden rounded-2xl p-6">
-          <div className="grid-texture absolute inset-0 opacity-50 [mask-image:linear-gradient(to_bottom_left,black,transparent_60%)]" aria-hidden="true" />
+        <section
+          aria-labelledby="leader-heading"
+          className="glass winner-panel relative overflow-hidden rounded-2xl p-6"
+        >
+          <div
+            className="grid-texture absolute inset-0 opacity-50 [mask-image:linear-gradient(to_bottom_left,black,transparent_60%)]"
+            aria-hidden="true"
+          />
           <div className="relative">
             <p className="eyebrow flex items-center gap-1.5">
               <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-              Leading option
+              {tied ? "Joint leading options" : "Leading option"}
             </p>
             <h2 id="leader-heading" className="mt-3 text-2xl font-semibold tracking-tight">
-              {leader.name}
+              {tied ? tiedLeaders.map((entry) => entry.name).join(" / ") : leader.name}
             </h2>
             <p className="mt-4 flex items-baseline gap-1.5">
               <CountUp
@@ -235,7 +312,7 @@ export function RankingTab() {
               />
               <span className="text-sm text-muted">/ 100</span>
             </p>
-            {margin !== null && (
+            {margin !== null && !tied && (
               <p className="mt-1 text-sm text-muted">
                 Ahead of <span className="text-text">{runnerUp.name}</span> by{" "}
                 <span className="font-mono tabular-nums text-text">{margin}</span> pts
@@ -249,7 +326,10 @@ export function RankingTab() {
               {stable ? (
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
               ) : (
-                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+                <TriangleAlert
+                  className="mt-0.5 h-4 w-4 shrink-0 text-warning"
+                  aria-hidden="true"
+                />
               )}
               <div className="text-sm">
                 <p className={`font-medium ${stable ? "text-success" : "text-warning"}`}>
@@ -275,6 +355,11 @@ export function RankingTab() {
       </div>
 
       <BreakdownTable ranking={ranking} criteria={criteria} />
+      <p className="max-w-2xl text-xs leading-relaxed text-muted">
+        Scores reflect your entered evidence, not a probability of success. Each criterion is
+        normalised, adjusted for benefit or cost, and multiplied by its relative weight. Sensitivity
+        is a close-margin indicator, not a statistical confidence interval.
+      </p>
     </div>
   );
 }

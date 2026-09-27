@@ -10,7 +10,9 @@ export function useTokenColor(name: string, alpha = 1): string {
   const theme = useThemeStore((s) => s.theme);
   return useMemo(() => {
     void theme;
-    const channels = getComputedStyle(document.documentElement).getPropertyValue(`--color-${name}`).trim();
+    const channels = getComputedStyle(document.documentElement)
+      .getPropertyValue(`--color-${name}`)
+      .trim();
     return channels ? `rgb(${channels} / ${alpha})` : "currentColor";
   }, [name, alpha, theme]);
 }

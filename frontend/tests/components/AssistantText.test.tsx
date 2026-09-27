@@ -20,7 +20,9 @@ describe("AssistantText", () => {
   });
 
   it("never interprets model output as HTML", () => {
-    const { container } = render(<AssistantText text={'<img src=x onerror="alert(1)"> <b>hi</b>'} />);
+    const { container } = render(
+      <AssistantText text={'<img src=x onerror="alert(1)"> <b>hi</b>'} />,
+    );
     expect(container.querySelector("img")).toBeNull();
     expect(container.querySelector("b")).toBeNull();
     expect(container.textContent).toContain("<img src=x");

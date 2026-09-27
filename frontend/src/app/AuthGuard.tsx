@@ -11,7 +11,11 @@ export function AuthGuard({ children }: PropsWithChildren) {
 
   if (isBootstrapping) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-4" role="status" aria-live="polite">
+      <div
+        className="flex min-h-dvh flex-col items-center justify-center gap-4"
+        role="status"
+        aria-live="polite"
+      >
         <LogoMark className="h-10 w-10 animate-pulse" />
         <span className="sr-only">Loading…</span>
       </div>

@@ -10,7 +10,12 @@ interface DirectionToggleProps {
 }
 
 /** Plain-language wording for benefit/cost (docs/07 §5 criteria editor). */
-export function DirectionToggle({ value, onChange, label = "Direction", size = "md" }: DirectionToggleProps) {
+export function DirectionToggle({
+  value,
+  onChange,
+  label = "Direction",
+  size = "md",
+}: DirectionToggleProps) {
   const options: { value: Direction; text: string; icon: typeof TrendingUp }[] = [
     { value: "benefit", text: "Higher is better", icon: TrendingUp },
     { value: "cost", text: "Lower is better", icon: TrendingDown },
@@ -18,7 +23,11 @@ export function DirectionToggle({ value, onChange, label = "Direction", size = "
   const height = size === "sm" ? "h-8 text-xs" : "h-9 text-sm";
 
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-lg border border-border bg-surface-2 p-0.5">
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="inline-flex rounded-lg border border-border bg-surface-2 p-0.5"
+    >
       {options.map(({ value: v, text, icon: Icon }) => {
         const selected = value === v;
         return (
@@ -27,6 +36,30 @@ export function DirectionToggle({ value, onChange, label = "Direction", size = "
             type="button"
             role="radio"
             aria-checked={selected}
+            tabIndex={selected ? 0 : -1}
+            onKeyDown={(event) => {
+              if (
+                !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(
+                  event.key,
+                )
+              )
+                return;
+              event.preventDefault();
+              const next =
+                event.key === "Home"
+                  ? "benefit"
+                  : event.key === "End"
+                    ? "cost"
+                    : value === "benefit"
+                      ? "cost"
+                      : "benefit";
+              onChange(next);
+              const radios =
+                event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                  "[role=radio]",
+                );
+              radios?.[next === "benefit" ? 0 : 1]?.focus();
+            }}
             onClick={() => onChange(v)}
             className={`inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 font-medium transition-colors ${height} ${
               selected ? "bg-surface text-text shadow-soft" : "text-muted hover:text-text"
@@ -60,7 +93,7 @@ export function WeightStepper({ value, onChange, onCommit, label, invalid }: Wei
   };
 
   return (
-    <div className="inline-flex h-9 items-center rounded-lg border border-border-strong bg-surface">
+    <div className="inline-flex h-11 items-center rounded-lg border border-border-strong bg-surface">
       <button
         type="button"
         onClick={() => step(-1)}
@@ -97,7 +130,13 @@ export function WeightStepper({ value, onChange, onCommit, label, invalid }: Wei
   );
 }
 
-const SEGMENT_SHADES = ["bg-primary", "bg-primary/70", "bg-primary/50", "bg-primary/35", "bg-primary/25"];
+const SEGMENT_SHADES = [
+  "bg-primary",
+  "bg-primary/70",
+  "bg-primary/50",
+  "bg-primary/35",
+  "bg-primary/25",
+];
 
 interface WeightBarProps {
   items: { key: string; name: string; weight: number }[];
@@ -110,6 +149,10 @@ export function WeightBar({ items }: WeightBarProps) {
 
   return (
     <div>
+      <p className="mb-3 flex flex-wrap justify-between gap-2 text-xs text-muted">
+        <span>Relative weight distribution</span>
+        <span className="font-mono text-primary">Normalised to 100%</span>
+      </p>
       <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
         {items.map((item, i) => (
           <div
@@ -119,12 +162,20 @@ export function WeightBar({ items }: WeightBarProps) {
           />
         ))}
       </div>
-      <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted" aria-label="Normalised weights">
+      <ul
+        className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted"
+        aria-label="Normalised weights"
+      >
         {items.map((item, i) => (
           <li key={item.key} className="inline-flex items-center gap-1.5">
-            <span className={`h-2 w-2 rounded-full ${SEGMENT_SHADES[i % SEGMENT_SHADES.length]}`} aria-hidden="true" />
+            <span
+              className={`h-2 w-2 rounded-full ${SEGMENT_SHADES[i % SEGMENT_SHADES.length]}`}
+              aria-hidden="true"
+            />
             {item.name}
-            <span className="font-mono tabular-nums text-text">{Math.round((Math.max(item.weight, 0) / total) * 100)}%</span>
+            <span className="font-mono tabular-nums text-text">
+              {Math.round((Math.max(item.weight, 0) / total) * 100)}%
+            </span>
           </li>
         ))}
       </ul>

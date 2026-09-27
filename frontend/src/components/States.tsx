@@ -18,7 +18,13 @@ interface EmptyStateProps {
 }
 
 /** docs/07 §7 — every empty view explains itself and offers the next action. */
-export function EmptyState({ icon: Icon, title, description, action, className = "" }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+  className = "",
+}: EmptyStateProps) {
   return (
     <div
       className={`flex flex-col items-center rounded-xl border border-dashed border-border-strong bg-surface/60 px-6 py-12 text-center ${className}`}
@@ -42,13 +48,16 @@ interface ErrorStateProps {
 /** Page-level error with retry and a subtle correlation id (docs/07 §7). */
 export function ErrorState({ title = "Something went wrong", error, onRetry }: ErrorStateProps) {
   const message =
-    error instanceof ApiError
+    error instanceof ApiError && (error.status ?? 0) < 500
       ? error.message
       : "We couldn't reach the server. Check your connection and try again.";
   const requestId = error instanceof ApiError ? error.requestId : undefined;
 
   return (
-    <div role="alert" className="flex flex-col items-center rounded-xl border border-danger/25 bg-danger/5 px-6 py-10 text-center">
+    <div
+      role="alert"
+      className="flex flex-col items-center rounded-xl border border-danger/25 bg-danger/5 px-6 py-10 text-center"
+    >
       <CircleAlert className="mb-3 h-6 w-6 text-danger" aria-hidden="true" />
       <h3 className="text-base font-semibold">{title}</h3>
       <p className="mt-1 max-w-md text-sm text-muted">{message}</p>

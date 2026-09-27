@@ -1,5 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, CircleAlert, CircleCheck, Grid3x3, LoaderCircle, TrendingDown, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  CircleAlert,
+  CircleCheck,
+  Grid3x3,
+  LoaderCircle,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -50,7 +58,18 @@ interface CellProps {
   className?: string;
 }
 
-function ScoreInput({ row, col, value, criterion, alternative, isPending, onChange, onBlur, onKeyDown, className = "" }: CellProps) {
+function ScoreInput({
+  row,
+  col,
+  value,
+  criterion,
+  alternative,
+  isPending,
+  onChange,
+  onBlur,
+  onKeyDown,
+  className = "",
+}: CellProps) {
   const parsed = parseScore(value);
   const invalid = value.trim() !== "" && parsed === null;
   const missing = value.trim() === "";
@@ -71,7 +90,9 @@ function ScoreInput({ row, col, value, criterion, alternative, isPending, onChan
       onBlur={onBlur}
       onFocus={(e) => e.currentTarget.select()}
       onKeyDown={(e) => onKeyDown(e, row, col)}
-      style={tint ? { backgroundColor: `rgb(var(--color-primary) / ${tint.toFixed(3)})` } : undefined}
+      style={
+        tint ? { backgroundColor: `rgb(var(--color-primary) / ${tint.toFixed(3)})` } : undefined
+      }
       className={`h-11 w-16 rounded-lg border text-center font-mono text-[15px] tabular-nums transition-[border-color,box-shadow,background-color] duration-fast focus:outline-none focus:ring-4 ${
         invalid
           ? "border-danger text-danger focus:ring-danger/15"
@@ -123,12 +144,18 @@ export function ScoresTab() {
   const scoresQuery = useScores(decisionId);
 
   const alternatives = useMemo(() => alternativesQuery.data ?? [], [alternativesQuery.data]);
-  const criteria = useMemo(() => (criteriaQuery.data ?? []).filter((c) => c.is_active), [criteriaQuery.data]);
+  const criteria = useMemo(
+    () => (criteriaQuery.data ?? []).filter((c) => c.is_active),
+    [criteriaQuery.data],
+  );
 
   const server = useMemo(() => {
     const map = new Map<string, { score: number; rationale: string }>();
     for (const s of scoresQuery.data ?? []) {
-      map.set(cellKey(s.alternative, s.criterion), { score: Number(s.score), rationale: s.rationale });
+      map.set(cellKey(s.alternative, s.criterion), {
+        score: Number(s.score),
+        rationale: s.rationale,
+      });
     }
     return map;
   }, [scoresQuery.data]);
@@ -182,7 +209,9 @@ export function ScoresTab() {
         setLastError(null);
       } catch (error) {
         setSaveState("error");
-        setLastError(error instanceof ApiError ? error.message : "Check your connection and try again.");
+        setLastError(
+          error instanceof ApiError ? error.message : "Check your connection and try again.",
+        );
       }
     },
     [decisionId, pendingCells, qc],
@@ -236,6 +265,8 @@ export function ScoresTab() {
       ArrowDown: [row + 1, col],
       Enter: row + 1 < rows ? [row + 1, col] : [0, col + 1],
       ArrowUp: [row - 1, col],
+      ArrowLeft: [row, col - 1],
+      ArrowRight: [row, col + 1],
     };
     const target = moves[e.key];
     if (!target) return;
@@ -294,7 +325,9 @@ export function ScoresTab() {
     alternative: alt,
     criterion: crit,
     value: valueFor(alt.id, crit.id),
-    isPending: cellKey(alt.id, crit.id) in draft && pendingCells({ [cellKey(alt.id, crit.id)]: draft[cellKey(alt.id, crit.id)] }).length > 0,
+    isPending:
+      cellKey(alt.id, crit.id) in draft &&
+      pendingCells({ [cellKey(alt.id, crit.id)]: draft[cellKey(alt.id, crit.id)] }).length > 0,
     onChange: (v: string) => setCell(alt.id, crit.id, v),
     onBlur: () => restoreIfEmpty(alt.id, crit.id),
     onKeyDown,
@@ -306,7 +339,8 @@ export function ScoresTab() {
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Scores</h2>
           <p className="text-sm text-muted">
-            Rate each option from {SCORE_MIN} (worst) to {SCORE_MAX} (best) on each criterion. Use ↑ ↓ or Enter to move.
+            Rate each option from {SCORE_MIN} (worst) to {SCORE_MAX} (best) on each criterion. Use ↑
+            ↓ or Enter to move.
           </p>
         </div>
         <div aria-live="polite">
@@ -334,8 +368,8 @@ export function ScoresTab() {
             aria-valuenow={filled}
           >
             <div
-              className={`h-full rounded-full transition-[width] duration-base ease-out ${complete ? "bg-success" : "bg-primary"}`}
-              style={{ width: `${(filled / total) * 100}%` }}
+              className={`h-full origin-left rounded-full transition-transform duration-base ease-out ${complete ? "bg-success" : "bg-primary"}`}
+              style={{ transform: `scaleX(${filled / total})` }}
             />
           </div>
         </div>
@@ -345,7 +379,9 @@ export function ScoresTab() {
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </ButtonLink>
         ) : (
-          <span className="text-sm text-muted">{total - filled} left — dashed cells need a score</span>
+          <span className="text-sm text-muted">
+            {total - filled} left — dashed cells need a score
+          </span>
         )}
       </div>
 
@@ -355,11 +391,18 @@ export function ScoresTab() {
           <caption className="sr-only">Score matrix: options by criteria</caption>
           <thead>
             <tr className="border-b border-border">
-              <th scope="col" className="sticky left-0 z-10 bg-surface px-5 py-3 text-left font-medium text-muted">
+              <th
+                scope="col"
+                className="sticky left-0 z-10 bg-surface px-5 py-3 text-left font-medium text-muted"
+              >
                 Option
               </th>
               {criteria.map((c) => (
-                <th key={c.id} scope="col" className="min-w-[112px] px-3 py-3 text-center align-bottom font-medium">
+                <th
+                  key={c.id}
+                  scope="col"
+                  className="min-w-[112px] px-3 py-3 text-center align-bottom font-medium"
+                >
                   <span className="block truncate">{c.name}</span>
                   <span className="mt-1 inline-flex items-center gap-1 text-xs font-normal text-muted">
                     <DirectionIcon direction={c.direction} />
@@ -374,7 +417,10 @@ export function ScoresTab() {
           <tbody>
             {alternatives.map((alt, row) => (
               <tr key={alt.id} className="border-b border-border last:border-0">
-                <th scope="row" className="sticky left-0 z-10 max-w-[240px] bg-surface px-5 py-3 text-left font-medium">
+                <th
+                  scope="row"
+                  className="sticky left-0 z-10 max-w-[240px] bg-surface px-5 py-3 text-left font-medium"
+                >
                   <span className="block truncate">{alt.name}</span>
                 </th>
                 {criteria.map((crit, col) => (

@@ -1,12 +1,7 @@
 /** Mirrors backend/app/schemas/decision.py. Decimal fields arrive as JSON strings. */
 
 export type DecisionStatus =
-  | "DRAFT"
-  | "SCORED"
-  | "COMMITTED"
-  | "UNDER_REVIEW"
-  | "REVIEWED"
-  | "ARCHIVED";
+  "DRAFT" | "SCORED" | "COMMITTED" | "UNDER_REVIEW" | "REVIEWED" | "ARCHIVED";
 
 export type Direction = "benefit" | "cost";
 

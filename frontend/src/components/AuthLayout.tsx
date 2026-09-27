@@ -31,6 +31,9 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
         </div>
         <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-12">
           <div className="glass animate-rise rounded-2xl p-6 sm:p-8">
+            <p className="mb-5 font-mono text-[10px] tracking-widest text-primary">
+              DECISION INTELLIGENCE LAB
+            </p>
             <h1 className="text-[28px] font-semibold tracking-tight">{title}</h1>
             <p className="mt-2 text-[15px] text-muted">{subtitle}</p>
             <div className="mt-8">{children}</div>
@@ -43,7 +46,8 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
         <div className="relative max-w-md">
           <p className="eyebrow">Decisions, made legible</p>
           <p className="mt-4 text-3xl font-semibold leading-tight tracking-tight">
-            Stop going in circles. <span className="text-primary">Weigh it, score it, rank it.</span>
+            Stop going in circles.{" "}
+            <span className="text-primary">Weigh it, score it, rank it.</span>
           </p>
           <ul className="mt-10 space-y-4">
             {points.map(({ icon: Icon, text }) => (

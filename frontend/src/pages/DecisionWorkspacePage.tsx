@@ -17,7 +17,7 @@ import {
 import { type ReactNode, useId, useState } from "react";
 import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
-import { Link, NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
 import { Button, ButtonLink } from "@/components/Button";
@@ -34,11 +34,23 @@ import {
   useUpdateDecision,
 } from "@/features/decisions/hooks";
 import { deadlineLabel, timeAgo } from "@/lib/format";
-import { CATEGORY_SUGGESTIONS, type DecisionDetailsValues, decisionDetailsSchema } from "@/schemas/decision";
+import {
+  CATEGORY_SUGGESTIONS,
+  type DecisionDetailsValues,
+  decisionDetailsSchema,
+} from "@/schemas/decision";
 import { toast } from "@/stores/toastStore";
 import type { Decision } from "@/types/decision";
 
-function EditDecisionDialog({ decision, open, onClose }: { decision: Decision; open: boolean; onClose: () => void }) {
+function EditDecisionDialog({
+  decision,
+  open,
+  onClose,
+}: {
+  decision: Decision;
+  open: boolean;
+  onClose: () => void;
+}) {
   const listId = useId();
   const update = useUpdateDecision(decision.id);
   const {
@@ -75,7 +87,10 @@ function EditDecisionDialog({ decision, open, onClose }: { decision: Decision; o
               setError(field as keyof DecisionDetailsValues, { message: messages[0] });
             }
           } else {
-            toast.error("Couldn't save changes", error instanceof ApiError ? error.message : undefined);
+            toast.error(
+              "Couldn't save changes",
+              error instanceof ApiError ? error.message : undefined,
+            );
           }
         },
       },
@@ -103,7 +118,13 @@ function EditDecisionDialog({ decision, open, onClose }: { decision: Decision; o
         <TextAreaField label="Context" optional {...register("context")} />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <FormField label="Category" optional list={listId} error={errors.category?.message} {...register("category")} />
+            <FormField
+              label="Category"
+              optional
+              list={listId}
+              error={errors.category?.message}
+              {...register("category")}
+            />
             <datalist id={listId}>
               {CATEGORY_SUGGESTIONS.map((c) => (
                 <option key={c} value={c} />
@@ -131,6 +152,8 @@ function TabBadge({ done, children }: { done: boolean; children: ReactNode }) {
 }
 
 function WorkspaceTabs({ readiness }: { readiness: Readiness }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const tabs = [
     {
       to: "alternatives",
@@ -155,48 +178,74 @@ function WorkspaceTabs({ readiness }: { readiness: Readiness }) {
           {readiness.filledCells}/{readiness.totalCells}
         </TabBadge>
       ),
-      sr: readiness.isScored ? "complete" : `${readiness.filledCells} of ${readiness.totalCells} filled`,
+      sr: readiness.isScored
+        ? "complete"
+        : `${readiness.filledCells} of ${readiness.totalCells} filled`,
     },
-    { to: "ranking", label: "Ranking", icon: Trophy, badge: null, sr: readiness.isReady ? "ready" : "not ready yet" },
+    {
+      to: "ranking",
+      label: "Ranking",
+      icon: Trophy,
+      badge: null,
+      sr: readiness.isReady ? "ready" : "not ready yet",
+    },
   ];
 
   return (
-    <nav aria-label="Decision stages" className="-mx-4 overflow-x-auto px-4 [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)] sm:mx-0 sm:px-0 sm:[mask-image:none]">
-      <ol className="flex min-w-max items-center gap-1 border-b border-border">
-        {tabs.map((tab, i) => (
-          <li key={tab.to} className="flex items-center">
-            <NavLink
-              to={tab.to}
-              className={({ isActive }) =>
-                `group relative -mb-px inline-flex h-11 items-center gap-2 px-3 text-sm font-medium transition-colors ${
-                  isActive ? "text-text" : "text-muted hover:text-text"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <tab.icon
-                    className={`h-4 w-4 transition-transform duration-base group-hover:-translate-y-0.5 ${isActive ? "text-primary" : ""}`}
-                    aria-hidden="true"
-                  />
-                  {tab.label}
-                  {!readiness.isLoading && tab.badge}
-                  <span className="sr-only">({tab.sr})</span>
-                  {isActive && (
-                    <motion.span
-                      layoutId="workspace-tab"
-                      className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary shadow-[0_0_12px_rgb(var(--color-primary)/0.8)]"
-                      transition={{ type: "spring", stiffness: 500, damping: 40 }}
+    <>
+      <label className="flex flex-col gap-2 text-xs font-medium text-muted sm:hidden">
+        Decision stage
+        <select
+          className="input-base text-sm"
+          value={location.pathname.split("/").at(-1)}
+          onChange={(event) => navigate(event.target.value)}
+        >
+          {tabs.map((tab) => (
+            <option key={tab.to} value={tab.to}>
+              {tab.label} — {tab.sr}
+            </option>
+          ))}
+        </select>
+      </label>
+      <nav aria-label="Decision stages" className="hidden overflow-x-auto sm:block">
+        <ol className="flex min-w-max items-center gap-1 border-b border-border">
+          {tabs.map((tab, i) => (
+            <li key={tab.to} className="flex items-center">
+              <NavLink
+                to={tab.to}
+                className={({ isActive }) =>
+                  `group relative -mb-px inline-flex h-11 items-center gap-2 px-3 text-sm font-medium transition-colors ${
+                    isActive ? "text-text" : "text-muted hover:text-text"
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <tab.icon
+                      className={`h-4 w-4 transition-transform duration-base group-hover:-translate-y-0.5 ${isActive ? "text-primary" : ""}`}
+                      aria-hidden="true"
                     />
-                  )}
-                </>
+                    {tab.label}
+                    {!readiness.isLoading && tab.badge}
+                    <span className="sr-only">({tab.sr})</span>
+                    {isActive && (
+                      <motion.span
+                        layoutId="workspace-tab"
+                        className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary shadow-[0_0_12px_rgb(var(--color-primary)/0.8)]"
+                        transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                      />
+                    )}
+                  </>
+                )}
+              </NavLink>
+              {i < tabs.length - 1 && (
+                <ChevronRight className="h-3.5 w-3.5 text-border-strong" aria-hidden="true" />
               )}
-            </NavLink>
-            {i < tabs.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-border-strong" aria-hidden="true" />}
-          </li>
-        ))}
-      </ol>
-    </nav>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </>
   );
 }
 
@@ -231,11 +280,17 @@ export function DecisionWorkspacePage() {
           icon={FileQuestion}
           title="Decision not found"
           description="It may have been deleted, or the link is wrong."
-          action={<ButtonLink to="/app" variant="secondary">Back to dashboard</ButtonLink>}
+          action={
+            <ButtonLink to="/app" variant="secondary">
+              Back to dashboard
+            </ButtonLink>
+          }
         />
       );
     }
-    return <ErrorState title="Couldn't load this decision" error={error} onRetry={() => refetch()} />;
+    return (
+      <ErrorState title="Couldn't load this decision" error={error} onRetry={() => refetch()} />
+    );
   }
 
   const archive = () =>
@@ -246,7 +301,8 @@ export function DecisionWorkspacePage() {
           setDialog(null);
           toast.success("Decision archived", "You'll find it under Archived on the dashboard.");
         },
-        onError: (e) => toast.error("Couldn't archive", e instanceof ApiError ? e.message : undefined),
+        onError: (e) =>
+          toast.error("Couldn't archive", e instanceof ApiError ? e.message : undefined),
       },
     );
 
@@ -281,7 +337,9 @@ export function DecisionWorkspacePage() {
         <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{decision.title}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                {decision.title}
+              </h1>
               <StatusChip status={decision.status} />
             </div>
             <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
@@ -300,14 +358,16 @@ export function DecisionWorkspacePage() {
               <span>Updated {timeAgo(decision.updated_at)}</span>
             </div>
             {decision.context && (
-              <p className="mt-3 max-w-3xl whitespace-pre-line text-[15px] leading-relaxed text-muted">{decision.context}</p>
+              <p className="mt-3 max-w-3xl whitespace-pre-line text-[15px] leading-relaxed text-muted">
+                {decision.context}
+              </p>
             )}
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setAiOpen(true)}
-              className="group relative inline-flex h-9 cursor-pointer items-center gap-1.5 overflow-hidden rounded-lg bg-gradient-to-r from-ai to-primary px-3 text-sm font-medium text-white shadow-[0_6px_20px_-8px_rgb(var(--color-ai)/0.9)] transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+              className="group relative inline-flex h-9 cursor-pointer items-center gap-1.5 overflow-hidden rounded-lg border border-ai/30 bg-ai/10 px-3 text-sm font-medium text-ai transition-colors hover:bg-ai/20 active:scale-[0.98]"
             >
               <span
                 aria-hidden="true"
@@ -351,7 +411,11 @@ export function DecisionWorkspacePage() {
         open={aiOpen}
         onClose={() => setAiOpen(false)}
       />
-      <EditDecisionDialog decision={decision} open={dialog === "edit"} onClose={() => setDialog(null)} />
+      <EditDecisionDialog
+        decision={decision}
+        open={dialog === "edit"}
+        onClose={() => setDialog(null)}
+      />
       <ConfirmDialog
         open={dialog === "archive"}
         onClose={() => setDialog(null)}
@@ -370,8 +434,8 @@ export function DecisionWorkspacePage() {
         title="Delete this decision?"
         description={
           <>
-            <span className="font-medium text-text">{decision.title}</span> and all its options, criteria and
-            scores will be permanently deleted.
+            <span className="font-medium text-text">{decision.title}</span> and all its options,
+            criteria and scores will be permanently deleted.
           </>
         }
         confirmLabel="Delete permanently"

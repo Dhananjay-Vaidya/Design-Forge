@@ -62,7 +62,10 @@ export async function streamChat(
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => null);
     if (isApiErrorEnvelope(body)) throw new ApiError(body.error, res.status);
-    throw new ApiError({ code: "network", message: "The assistant couldn't be reached." }, res.status);
+    throw new ApiError(
+      { code: "network", message: "The assistant couldn't be reached." },
+      res.status,
+    );
   }
 
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
@@ -84,8 +87,12 @@ export async function streamChat(
       const payload = data ? JSON.parse(data) : {};
       if (event === "delta") onDelta(payload.text ?? "");
       else if (event === "done") return payload as ChatDone;
-      else if (event === "error") throw new ApiError({ code: "stream_error", message: payload.message }, 502);
+      else if (event === "error")
+        throw new ApiError({ code: "stream_error", message: payload.message }, 502);
     }
   }
-  throw new ApiError({ code: "stream_error", message: "The answer was cut off. Please try again." }, 502);
+  throw new ApiError(
+    { code: "stream_error", message: "The answer was cut off. Please try again." },
+    502,
+  );
 }

@@ -11,7 +11,10 @@ interface AmbientBackgroundProps {
 export function AmbientBackground({ className = "", variant = "app" }: AmbientBackgroundProps) {
   const hero = variant === "hero";
   return (
-    <div aria-hidden="true" className={`pointer-events-none absolute inset-0 -z-10 overflow-hidden ${className}`}>
+    <div
+      aria-hidden="true"
+      className={`pointer-events-none absolute inset-0 -z-10 overflow-hidden ${className}`}
+    >
       <div
         className="aurora-blob aurora-a"
         style={{

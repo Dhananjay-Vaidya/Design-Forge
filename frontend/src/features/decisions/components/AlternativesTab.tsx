@@ -1,4 +1,14 @@
-import { ArrowDown, ArrowRight, ArrowUp, Check, Layers, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  Check,
+  Layers,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -18,9 +28,16 @@ import {
   useUpdateAlternative,
 } from "../hooks";
 
-const errorText = (e: unknown) => (e instanceof ApiError ? e.message : "Check your connection and try again.");
+const errorText = (e: unknown) =>
+  e instanceof ApiError ? e.message : "Check your connection and try again.";
 
-function AddAlternativeForm({ decisionId, nextPosition }: { decisionId: string; nextPosition: number }) {
+function AddAlternativeForm({
+  decisionId,
+  nextPosition,
+}: {
+  decisionId: string;
+  nextPosition: number;
+}) {
   const create = useCreateAlternative(decisionId);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -43,7 +60,11 @@ function AddAlternativeForm({ decisionId, nextPosition }: { decisionId: string; 
   };
 
   return (
-    <form onSubmit={submit} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-start" noValidate>
+    <form
+      onSubmit={submit}
+      className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-start"
+      noValidate
+    >
       <div className="flex-1">
         <FormField
           label="Option name"
@@ -84,7 +105,15 @@ interface RowProps {
   isReordering: boolean;
 }
 
-function AlternativeRow({ alternative, index, count, decisionId, onMove, onDelete, isReordering }: RowProps) {
+function AlternativeRow({
+  alternative,
+  index,
+  count,
+  decisionId,
+  onMove,
+  onDelete,
+  isReordering,
+}: RowProps) {
   const update = useUpdateAlternative(decisionId);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(alternative.name);
@@ -106,7 +135,10 @@ function AlternativeRow({ alternative, index, count, decisionId, onMove, onDelet
     "flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:cursor-not-allowed disabled:opacity-30";
 
   return (
-    <li className="group card flex animate-rise items-start gap-4 p-4" style={{ animationDelay: `${index * 30}ms` }}>
+    <li
+      className="group card flex animate-rise flex-wrap items-start gap-3 p-4 sm:flex-nowrap"
+      style={{ animationDelay: `${Math.min(index, 5) * 30}ms` }}
+    >
       <span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-2 font-mono text-xs text-muted">
         {index + 1}
       </span>
@@ -152,9 +184,11 @@ function AlternativeRow({ alternative, index, count, decisionId, onMove, onDelet
         <>
           <div className="min-w-0 flex-1 pt-0.5">
             <p className="font-medium">{alternative.name}</p>
-            {alternative.description && <p className="mt-0.5 text-sm text-muted">{alternative.description}</p>}
+            {alternative.description && (
+              <p className="mt-0.5 text-sm text-muted">{alternative.description}</p>
+            )}
           </div>
-          <div className="flex shrink-0 items-center gap-0.5">
+          <div className="ml-auto flex shrink-0 basis-full items-center justify-end gap-0.5 sm:basis-auto">
             <button
               type="button"
               className={iconBtn}
@@ -173,7 +207,12 @@ function AlternativeRow({ alternative, index, count, decisionId, onMove, onDelet
             >
               <ArrowDown className="h-4 w-4" />
             </button>
-            <button type="button" className={iconBtn} onClick={() => setEditing(true)} aria-label={`Edit ${alternative.name}`}>
+            <button
+              type="button"
+              className={iconBtn}
+              onClick={() => setEditing(true)}
+              aria-label={`Edit ${alternative.name}`}
+            >
               <Pencil className="h-4 w-4" />
             </button>
             <button
@@ -238,7 +277,9 @@ export function AlternativesTab() {
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Options</h2>
-          <p className="text-sm text-muted">The alternatives you're choosing between. Order is only for display.</p>
+          <p className="text-sm text-muted">
+            The alternatives you're choosing between. Order is only for display.
+          </p>
         </div>
         {needed === 0 && (
           <ButtonLink to="../criteria" variant="soft" size="sm">
@@ -250,11 +291,18 @@ export function AlternativesTab() {
 
       <AddAlternativeForm
         decisionId={decisionId}
-        nextPosition={alternatives.reduce((max, a) => Math.max(max, a.position + 1), alternatives.length)}
+        nextPosition={alternatives.reduce(
+          (max, a) => Math.max(max, a.position + 1),
+          alternatives.length,
+        )}
       />
 
       {alternatives.length === 0 ? (
-        <EmptyState icon={Layers} title="No options yet" description="Add the alternatives you're weighing up. You need at least two to rank them." />
+        <EmptyState
+          icon={Layers}
+          title="No options yet"
+          description="Add the alternatives you're weighing up. You need at least two to rank them."
+        />
       ) : (
         <ul className="flex flex-col gap-2.5">
           {alternatives.map((alt, i) => (
@@ -284,8 +332,8 @@ export function AlternativesTab() {
         title="Delete this option?"
         description={
           <>
-            <span className="font-medium text-text">{pendingDelete?.name}</span> and every score you've given it will be
-            removed.
+            <span className="font-medium text-text">{pendingDelete?.name}</span> and every score
+            you've given it will be removed.
           </>
         }
         confirmLabel="Delete option"

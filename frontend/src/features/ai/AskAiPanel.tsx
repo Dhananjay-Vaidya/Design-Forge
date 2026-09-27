@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowUp, CircleAlert, Info, RotateCcw, Sparkles, Square, Trash2, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import { ApiError } from "@/api/client";
+import { trapDialogTab } from "@/lib/dialogKeyboard";
 
 import { type ChatTurn, getAIStatus, streamChat } from "./api";
 import { AssistantText } from "./AssistantText";
@@ -21,8 +22,11 @@ const MAX_HISTORY = 12;
 
 function friendlyError(error: unknown): string {
   if (error instanceof ApiError) {
+    if ((error.status ?? 0) >= 500)
+      return "The assistant is temporarily unavailable. Your calculated ranking is unaffected. Please try again.";
     if (error.code === "quota_exhausted") return error.message;
-    if (error.code === "rate_limited") return "The AI provider is busy right now. Wait a minute and try again.";
+    if (error.code === "rate_limited")
+      return "The AI provider is busy right now. Wait a minute and try again.";
     return error.message;
   }
   return "Something went wrong reaching the assistant. Check your connection and try again.";
@@ -36,8 +40,15 @@ interface AskAiPanelProps {
 }
 
 export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPanelProps) {
+  const reduced = useReducedMotion();
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const qc = useQueryClient();
-  const status = useQuery({ queryKey: ["ai", "status"], queryFn: getAIStatus, enabled: open, staleTime: 30_000 });
+  const status = useQuery({
+    queryKey: ["ai", "status"],
+    queryFn: getAIStatus,
+    enabled: open,
+    staleTime: 30_000,
+  });
   const turns = useChatStore((s) => s.threads[decisionId] ?? EMPTY);
   const setTurns = useChatStore((s) => s.set);
   const clearThread = useChatStore((s) => s.clear);
@@ -51,15 +62,27 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
 
   const enabled = status.data?.enabled ?? false;
   const remaining = status.data?.remaining_today;
+  const exhausted = remaining === 0;
   const busy = streaming !== null;
 
   useEffect(() => {
-    if (open) requestAnimationFrame(() => inputRef.current?.focus());
+    const dialog = dialogRef.current;
+    if (open && dialog && !dialog.open) dialog.showModal();
+    if (!open && dialog?.open) dialog.close();
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
   }, [open]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [turns, streaming, error]);
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: reduced || streaming !== null ? "auto" : "smooth",
+    });
+  }, [turns, streaming, error, reduced]);
 
   useEffect(() => {
     if (!open) return;
@@ -72,7 +95,7 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
 
   const ask = async (question: string) => {
     const text = question.trim();
-    if (!text || busy) return;
+    if (!text || busy || !enabled || exhausted) return;
     const history: ChatTurn[] = [...turns, { role: "user", content: text }];
     setTurns(decisionId, history);
     setDraft("");
@@ -96,7 +119,11 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
       );
     } catch (err) {
       if (controller.signal.aborted) {
-        if (answer) setTurns(decisionId, [...history, { role: "assistant", content: `${answer} …(stopped)` }]);
+        if (answer)
+          setTurns(decisionId, [
+            ...history,
+            { role: "assistant", content: `${answer} …(stopped)` },
+          ]);
       } else {
         if (answer) setTurns(decisionId, [...history, { role: "assistant", content: answer }]);
         setError(friendlyError(err));
@@ -142,14 +169,20 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
             onClick={() => !busy && onClose()}
             aria-hidden="true"
           />
-          <motion.aside
+          <motion.dialog
+            ref={dialogRef}
+            onKeyDown={trapDialogTab}
             role="dialog"
             aria-modal="true"
             aria-labelledby="ask-ai-title"
-            className="glass-strong fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-ai/20 sm:inset-y-3 sm:right-3 sm:rounded-2xl"
-            initial={{ x: "105%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "105%" }}
+            onCancel={(event) => {
+              event.preventDefault();
+              onClose();
+            }}
+            className="glass-strong fixed inset-y-0 left-auto right-0 z-50 m-0 flex h-dvh max-h-none w-full max-w-md flex-col border-l border-ai/20 p-0 text-text sm:inset-y-3 sm:right-3 sm:h-[calc(100dvh-1.5rem)] sm:rounded-2xl"
+            initial={{ x: reduced ? 0 : "105%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: reduced ? 0 : "105%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 38 }}
           >
             <header className="flex items-start gap-3 border-b border-border/70 px-5 py-4">
@@ -197,26 +230,61 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
               </p>
             </div>
 
-            <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5" aria-live="polite">
+            <div
+              ref={scrollRef}
+              className="flex-1 space-y-4 overflow-y-auto px-5 py-5"
+              aria-live="polite"
+            >
               {status.isLoading ? (
-                <div className="space-y-2" aria-hidden="true">
-                  <div className="skeleton h-4 w-2/3" />
-                  <div className="skeleton h-4 w-1/2" />
+                <div
+                  className="space-y-2"
+                  role="status"
+                  aria-label="Connecting to the advisory assistant"
+                >
+                  <div className="skeleton h-4 w-2/3" aria-hidden="true" />
+                  <div className="skeleton h-4 w-1/2" aria-hidden="true" />
+                </div>
+              ) : status.isError ? (
+                <div
+                  role="alert"
+                  className="rounded-xl border border-warning/30 bg-warning/5 p-4 text-sm"
+                >
+                  <p className="font-medium">Assistant status unavailable</p>
+                  <p className="mt-1 text-muted">
+                    Your scoring and ranking still work. Try connecting again.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void status.refetch()}
+                    className="mt-3 rounded text-primary underline"
+                  >
+                    Retry connection
+                  </button>
                 </div>
               ) : !enabled ? (
                 <div className="rounded-xl border border-border bg-surface/70 p-4 text-sm">
                   <p className="font-medium">The AI assistant is turned off</p>
                   <p className="mt-1 text-muted">
-                    The server has no Gemini key configured (<code className="font-mono text-xs">GEMINI_ENABLED</code> and{" "}
-                    <code className="font-mono text-xs">GEMINI_API_KEY</code>). Everything else, including your ranking,
-                    works without it.
+                    AI advice is unavailable in this workspace. You can keep comparing options and
+                    calculating your ranking without it.
+                  </p>
+                </div>
+              ) : exhausted ? (
+                <div
+                  role="status"
+                  className="rounded-xl border border-warning/30 bg-warning/5 p-4 text-sm"
+                >
+                  <p className="font-medium">Daily advisory limit reached</p>
+                  <p className="mt-1 text-muted">
+                    Try again after your quota resets. Your calculated ranking and scoring remain
+                    available.
                   </p>
                 </div>
               ) : turns.length === 0 && !busy ? (
                 <div>
                   <p className="text-sm text-muted">
-                    Ask anything about this decision. The assistant sees your options, criteria, scores and the
-                    calculated ranking, but not your email or account.
+                    Ask anything about this decision. The assistant sees your options, criteria,
+                    scores and the calculated ranking, but not your email or account.
                   </p>
                   <ul className="mt-4 space-y-2">
                     {SUGGESTIONS.map((s, i) => (
@@ -241,13 +309,23 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
 
               {turns.map((turn, i) =>
                 turn.role === "user" ? (
-                  <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-end"
+                  >
                     <p className="max-w-[85%] whitespace-pre-line rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm text-on-primary">
                       {turn.content}
                     </p>
                   </motion.div>
                 ) : (
-                  <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2.5">
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex gap-2.5"
+                  >
                     <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-ai/10 text-ai">
                       <Sparkles className="h-3 w-3" aria-hidden="true" />
                     </span>
@@ -267,7 +345,10 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
                     {streaming ? (
                       <>
                         <AssistantText text={streaming} />
-                        <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-ai" aria-hidden="true" />
+                        <span
+                          className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-ai"
+                          aria-hidden="true"
+                        />
                       </>
                     ) : (
                       <span className="inline-flex gap-1 py-2" aria-label="Thinking">
@@ -275,8 +356,12 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
                           <motion.span
                             key={d}
                             className="h-1.5 w-1.5 rounded-full bg-ai"
-                            animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
-                            transition={{ duration: 0.9, repeat: Infinity, delay: d * 0.15 }}
+                            animate={reduced ? { opacity: 1 } : { opacity: [0.3, 1, 0.3] }}
+                            transition={{
+                              duration: 0.9,
+                              repeat: reduced ? 0 : Infinity,
+                              delay: d * 0.15,
+                            }}
                           />
                         ))}
                       </span>
@@ -286,7 +371,10 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
               )}
 
               {error && (
-                <div role="alert" className="flex items-start gap-2.5 rounded-xl border border-danger/25 bg-danger/5 p-3 text-sm">
+                <div
+                  role="alert"
+                  className="flex items-start gap-2.5 rounded-xl border border-danger/25 bg-danger/5 p-3 text-sm"
+                >
                   <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true" />
                   <div className="flex-1">
                     <p>{error}</p>
@@ -311,8 +399,10 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
                   onChange={(e) => setDraft(e.target.value.slice(0, 2000))}
                   onKeyDown={onKeyDown}
                   rows={1}
-                  disabled={!enabled}
-                  placeholder={enabled ? "Ask about this decision…" : "AI is turned off on this server"}
+                  disabled={!enabled || exhausted}
+                  placeholder={
+                    enabled ? "Ask about this decision…" : "AI is turned off on this server"
+                  }
                   aria-label="Your question"
                   className="max-h-32 min-h-9 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted/80 disabled:cursor-not-allowed [field-sizing:content]"
                 />
@@ -328,7 +418,7 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
                 ) : (
                   <button
                     type="submit"
-                    disabled={!enabled || !draft.trim()}
+                    disabled={!enabled || exhausted || !draft.trim()}
                     aria-label="Send question"
                     className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-gradient-to-br from-ai to-primary text-white transition-transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
                   >
@@ -343,7 +433,7 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
                 )}
               </p>
             </form>
-          </motion.aside>
+          </motion.dialog>
         </>
       )}
     </AnimatePresence>

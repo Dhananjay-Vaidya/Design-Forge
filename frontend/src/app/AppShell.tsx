@@ -1,10 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
 import { LayoutDashboard, LogOut, Plus, Search } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { entrance } from "@/lib/motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useOutlet } from "react-router-dom";
 
 import { ButtonLink } from "@/components/Button";
+import { LabNavigation } from "@/components/LabNavigation";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -29,13 +31,23 @@ function UserMenu() {
 
   useEffect(() => {
     if (!open) return;
+    const frame = requestAnimationFrame(() =>
+      rootRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus(),
+    );
     const onPointer = (e: PointerEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        rootRef.current?.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]')?.focus();
+      }
+      if (e.key === "Tab") setOpen(false);
+    };
     document.addEventListener("pointerdown", onPointer);
     document.addEventListener("keydown", onKey);
     return () => {
+      cancelAnimationFrame(frame);
       document.removeEventListener("pointerdown", onPointer);
       document.removeEventListener("keydown", onKey);
     };
@@ -97,10 +109,13 @@ function transitionKey(pathname: string) {
 
 function isTypingTarget(el: EventTarget | null) {
   const node = el as HTMLElement | null;
-  return !!node && (node.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(node.tagName));
+  return (
+    !!node && (node.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(node.tagName))
+  );
 }
 
 export function AppShell() {
+  const reduced = useReducedMotion();
   const location = useLocation();
   const navigate = useNavigate();
   // Captured per render so the exiting page keeps showing its own content while it fades out.
@@ -120,7 +135,14 @@ export function AppShell() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setPaletteOpen((v) => !v);
-      } else if (e.key === "n" && !e.ctrlKey && !e.metaKey && !e.altKey && !isTypingTarget(e.target) && !paletteOpen) {
+      } else if (
+        e.key === "n" &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        !isTypingTarget(e.target) &&
+        !paletteOpen
+      ) {
         navigate("/app/decisions/new");
       }
     };
@@ -145,7 +167,7 @@ export function AppShell() {
         Skip to content
       </a>
       <header className="sticky top-0 z-30 px-3 pt-3 sm:px-4">
-        <div className="glass mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 rounded-2xl px-3 sm:px-4">
+        <div className="glass mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-3 rounded-2xl px-3 sm:px-4">
           <div className="flex items-center gap-4">
             <Link to="/app" aria-label="DecisionForge AI — dashboard" className="rounded-lg">
               <Logo className="max-sm:[&>span:last-child]:hidden" />
@@ -155,10 +177,14 @@ export function AppShell() {
                 {({ isActive }) => (
                   <>
                     {isActive && (
-                      <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-lg bg-surface-2" transition={{ type: "spring", stiffness: 500, damping: 40 }} />
+                      <motion.span
+                        layoutId="nav-pill"
+                        className="absolute inset-0 rounded-lg bg-surface-2"
+                        transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                      />
                     )}
                     <LayoutDashboard className="relative h-4 w-4" aria-hidden="true" />
-                    <span className="relative">Dashboard</span>
+                    <span className="relative max-sm:sr-only">Dashboard</span>
                   </>
                 )}
               </NavLink>
@@ -173,9 +199,16 @@ export function AppShell() {
             >
               <Search className="h-4 w-4" aria-hidden="true" />
               <span className="max-md:hidden">Search</span>
-              <kbd className="ml-3 rounded border border-border px-1.5 font-mono text-[10px] max-md:hidden">Ctrl K</kbd>
+              <kbd className="ml-3 rounded border border-border px-1.5 font-mono text-[10px] max-md:hidden">
+                Ctrl K
+              </kbd>
             </button>
-            <ButtonLink to="/app/decisions/new" size="sm" className="max-sm:w-9 max-sm:px-0" title="New decision (N)">
+            <ButtonLink
+              to="/app/decisions/new"
+              size="sm"
+              className="max-sm:w-9 max-sm:px-0"
+              title="New decision (N)"
+            >
               <Plus className="h-4 w-4" aria-hidden="true" />
               <span className="max-sm:sr-only">New decision</span>
             </ButtonLink>
@@ -184,19 +217,16 @@ export function AppShell() {
           </div>
         </div>
       </header>
-      <main id="main" ref={mainRef} tabIndex={-1} className="mx-auto max-w-6xl px-4 py-8 outline-none sm:px-6 sm:py-10">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={transitionKey(location.pathname)}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {outlet}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-6 px-4 py-6 sm:px-6 lg:flex-row lg:py-10">
+        <LabNavigation />
+        <main id="main" ref={mainRef} tabIndex={-1} className="min-w-0 flex-1 outline-none">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div key={transitionKey(location.pathname)} {...entrance(!!reduced)}>
+              {outlet}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
       <CommandPalette open={paletteOpen} onClose={closePalette} />
     </div>
   );

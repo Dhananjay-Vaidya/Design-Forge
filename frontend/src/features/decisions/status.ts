@@ -13,7 +13,10 @@ import type { DecisionStatus } from "@/types/decision";
 export type StatusTone = "neutral" | "primary" | "success" | "warning";
 
 /** Status is always shown as icon + text, never colour alone (docs/07 §8). */
-export const statusMeta: Record<DecisionStatus, { label: string; icon: LucideIcon; tone: StatusTone }> = {
+export const statusMeta: Record<
+  DecisionStatus,
+  { label: string; icon: LucideIcon; tone: StatusTone }
+> = {
   DRAFT: { label: "Draft", icon: CircleDashed, tone: "neutral" },
   SCORED: { label: "Ready to rank", icon: Calculator, tone: "primary" },
   COMMITTED: { label: "Committed", icon: CircleCheck, tone: "success" },

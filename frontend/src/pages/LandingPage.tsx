@@ -10,7 +10,7 @@ import {
   TrendingDown,
   Trophy,
 } from "lucide-react";
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion } from "motion/react";
 import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -23,6 +23,7 @@ import { Reveal } from "@/components/fx/Reveal";
 import { Faq } from "@/features/landing/Faq";
 import { FeatureGrid } from "@/features/landing/FeatureGrid";
 import { LiveDemo } from "@/features/landing/LiveDemo";
+import { DecisionNetwork } from "@/features/landing/DecisionNetwork";
 import { rankOptions } from "@/lib/scoring";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -42,10 +43,26 @@ const preview = rankOptions(
 );
 
 const steps = [
-  { icon: Compass, title: "Frame it", text: "Name the decision, the context, and when it needs to be made." },
-  { icon: Layers, title: "List the options", text: "Two or more real alternatives you're choosing between." },
-  { icon: SlidersHorizontal, title: "Weigh what matters", text: "Criteria with weights, and whether higher or lower is better." },
-  { icon: ListChecks, title: "Score and rank", text: "Score each option 1–10 and get a ranking with a stability check." },
+  {
+    icon: Compass,
+    title: "Frame it",
+    text: "Name the decision, the context, and when it needs to be made.",
+  },
+  {
+    icon: Layers,
+    title: "List the options",
+    text: "Two or more real alternatives you're choosing between.",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Weigh what matters",
+    text: "Criteria with weights, and whether higher or lower is better.",
+  },
+  {
+    icon: ListChecks,
+    title: "Score and rank",
+    text: "Score each option 1–10 and get a ranking with a stability check.",
+  },
 ];
 
 /** Example questions people weigh up; shown as a ticker of use cases, not as customer claims. */
@@ -114,7 +131,15 @@ function Header() {
   );
 }
 
-function FloatingChip({ className, delay, children }: { className: string; delay: string; children: ReactNode }) {
+function FloatingChip({
+  className,
+  delay,
+  children,
+}: {
+  className: string;
+  delay: string;
+  children: ReactNode;
+}) {
   return (
     <div
       className={`glass float-y absolute hidden items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium sm:flex ${className}`}
@@ -155,7 +180,9 @@ function RankingPreview() {
             </span>
             <span className="ml-2 text-sm font-medium">Which job offer should I accept?</span>
           </div>
-          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted">Example</span>
+          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted">
+            Example
+          </span>
         </div>
         <div className="space-y-4 p-5">
           {preview.ranked.map((row, i) => (
@@ -166,7 +193,9 @@ function RankingPreview() {
                   {row.name}
                   {i === 0 && <Trophy className="h-3.5 w-3.5 text-primary" aria-label="Leader" />}
                 </span>
-                <span className="font-mono tabular-nums text-muted">{(row.total * 100).toFixed(1)}</span>
+                <span className="font-mono tabular-nums text-muted">
+                  {(row.total * 100).toFixed(1)}
+                </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-surface-2">
                 <div
@@ -192,15 +221,11 @@ function RankingPreview() {
 }
 
 function Hero() {
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 500], [0, 60]);
-  const opacity = useTransform(scrollY, [0, 400], [1, 0.3]);
-
   return (
     <section className="relative isolate">
       <AmbientBackground variant="hero" />
       <div className="mx-auto grid max-w-6xl items-center gap-16 px-4 pb-24 pt-16 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:pb-32 lg:pt-24">
-        <motion.div style={{ y, opacity }}>
+        <motion.div>
           <motion.span
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -211,7 +236,7 @@ function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
-            Deterministic by design
+            Decision intelligence laboratory
           </motion.span>
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
@@ -219,7 +244,9 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
             className="mt-6 text-4xl font-semibold leading-[1.06] tracking-tight sm:text-5xl lg:text-[3.6rem]"
           >
-            Turn a hard decision into a <span className="text-gradient">transparent, repeatable</span> process.
+            Hard choices.
+            <br />
+            <span className="text-primary">Clear reasoning.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -227,8 +254,9 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.12, ease: EASE }}
             className="mt-6 max-w-xl text-lg leading-relaxed text-muted"
           >
-            Score alternatives against weighted criteria and get a deterministic ranking you can explain.
-            Optionally add Gemini-powered questions, risks, and scenarios — advisory only, never the final word.
+            Score alternatives against weighted criteria and get a deterministic ranking you can
+            explain. Optionally add Gemini-powered questions, risks, and scenarios — advisory only,
+            never the final word.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -236,9 +264,16 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
             className="mt-9 flex flex-wrap gap-3"
           >
-            <ButtonLink to="/register" size="lg" className="group shadow-[0_8px_30px_-8px_rgb(var(--color-primary)/0.6)]">
+            <ButtonLink
+              to="/register"
+              size="lg"
+              className="group shadow-[0_8px_30px_-8px_rgb(var(--color-primary)/0.6)]"
+            >
               Start deciding
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              <ArrowRight
+                className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </ButtonLink>
             <a
               href="#demo"
@@ -248,13 +283,26 @@ function Hero() {
             </a>
           </motion.div>
         </motion.div>
-        <RankingPreview />
+        <div className="min-w-0">
+          <DecisionNetwork />
+          <RankingPreview />
+        </div>
       </div>
     </section>
   );
 }
 
-function SectionHeading({ eyebrow, title, text, id }: { eyebrow: string; title: string; text?: string; id: string }) {
+function SectionHeading({
+  eyebrow,
+  title,
+  text,
+  id,
+}: {
+  eyebrow: string;
+  title: string;
+  text?: string;
+  id: string;
+}) {
   return (
     <Reveal className="max-w-2xl">
       <p className="eyebrow">{eyebrow}</p>
@@ -273,17 +321,30 @@ export function LandingPage() {
       <main>
         <Hero />
 
-        <section aria-label="Example decisions" className="border-y border-border/70 bg-surface/40 py-5 backdrop-blur-sm">
+        <section
+          aria-label="Example decisions"
+          className="border-y border-border/70 bg-surface/40 py-5 backdrop-blur-sm"
+        >
           <Marquee
             label="Example decisions"
             items={USE_CASES.map((q) => (
-              <span className="glass inline-flex whitespace-nowrap rounded-full px-4 py-1.5 text-sm text-muted">{q}</span>
+              <span className="glass inline-flex whitespace-nowrap rounded-full px-4 py-1.5 text-sm text-muted">
+                {q}
+              </span>
             ))}
           />
         </section>
 
-        <section id="how" className="scroll-mt-24 mx-auto max-w-6xl px-4 py-24 sm:px-6" aria-labelledby="how-heading">
-          <SectionHeading id="how-heading" eyebrow="How it works" title="Four steps from “I can't decide” to a reasoned choice." />
+        <section
+          id="how"
+          className="scroll-mt-24 mx-auto max-w-6xl px-4 py-24 sm:px-6"
+          aria-labelledby="how-heading"
+        >
+          <SectionHeading
+            id="how-heading"
+            eyebrow="How it works"
+            title="Four steps from “I can't decide” to a reasoned choice."
+          />
           <ol className="relative mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <motion.span
               aria-hidden="true"
@@ -306,7 +367,11 @@ export function LandingPage() {
           </ol>
         </section>
 
-        <section id="demo" className="relative isolate scroll-mt-24 py-24" aria-labelledby="demo-heading">
+        <section
+          id="demo"
+          className="relative isolate scroll-mt-24 py-24"
+          aria-labelledby="demo-heading"
+        >
           <AmbientBackground />
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <SectionHeading
@@ -321,7 +386,11 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section id="features" className="scroll-mt-24 mx-auto max-w-6xl px-4 py-24 sm:px-6" aria-labelledby="features-heading">
+        <section
+          id="features"
+          className="scroll-mt-24 mx-auto max-w-6xl px-4 py-24 sm:px-6"
+          aria-labelledby="features-heading"
+        >
           <SectionHeading
             id="features-heading"
             eyebrow="Features"
@@ -346,8 +415,8 @@ export function LandingPage() {
               </span>
               <h3 className="mt-5 text-lg font-semibold">The ranking</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">
-                A weighted sum of your own scores. Identical inputs always produce the identical ranking, with a
-                sensitivity check that tells you when the leader could flip.
+                A weighted sum of your own scores. Identical inputs always produce the identical
+                ranking, with a sensitivity check that tells you when the leader could flip.
               </p>
             </Reveal>
             <Reveal delay={0.08} className="card border-ai/25 p-7">
@@ -357,14 +426,18 @@ export function LandingPage() {
               </span>
               <h3 className="mt-5 text-lg font-semibold">The AI insights</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">
-                Optional questions, risks and scenarios to challenge your thinking. Clearly marked, kept separate,
-                and never able to change the ranking.
+                Optional questions, risks and scenarios to challenge your thinking. Clearly marked,
+                kept separate, and never able to change the ranking.
               </p>
             </Reveal>
           </div>
         </section>
 
-        <section id="faq" className="scroll-mt-24 mx-auto max-w-3xl px-4 pb-24 sm:px-6" aria-labelledby="faq-heading">
+        <section
+          id="faq"
+          className="scroll-mt-24 mx-auto max-w-3xl px-4 pb-24 sm:px-6"
+          aria-labelledby="faq-heading"
+        >
           <SectionHeading id="faq-heading" eyebrow="FAQ" title="Questions, answered." />
           <Reveal className="mt-10">
             <Faq />
@@ -377,13 +450,22 @@ export function LandingPage() {
               <div
                 aria-hidden="true"
                 className="aurora-blob aurora-a"
-                style={{ width: "28rem", height: "28rem", left: "-8rem", top: "-12rem", background: "rgb(var(--aurora-2))", opacity: 0.35 }}
+                style={{
+                  width: "28rem",
+                  height: "28rem",
+                  left: "-8rem",
+                  top: "-12rem",
+                  background: "rgb(var(--aurora-2))",
+                  opacity: 0.35,
+                }}
               />
               <div
                 className="absolute inset-0 opacity-15 [background-image:linear-gradient(currentColor_1px,transparent_1px),linear-gradient(90deg,currentColor_1px,transparent_1px)] [background-size:32px_32px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]"
                 aria-hidden="true"
               />
-              <h2 className="relative text-3xl font-semibold tracking-tight sm:text-4xl">Your next hard call deserves a method.</h2>
+              <h2 className="relative text-3xl font-semibold tracking-tight sm:text-4xl">
+                Your next hard call deserves a method.
+              </h2>
               <p className="relative mx-auto mt-3 max-w-md opacity-85">
                 Create an account and frame your first decision in a couple of minutes.
               </p>
@@ -392,7 +474,10 @@ export function LandingPage() {
                 className="group relative mt-8 inline-flex h-12 items-center gap-2 rounded-lg bg-on-primary px-6 text-[15px] font-medium text-primary transition-transform hover:scale-[1.03] active:scale-[0.98]"
               >
                 Create your account
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                <ArrowRight
+                  className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
               </Link>
             </div>
           </Reveal>

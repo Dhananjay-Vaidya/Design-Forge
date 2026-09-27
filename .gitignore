@@ -27,6 +27,8 @@ frontend/dist/
 frontend/build/
 frontend/coverage/
 frontend/.vite/
+frontend/test-results/
+frontend/playwright-report/
 *.local
 
 # Docker

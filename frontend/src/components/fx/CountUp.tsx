@@ -12,7 +12,7 @@ interface CountUpProps {
  * Animates from the previously shown value to the new one. The final number is always what
  * screen readers get (aria-label), never an intermediate frame.
  */
-export function CountUp({ value, decimals = 0, duration = 0.9, className }: CountUpProps) {
+export function CountUp({ value, decimals = 0, duration = 0.32, className }: CountUpProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const from = useRef(0);
   const reduce = useReducedMotion();

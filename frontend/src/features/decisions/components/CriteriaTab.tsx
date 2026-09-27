@@ -13,10 +13,17 @@ import type { Criterion, Direction } from "@/types/decision";
 import { useCreateCriterion, useCriteria, useDeleteCriterion, useUpdateCriterion } from "../hooks";
 import { DirectionToggle, WeightBar, WeightStepper } from "./CriterionControls";
 
-const errorText = (e: unknown) => (e instanceof ApiError ? e.message : "Check your connection and try again.");
+const errorText = (e: unknown) =>
+  e instanceof ApiError ? e.message : "Check your connection and try again.";
 const cleanWeight = (w: string) => String(Number(w));
 
-function AddCriterionForm({ decisionId, nextPosition }: { decisionId: string; nextPosition: number }) {
+function AddCriterionForm({
+  decisionId,
+  nextPosition,
+}: {
+  decisionId: string;
+  nextPosition: number;
+}) {
   const create = useCreateCriterion(decisionId);
   const [name, setName] = useState("");
   const [weight, setWeight] = useState("3");
@@ -56,10 +63,19 @@ function AddCriterionForm({ decisionId, nextPosition }: { decisionId: string; ne
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <DirectionToggle value={direction} onChange={setDirection} label="New criterion direction" />
+          <DirectionToggle
+            value={direction}
+            onChange={setDirection}
+            label="New criterion direction"
+          />
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted">Weight</span>
-            <WeightStepper label="New criterion weight" value={weight} onChange={setWeight} invalid={!(Number(weight) > 0)} />
+            <WeightStepper
+              label="New criterion weight"
+              value={weight}
+              onChange={setWeight}
+              invalid={!(Number(weight) > 0)}
+            />
           </div>
         </div>
         <Button type="submit" isLoading={create.isPending}>
@@ -71,7 +87,17 @@ function AddCriterionForm({ decisionId, nextPosition }: { decisionId: string; ne
   );
 }
 
-function ActiveSwitch({ checked, onChange, label, disabled }: { checked: boolean; onChange: () => void; label: string; disabled?: boolean }) {
+function ActiveSwitch({
+  checked,
+  onChange,
+  label,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
@@ -80,15 +106,18 @@ function ActiveSwitch({ checked, onChange, label, disabled }: { checked: boolean
       aria-label={label}
       onClick={onChange}
       disabled={disabled}
-      className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-base disabled:cursor-wait disabled:opacity-60 ${
-        checked ? "bg-primary" : "bg-border-strong"
-      }`}
+      className="relative inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg disabled:cursor-wait disabled:opacity-60"
     >
       <span
-        className={`inline-block h-5 w-5 rounded-full bg-white shadow-soft transition-transform duration-base ease-out ${
-          checked ? "translate-x-[18px]" : "translate-x-0.5"
-        }`}
-      />
+        aria-hidden="true"
+        className={`flex h-6 w-10 items-center rounded-full transition-colors duration-base ${checked ? "bg-primary" : "bg-border-strong"}`}
+      >
+        <span
+          className={`inline-block h-5 w-5 rounded-full bg-white shadow-soft transition-transform duration-base ease-out ${
+            checked ? "translate-x-[18px]" : "translate-x-0.5"
+          }`}
+        />
+      </span>
     </button>
   );
 }
@@ -152,7 +181,11 @@ function CriterionRow({ criterion, share, decisionId, onDelete, index }: RowProp
           disabled={update.isPending}
           onChange={() =>
             patch({ is_active: !criterion.is_active }, () =>
-              toast.info(criterion.is_active ? `“${criterion.name}” excluded` : `“${criterion.name}” included`),
+              toast.info(
+                criterion.is_active
+                  ? `“${criterion.name}” excluded`
+                  : `“${criterion.name}” included`,
+              ),
             )
           }
         />
@@ -167,7 +200,13 @@ function CriterionRow({ criterion, share, decisionId, onDelete, index }: RowProp
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Escape" && setEditing(false)}
             />
-            <Button type="submit" size="icon" className="h-9 w-9" aria-label="Save name" isLoading={update.isPending}>
+            <Button
+              type="submit"
+              size="icon"
+              className="h-9 w-9"
+              aria-label="Save name"
+              isLoading={update.isPending}
+            >
               {!update.isPending && <Check className="h-4 w-4" />}
             </Button>
             <Button
@@ -185,13 +224,19 @@ function CriterionRow({ criterion, share, decisionId, onDelete, index }: RowProp
           </form>
         ) : (
           <div className="min-w-0">
-            <p className={`truncate font-medium ${criterion.is_active ? "" : "text-muted line-through decoration-muted/50"}`}>
+            <p
+              className={`truncate font-medium ${criterion.is_active ? "" : "text-muted line-through decoration-muted/50"}`}
+            >
               {criterion.name}
             </p>
             <p className="text-xs text-muted">
               {criterion.is_active ? (
                 <>
-                  Counts for <span className="font-mono tabular-nums text-text">{share !== null ? `${Math.round(share * 100)}%` : "—"}</span> of the total
+                  Counts for{" "}
+                  <span className="font-mono tabular-nums text-text">
+                    {share !== null ? `${Math.round(share * 100)}%` : "—"}
+                  </span>{" "}
+                  of the total
                 </>
               ) : (
                 "Excluded from ranking"
@@ -201,7 +246,7 @@ function CriterionRow({ criterion, share, decisionId, onDelete, index }: RowProp
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 max-lg:pl-[52px]">
+      <div className="flex flex-wrap items-center gap-2.5">
         <DirectionToggle
           size="sm"
           label={`${criterion.name} direction`}
@@ -275,7 +320,9 @@ export function CriteriaTab() {
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Criteria & weights</h2>
-          <p className="text-sm text-muted">Weights are relative — they're normalised to 100% automatically.</p>
+          <p className="text-sm text-muted">
+            Weights are relative — they're normalised to 100% automatically.
+          </p>
         </div>
         {active.length > 0 && (
           <ButtonLink to="../scores" variant="soft" size="sm">
@@ -288,7 +335,9 @@ export function CriteriaTab() {
       {active.length > 0 && (
         <div className="card p-5">
           <p className="mb-3 text-sm font-medium">Weight distribution</p>
-          <WeightBar items={active.map((c) => ({ key: c.id, name: c.name, weight: Number(c.weight) }))} />
+          <WeightBar
+            items={active.map((c) => ({ key: c.id, name: c.name, weight: Number(c.weight) }))}
+          />
         </div>
       )}
 
@@ -319,7 +368,9 @@ export function CriteriaTab() {
       )}
 
       {criteria.length > 0 && active.length === 0 && (
-        <p className="text-sm text-warning">Every criterion is switched off. Include at least one to rank.</p>
+        <p className="text-sm text-warning">
+          Every criterion is switched off. Include at least one to rank.
+        </p>
       )}
 
       <ConfirmDialog
@@ -330,8 +381,8 @@ export function CriteriaTab() {
         title="Delete this criterion?"
         description={
           <>
-            <span className="font-medium text-text">{pendingDelete?.name}</span> and all scores given against it will be
-            removed. To keep the scores, switch it off instead.
+            <span className="font-medium text-text">{pendingDelete?.name}</span> and all scores
+            given against it will be removed. To keep the scores, switch it off instead.
           </>
         }
         confirmLabel="Delete criterion"

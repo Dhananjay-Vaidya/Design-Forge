@@ -72,7 +72,10 @@ export function RegisterForm() {
           <p
             className={`flex items-center gap-1.5 text-[13px] transition-colors ${lengthMet ? "text-success" : "text-muted"}`}
           >
-            <Check className={`h-3.5 w-3.5 transition-opacity ${lengthMet ? "opacity-100" : "opacity-40"}`} aria-hidden="true" />
+            <Check
+              className={`h-3.5 w-3.5 transition-opacity ${lengthMet ? "opacity-100" : "opacity-40"}`}
+              aria-hidden="true"
+            />
             At least {MIN_PASSWORD} characters
           </p>
         )}

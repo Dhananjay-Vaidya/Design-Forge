@@ -1,15 +1,15 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 WORKDIR /app
 COPY package.json package-lock.json* .npmrc ./
 
 FROM base AS dev
-RUN npm install
+RUN npm ci
 COPY . .
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 
 FROM base AS build
-RUN npm install
+RUN npm ci
 COPY . .
 RUN npm run build
 
