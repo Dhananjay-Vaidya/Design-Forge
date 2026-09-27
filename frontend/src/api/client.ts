@@ -50,7 +50,8 @@ export class ApiError extends Error {
 
 let refreshPromise: Promise<string | null> | null = null;
 
-async function refreshAccessToken(): Promise<string | null> {
+/** Shared single-flight refresh; also used by the streaming AI chat, which bypasses axios. */
+export async function refreshAccessToken(): Promise<string | null> {
   if (!refreshPromise) {
     refreshPromise = apiClient
       .post<{ access: string }>("/auth/refresh")

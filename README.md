@@ -50,8 +50,12 @@ http://localhost:9090, and Grafana at http://localhost:3001 (login `GRAFANA_ADMI
 [`docs/observability-setup.md`](docs/observability-setup.md).
 
 Gemini is disabled by default (`GEMINI_ENABLED=0`); the whole product works without a Gemini API
-key. To enable live AI analysis, set `GEMINI_API_KEY`, `GEMINI_MODEL`, and `GEMINI_ENABLED=1` in
-`.env` and restart `worker`.
+key. To enable the **Ask AI** assistant (the violet button on any decision), set `GEMINI_API_KEY`
+and `GEMINI_ENABLED=1` in `.env` (defaults: `GEMINI_MODEL=gemini-3.8-flash`,
+`GEMINI_FALLBACK_MODEL=gemini-3.1-flash-lite`) and restart `web`. It streams answers grounded in
+that decision's options, criteria, scores and calculated ranking, is labelled advisory, cannot
+change the ranking, and is limited to `GEMINI_DAILY_USER_QUOTA` questions per user per day. Details:
+[`docs/06-gemini-integration-design.md`](docs/06-gemini-integration-design.md) §0.
 
 ## Common commands
 

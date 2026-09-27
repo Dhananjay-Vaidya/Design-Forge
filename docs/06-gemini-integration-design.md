@@ -5,6 +5,26 @@
 
 ---
 
+## 0. Implementation status (2026-09-27)
+
+**Built: the "Ask AI" decision assistant** (a conversational use case added alongside §1). The six
+structured analyses in §1 are still to do.
+
+| Concern | Implementation |
+|---------|----------------|
+| Endpoints | `GET /api/v1/ai/status` (enabled, model, daily limit, remaining). `POST /api/v1/decisions/{id}/chat`: body `{messages:[{role:"user"\|"assistant", content≤2000}]}` (≤20, last must be `user`); response is Server-Sent Events `delta*` then `done` (`model`, `remaining_today`, `disclaimer`), or `error` if the provider fails after text started. |
+| Adapter (§2) | `backend/app/ai/provider.py`: `GeminiChatProvider` (only importer of `google-genai`) and `FakeChatProvider` for tests, injected via the `get_chat_provider` dependency. |
+| Models (§3) | `GEMINI_MODEL=gemini-3.8-flash`, `GEMINI_FALLBACK_MODEL=gemini-3.1-flash-lite`. `gemini-2.5-flash` returns 404 "no longer available to new users" for new keys. Gemini 3 models run with `thinking_level=low` and a 4096-token output budget (a 1024 budget let reasoning consume it and produced empty answers). |
+| Minimisation (§5) | `backend/app/ai/context.py`: decision title/context/category/deadline, option names and notes, active criteria (share %, direction), scores by name, deterministic ranking summary. No user id, email or database ids (tested). |
+| Prompt injection (§10) | Decision data sits in a delimited `<decision_data>` block that the system instruction declares to be data, not instructions. The UI renders AI text as plain text (no HTML/markdown renderer). |
+| Retries/fallback (§12, §17) | Transient failures (5xx, network, retired model 404) before the first token get one attempt on the fallback model. 429 is not retried and maps to `429 rate_limited`. A stream that ends with no text is a failure, never an empty "success". |
+| Quota (§13) | Redis counter per user per UTC day (`GEMINI_DAILY_USER_QUOTA`), counts only, no prompt text. Failed requests are refunded. Over limit → `429 quota_exhausted` with `retry_after_seconds` to midnight UTC. |
+| Circuit breaker (§14) | Redis: `GEMINI_BREAKER_FAILURE_THRESHOLD` failures within `GEMINI_BREAKER_WINDOW_SECONDS` open it for `GEMINI_BREAKER_COOLDOWN_SECONDS`; while open, requests get `503` without calling the provider. |
+| Caching (§15) | Not applied to chat: answers depend on the whole conversation. |
+| Metrics (§18) | `decisionforge_ai_requests_total{provider,analysis_type="chat",status}`, request duration, rate-limit, quota-rejection, fallback, token-usage and circuit-breaker series. |
+| Storage | Conversations are not stored server-side; the browser keeps them per decision until reload. |
+| Tests (§19) | `backend/tests/api/test_ai_chat.py`, `backend/tests/unit/test_ai_provider.py`, `frontend/tests/components/AssistantText.test.tsx`; all use the fake provider, so no quota is consumed. |
+
 ## 1. AI Use Cases (DPR §Gemini usage strategy)
 
 | Analysis type | Output | Control |

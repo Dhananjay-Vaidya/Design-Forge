@@ -66,9 +66,9 @@ class Settings(BaseSettings):
     # ---- Gemini / AI (Phase 3 — not implemented yet; config wired ahead of the feature) ----
     gemini_enabled: bool = Field(default=False, alias="GEMINI_ENABLED")
     gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
-    gemini_model: str = Field(default="gemini-2.5-flash", alias="GEMINI_MODEL")
+    gemini_model: str = Field(default="gemini-3.8-flash", alias="GEMINI_MODEL")
     gemini_fallback_model: str = Field(
-        default="gemini-2.5-flash-lite", alias="GEMINI_FALLBACK_MODEL"
+        default="gemini-3.1-flash-lite", alias="GEMINI_FALLBACK_MODEL"
     )
     gemini_timeout_seconds: int = Field(default=20, alias="GEMINI_TIMEOUT_SECONDS")
     gemini_max_retries: int = Field(default=3, alias="GEMINI_MAX_RETRIES")

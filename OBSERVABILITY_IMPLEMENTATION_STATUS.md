@@ -57,9 +57,18 @@ published Postgres port, and its own `dfobs_*` volumes, so the developer's local
 backend and dev server were untouched. `docker compose -p dfobs down -v` removed only those volumes.
 Local tests used a separate `decisionforge_test` database and Redis db 15, never `decisionforge`.
 
+## Update 2026-09-27: Ask AI chat
+
+The "Ask AI" decision assistant now emits the AI series for real (`analysis_type="chat"`):
+requests, duration, rate limits, quota rejections, fallbacks, token usage and circuit-breaker
+state. Verified live: after one real Gemini conversation, Prometheus reported
+`ai_requests_total{provider="gemini",analysis_type="chat",status="success"}` and input/output token
+counts. AI *job* metrics and the cache series stay idle until the structured analyses and AI
+cache exist.
+
 ## Known limitations
 
-- AI, cache, scenario and outcome metrics cannot produce data until those features are built.
+- AI job, cache, scenario and outcome metrics cannot produce data until those features are built.
   Their instrumentation points are documented in `docs/observability-setup.md` §7.
 - No Alertmanager: alerts are visible in Prometheus but not delivered anywhere.
 - Makefile targets and the GitHub Actions workflow were not executed in this environment.

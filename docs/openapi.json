@@ -1,6 +1,46 @@
 {
   "components": {
     "schemas": {
+      "AIStatusResponse": {
+        "properties": {
+          "daily_limit": {
+            "title": "Daily Limit",
+            "type": "integer"
+          },
+          "disclaimer": {
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "remaining_today": {
+            "title": "Remaining Today",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "model",
+          "daily_limit",
+          "remaining_today",
+          "disclaimer"
+        ],
+        "title": "AIStatusResponse",
+        "type": "object"
+      },
       "AlternativeCreateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -138,6 +178,7 @@
             "type": "string"
           },
           "score": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Score",
             "type": "string"
           },
@@ -173,6 +214,50 @@
           "access"
         ],
         "title": "AuthResponse",
+        "type": "object"
+      },
+      "ChatMessageIn": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessageIn",
+        "type": "object"
+      },
+      "ChatRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessageIn"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "ChatRequest",
         "type": "object"
       },
       "CriterionCreateRequest": {
@@ -214,6 +299,7 @@
                 "type": "number"
               },
               {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                 "type": "string"
               }
             ],
@@ -299,6 +385,7 @@
                 "type": "number"
               },
               {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                 "type": "string"
               },
               {
@@ -358,6 +445,7 @@
             "type": "string"
           },
           "weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Weight",
             "type": "string"
           }
@@ -641,6 +729,7 @@
           "preferences": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -673,6 +762,7 @@
           },
           "breakdown": {
             "additionalProperties": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             },
             "title": "Breakdown",
@@ -687,6 +777,7 @@
             "type": "integer"
           },
           "total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total",
             "type": "string"
           }
@@ -732,6 +823,7 @@
           },
           "weights_normalized": {
             "additionalProperties": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             },
             "title": "Weights Normalized",
@@ -810,6 +902,7 @@
                 "type": "number"
               },
               {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                 "type": "string"
               }
             ],
@@ -869,6 +962,7 @@
             "type": "boolean"
           },
           "margin": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Margin",
             "type": "string"
           },
@@ -892,6 +986,7 @@
             "type": "string"
           },
           "preferences": {
+            "additionalProperties": true,
             "title": "Preferences",
             "type": "object"
           },
@@ -990,6 +1085,32 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/ai/status": {
+      "get": {
+        "operationId": "ai_status_api_v1_ai_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ai Status",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
     "/api/v1/alternatives/{alternative_id}": {
       "delete": {
         "operationId": "delete_alternative_api_v1_alternatives__alternative_id__delete",
@@ -1405,6 +1526,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "title": "Response List Decisions Api V1 Decisions Get",
                   "type": "object"
                 }
@@ -1673,6 +1795,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "title": "Response List Alternatives Api V1 Decisions  Decision Id  Alternatives Get",
                   "type": "object"
                 }
@@ -1758,6 +1881,60 @@
         ]
       }
     },
+    "/api/v1/decisions/{decision_id}/chat": {
+      "post": {
+        "operationId": "chat_about_decision_api_v1_decisions__decision_id__chat_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {}
+            },
+            "description": "SSE: delta*, done"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Chat About Decision",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
     "/api/v1/decisions/{decision_id}/criteria": {
       "get": {
         "operationId": "list_criteria_api_v1_decisions__decision_id__criteria_get",
@@ -1810,6 +1987,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "title": "Response List Criteria Api V1 Decisions  Decision Id  Criteria Get",
                   "type": "object"
                 }
@@ -2150,6 +2328,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "title": "Response Healthz Health Get",
                   "type": "object"
                 }
@@ -2172,6 +2351,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "title": "Response Healthz Healthz Get",
                   "type": "object"
                 }
@@ -2194,6 +2374,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "title": "Response Readyz Ready Get",
                   "type": "object"
                 }
@@ -2216,6 +2397,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "title": "Response Readyz Readyz Get",
                   "type": "object"
                 }

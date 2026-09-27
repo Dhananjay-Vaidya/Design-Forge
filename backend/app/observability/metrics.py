@@ -16,6 +16,7 @@ ALLOWED_ANALYSIS_TYPE = {
     "devil_advocate",
     "summary",
     "clarifying_questions",
+    "chat",
     "unknown",
 }
 ALLOWED_RESULT = {"hit", "miss", "success", "failure"}

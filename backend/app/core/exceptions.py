@@ -67,14 +67,14 @@ class RateLimitedError(AppError):
 
 
 class QuotaExceededError(AppError):
-    """ERR-QUOTA — reserved for the Phase 3 AI layer; not used yet (no AI endpoints exist)."""
+    """ERR-QUOTA — a user's daily AI allowance is used up (app/ai/guard.py)."""
 
     code = "quota_exhausted"
     status_code = status.HTTP_429_TOO_MANY_REQUESTS
 
 
 class ProviderUnavailableError(AppError):
-    """Reserved for the Phase 3 AI layer."""
+    """The AI provider is disabled, paused by the circuit breaker, or failing."""
 
     code = "provider_unavailable"
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE

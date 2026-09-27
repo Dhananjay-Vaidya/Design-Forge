@@ -9,6 +9,7 @@ import {
   Layers,
   Pencil,
   SlidersHorizontal,
+  Sparkles,
   Tag,
   Trash2,
   Trophy,
@@ -23,6 +24,7 @@ import { Button, ButtonLink } from "@/components/Button";
 import { ConfirmDialog, Dialog } from "@/components/Dialog";
 import { FormField, TextAreaField } from "@/components/FormField";
 import { EmptyState, ErrorState, Skeleton } from "@/components/States";
+import { AskAiPanel } from "@/features/ai/AskAiPanel";
 import { StatusChip } from "@/features/decisions/components/StatusChip";
 import {
   type Readiness,
@@ -218,6 +220,7 @@ export function DecisionWorkspacePage() {
   const update = useUpdateDecision(decisionId);
   const remove = useDeleteDecision(decisionId);
   const [dialog, setDialog] = useState<"edit" | "archive" | "delete" | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
 
   if (isLoading) return <HeaderSkeleton />;
 
@@ -301,6 +304,18 @@ export function DecisionWorkspacePage() {
             )}
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setAiOpen(true)}
+              className="group relative inline-flex h-9 cursor-pointer items-center gap-1.5 overflow-hidden rounded-lg bg-gradient-to-r from-ai to-primary px-3 text-sm font-medium text-white shadow-[0_6px_20px_-8px_rgb(var(--color-ai)/0.9)] transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+            >
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+              />
+              <Sparkles className="relative h-3.5 w-3.5" aria-hidden="true" />
+              <span className="relative">Ask AI</span>
+            </button>
             <Button variant="secondary" size="sm" onClick={() => setDialog("edit")}>
               <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
               Edit
@@ -330,6 +345,12 @@ export function DecisionWorkspacePage() {
         <Outlet />
       </div>
 
+      <AskAiPanel
+        decisionId={decision.id}
+        decisionTitle={decision.title}
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+      />
       <EditDecisionDialog decision={decision} open={dialog === "edit"} onClose={() => setDialog(null)} />
       <ConfirmDialog
         open={dialog === "archive"}

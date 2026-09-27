@@ -148,14 +148,14 @@ without it. No connection strings, hosts, credentials or exception text are ever
 | `decisionforge_celery_task_duration_seconds` | `task_name` | Celery signals | **Yes** |
 | `decisionforge_celery_task_retries_total` | `task_name` | Celery signals | **Yes** |
 | `decisionforge_celery_task_failures_total` | `task_name`, `error_category` | Celery signals | **Yes** |
-| `decisionforge_ai_requests_total` | `provider`, `analysis_type`, `status` | `observe_ai_call` | Wrapper ready; **no AI provider exists yet** |
-| `decisionforge_ai_request_duration_seconds` | `provider`, `analysis_type` | `observe_ai_call` | same |
-| `decisionforge_ai_rate_limit_total` | `provider` | `observe_ai_call` (rate-limit error category) | same |
-| `decisionforge_ai_quota_rejections_total` | none | `metrics.record_quota_rejection` | same |
+| `decisionforge_ai_requests_total` | `provider`, `analysis_type`, `status` | Ask AI chat endpoint (`analysis_type="chat"`) | **Yes** |
+| `decisionforge_ai_request_duration_seconds` | `provider`, `analysis_type` | Ask AI chat endpoint | **Yes** |
+| `decisionforge_ai_rate_limit_total` | `provider` | Ask AI chat (provider 429) | **Yes** |
+| `decisionforge_ai_quota_rejections_total` | none | Ask AI daily quota (`app/ai/guard.py`) | **Yes** |
 | `decisionforge_ai_cache_operations_total` | `result`: hit / miss | `observe_cache("ai")` | same |
-| `decisionforge_ai_circuit_breaker_open` | `provider` | `metrics.set_circuit_breaker_open` (gauge, `max` across processes) | same |
-| `decisionforge_ai_token_usage_total` | `provider`, `token_type`: input / output | `AICallRecorder.record_tokens` | same |
-| `decisionforge_ai_fallback_total` | `reason` | `AICallRecorder.mark_fallback` | same |
+| `decisionforge_ai_circuit_breaker_open` | `provider` | Ask AI breaker (`app/ai/guard.py`; gauge, `max` across processes) | **Yes** |
+| `decisionforge_ai_token_usage_total` | `provider`, `token_type`: input / output | Ask AI chat (provider usage metadata) | **Yes** |
+| `decisionforge_ai_fallback_total` | `reason` | Ask AI fallback model / breaker short-circuit | **Yes** |
 | `decisionforge_ai_jobs_total` | `status` | `observe_ai_job` | same |
 | `decisionforge_ai_job_duration_seconds` | `analysis_type` | `observe_ai_job` | same |
 | `decisionforge_cache_operations_total` | `cache_name`, `result` | `observe_cache` | Wrapper ready; no cache exists yet |
