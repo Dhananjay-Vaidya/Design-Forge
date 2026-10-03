@@ -95,7 +95,7 @@ function KeysVisual() {
       {["↑", "↓", "Enter"].map((k) => (
         <kbd
           key={k}
-          className="rounded-md border border-border-strong bg-surface px-2 py-1 font-mono text-xs shadow-[inset_0_-2px_0_rgb(var(--color-border-strong))]"
+          className="rounded-md border border-border-strong bg-surface px-2 py-1 font-mono text-xs shadow-keycap"
         >
           {k}
         </kbd>

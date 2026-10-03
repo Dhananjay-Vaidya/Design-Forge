@@ -66,7 +66,7 @@ function UserMenu() {
         aria-label="Account menu"
         className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full transition-transform hover:scale-105"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-ai text-sm font-semibold uppercase text-white shadow-[0_4px_14px_-4px_rgb(var(--color-primary)/0.7)]">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-ai text-sm font-semibold uppercase text-on-ai shadow-glow-primary">
           {name.charAt(0)}
         </span>
       </button>

@@ -267,7 +267,7 @@ function Hero() {
             <ButtonLink
               to="/register"
               size="lg"
-              className="group shadow-[0_8px_30px_-8px_rgb(var(--color-primary)/0.6)]"
+              className="group shadow-glow-primary"
             >
               Start deciding
               <ArrowRight
@@ -356,7 +356,7 @@ export function LandingPage() {
             />
             {steps.map(({ icon: Icon, title, text }, i) => (
               <Reveal as="li" key={title} delay={i * 0.1} className="relative">
-                <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-on-primary shadow-[0_6px_20px_-6px_rgb(var(--color-primary)/0.7)]">
+                <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-on-primary shadow-glow-primary">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <p className="mt-5 font-mono text-xs text-muted">Step 0{i + 1}</p>

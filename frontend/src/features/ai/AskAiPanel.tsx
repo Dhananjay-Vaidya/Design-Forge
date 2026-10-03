@@ -162,7 +162,7 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 z-40 bg-[rgb(5_8_12/0.35)] backdrop-blur-[2px]"
+            className="fixed inset-0 z-40 bg-scrim/35 backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -186,7 +186,7 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
             transition={{ type: "spring", stiffness: 380, damping: 38 }}
           >
             <header className="flex items-start gap-3 border-b border-border/70 px-5 py-4">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-ai to-primary text-white shadow-[0_6px_18px_-6px_rgb(var(--color-ai)/0.8)]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ai-gradient shadow-glow-ai">
                 <Sparkles className="h-4 w-4" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
@@ -420,7 +420,7 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
                     type="submit"
                     disabled={!enabled || exhausted || !draft.trim()}
                     aria-label="Send question"
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-gradient-to-br from-ai to-primary text-white transition-transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg ai-gradient transition-transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
                   >
                     <ArrowUp className="h-4 w-4" />
                   </button>

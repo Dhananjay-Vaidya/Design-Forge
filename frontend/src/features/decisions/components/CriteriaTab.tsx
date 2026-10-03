@@ -113,7 +113,7 @@ function ActiveSwitch({
         className={`flex h-6 w-10 items-center rounded-full transition-colors duration-base ${checked ? "bg-primary" : "bg-border-strong"}`}
       >
         <span
-          className={`inline-block h-5 w-5 rounded-full bg-white shadow-soft transition-transform duration-base ease-out ${
+          className={`inline-block h-5 w-5 rounded-full bg-highlight shadow-soft transition-transform duration-base ease-out ${
             checked ? "translate-x-[18px]" : "translate-x-0.5"
           }`}
         />

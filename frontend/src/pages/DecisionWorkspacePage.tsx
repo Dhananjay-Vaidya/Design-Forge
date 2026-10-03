@@ -231,7 +231,7 @@ function WorkspaceTabs({ readiness }: { readiness: Readiness }) {
                     {isActive && (
                       <motion.span
                         layoutId="workspace-tab"
-                        className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary shadow-[0_0_12px_rgb(var(--color-primary)/0.8)]"
+                        className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary shadow-glow-line"
                         transition={{ type: "spring", stiffness: 500, damping: 40 }}
                       />
                     )}
@@ -371,7 +371,7 @@ export function DecisionWorkspacePage() {
             >
               <span
                 aria-hidden="true"
-                className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+                className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-highlight/30 to-transparent transition-transform duration-700 group-hover:translate-x-full"
               />
               <Sparkles className="relative h-3.5 w-3.5" aria-hidden="true" />
               <span className="relative">Ask AI</span>

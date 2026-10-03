@@ -275,7 +275,7 @@ export function DashboardPage() {
         </div>
         <ButtonLink
           to="/app/decisions/new"
-          className="group shadow-[0_8px_24px_-10px_rgb(var(--color-primary)/0.7)]"
+          className="group shadow-glow-primary"
         >
           <Plus
             className="h-4 w-4 transition-transform duration-base group-hover:rotate-90"

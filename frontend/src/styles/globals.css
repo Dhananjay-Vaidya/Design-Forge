@@ -3,34 +3,54 @@
 @tailwind utilities;
 
 /*
- * Design tokens — docs/07-frontend-ux-specification.md §10/§11.
- * Channels are space-separated RGB so Tailwind's `/<alpha>` modifiers work.
+ * Design tokens — docs/07-frontend-ux-specification.md §10/§11, docs/15-ui-design-inventory.md.
+ *
+ * Channels are space-separated sRGB ("R G B") so Tailwind's `/<alpha>` modifiers work
+ * (`bg-primary/10`). The values are DERIVED in OKLCH so steps look perceptually even, then
+ * converted; the OKLCH source is kept here so future edits stay on the same ramp:
+ *
+ *   neutral ramp (hue 258)      light                       dark
+ *     bg                        L .975 C .004               L .18  C .025
+ *     surface                   white                       L .22  C .028
+ *     surface-2                 L .957 C .006               L .26  C .032
+ *     border                    L .918 C .009               L .29  C .022
+ *     border-strong             L .855 C .016               L .37  C .027
+ *     field (input border)      L .625 C .022  (>=3:1)      L .545 C .030  (>=3:1)
+ *   brand anchors               teal #006F67 / #2DD4BF      violet #7834E8 / #A78BFA
+ *
+ * Contrast is enforced by tests/styles/contrast.test.ts (WCAG AA: 4.5:1 text, 3:1 UI boundaries).
  * Teal = deterministic/calculated; violet (--color-ai) is reserved for AI-advisory content (AIR-06).
  */
 :root {
   color-scheme: light;
-  --color-bg: 246 247 249;
+  --color-bg: 245 247 249;
   --color-surface: 255 255 255;
-  --color-surface-2: 240 242 245;
+  --color-surface-2: 238 241 245;
   --color-text: 15 23 32;
   --color-muted: 84 96 112;
-  --color-border: 225 229 235;
-  --color-border-strong: 200 207 217;
-  --color-primary: 13 118 110;
+  --color-border: 224 228 234;
+  --color-border-strong: 201 208 218;
+  --color-field: 128 136 149;
+  --color-primary: 0 111 103;
   --color-primary-hover: 15 97 91;
   --color-primary-soft: 222 244 240;
   --color-on-primary: 255 255 255;
-  --color-success: 21 128 61;
-  --color-warning: 180 83 9;
-  --color-danger: 196 30 30;
-  --color-ai: 124 58 237;
+  --color-success: 0 114 48;
+  --color-warning: 165 69 0;
+  --color-danger: 192 24 26;
+  --color-ai: 120 52 232;
+  --color-on-ai: 255 255 255;
+  --color-on-danger: 255 255 255;
+  --color-scrim: 5 8 12;
+  --color-highlight: 255 255 255;
 
   --glass-alpha: 0.96;
   --glass-edge: 255 255 255;
-  --glass-highlight: 0.7;
+  --glass-highlight: 0.9;
   --aurora-1: 45 212 191;
   --aurora-2: 139 92 246;
   --aurora-opacity: 0.08;
+  --grain-opacity: 0.035;
 
   --color-elevated: var(--color-surface);
   --color-floating: var(--color-surface);
@@ -41,12 +61,68 @@
   --color-gold: 138 94 19;
   --color-silver: 88 105 126;
   --color-bronze: 150 82 44;
+
+  /* Shape */
   --radius-control: 0.5rem;
   --radius-panel: 1rem;
-  --space-unit: 0.25rem;
-  --blur-chrome: 8px;
-  --shadow-panel: 0 2px 4px rgb(15 23 42 / 0.025), 0 16px 40px -28px rgb(15 23 42 / 0.22);
-  --shadow-floating: 0 20px 64px -24px rgb(15 23 42 / 0.28);
+  --blur-chrome: 6px;
+
+  /*
+   * Elevation scale. Every step is two stacked, low-opacity shadows (a tight contact shadow and a
+   * soft ambient one). --shadow-strength lets dark mode deepen them without a second table.
+   */
+  --shadow-ink: 15 23 32;
+  --shadow-strength: 1;
+  --shadow-sm:
+    0 1px 2px rgb(var(--shadow-ink) / calc(0.05 * var(--shadow-strength))),
+    0 2px 6px -2px rgb(var(--shadow-ink) / calc(0.06 * var(--shadow-strength)));
+  --shadow-md:
+    0 2px 4px rgb(var(--shadow-ink) / calc(0.04 * var(--shadow-strength))),
+    0 8px 20px -8px rgb(var(--shadow-ink) / calc(0.1 * var(--shadow-strength)));
+  --shadow-lg:
+    0 4px 8px rgb(var(--shadow-ink) / calc(0.04 * var(--shadow-strength))),
+    0 16px 36px -12px rgb(var(--shadow-ink) / calc(0.16 * var(--shadow-strength)));
+  --shadow-xl:
+    0 8px 16px rgb(var(--shadow-ink) / calc(0.05 * var(--shadow-strength))),
+    0 28px 64px -20px rgb(var(--shadow-ink) / calc(0.26 * var(--shadow-strength)));
+  --shadow-panel:
+    0 2px 4px rgb(var(--shadow-ink) / calc(0.025 * var(--shadow-strength))),
+    0 16px 40px -28px rgb(var(--shadow-ink) / calc(0.22 * var(--shadow-strength)));
+  --shadow-floating: var(--shadow-xl);
+  /* Coloured glows: primary CTAs (teal) and AI actions (violet) only. */
+  --shadow-glow-primary:
+    0 2px 6px -2px rgb(var(--color-primary) / 0.3),
+    0 10px 26px -10px rgb(var(--color-primary) / 0.55);
+  --shadow-glow-ai:
+    0 2px 6px -2px rgb(var(--color-ai) / 0.3), 0 10px 26px -10px rgb(var(--color-ai) / 0.55);
+  /* Active-tab underline glow, and the pressed-keycap look on <kbd>. */
+  --shadow-glow-line: 0 0 12px rgb(var(--color-primary) / 0.8);
+  --shadow-keycap: inset 0 -2px 0 rgb(var(--color-border-strong));
+
+  /*
+   * Fluid type scale (Geist). Each step breathes between a phone and a wide desktop without
+   * manual breakpoints; pair with the matching Tailwind utility (text-hero, text-title, ...).
+   */
+  --text-hero: clamp(2.25rem, 1.45rem + 3.4vw, 3.75rem);
+  --text-title: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+  --text-section: clamp(1.625rem, 1.25rem + 1.5vw, 2.5rem);
+  --text-heading: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  --text-lead: clamp(1.0625rem, 0.98rem + 0.4vw, 1.25rem);
+  --text-card: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+
+  /*
+   * Spacing rhythm. --density scales the working-surface steps (Comfortable 1, Compact < 1, set
+   * by the density toggle); --space-section is the marketing rhythm and stays fluid only.
+   */
+  --density: 1;
+  --space-section: clamp(4rem, 2.6rem + 5vw, 7rem);
+  --space-stack: calc(1.5rem * var(--density));
+  --space-gutter: calc(1rem * var(--density));
+  --space-pad: calc(1.25rem * var(--density));
+  --control-sm: calc(2.25rem * var(--density));
+  --control-md: calc(2.5rem * var(--density));
+  --control-lg: 3rem;
+
   --z-chrome: 30;
   --z-overlay: 40;
   --z-dialog: 50;
@@ -66,6 +142,7 @@
   --color-muted: 150 161 176;
   --color-border: 37 44 55;
   --color-border-strong: 55 64 78;
+  --color-field: 102 113 130;
   --color-primary: 45 212 191;
   --color-primary-hover: 94 234 212;
   --color-primary-soft: 16 46 44;
@@ -74,11 +151,17 @@
   --color-warning: 251 191 36;
   --color-danger: 248 113 113;
   --color-ai: 167 139 250;
+  /* White on these light dark-mode fills is only 1.9–2.8:1; dark ink is 5.8–10:1. */
+  --color-on-ai: 10 16 26;
+  --color-on-danger: 10 16 26;
 
   --glass-alpha: 0.96;
   --glass-edge: 148 163 184;
-  --glass-highlight: 0.06;
+  --glass-highlight: 0.08;
   --aurora-opacity: 0.07;
+  --grain-opacity: 0.07;
+  --shadow-ink: 0 0 0;
+  --shadow-strength: 3;
   --color-info: 137 183 246;
   --color-scenario: 192 165 245;
   --color-gold: 228 195 117;
@@ -144,6 +227,15 @@
 }
 
 @layer components {
+  /*
+   * SURFACES — pick by what the surface is for:
+   *   .card   working surfaces: editor rows, forms, tables, anything the user reads or edits.
+   *           Opaque, hairline border, soft panel shadow.
+   *   .glass  chrome and anything floating over the ambient wash: headers, menus, dialogs,
+   *           toasts, stat tiles, hero previews. 96–98 % opaque so text contrast never depends
+   *           on what happens to be behind it; blur is switched off on touch / small screens.
+   * AI surfaces additionally get .border-ai-gradient; calculated surfaces keep solid teal/gold.
+   */
   .card {
     @apply rounded-xl border border-border bg-surface;
     box-shadow: var(--shadow-panel);
@@ -154,9 +246,9 @@
   }
 
   .input-base {
-    @apply min-h-11 w-full rounded-lg border border-border-strong bg-surface px-3 text-[15px] text-text
-      placeholder:text-muted/70 transition-[border-color,box-shadow] duration-fast
-      hover:border-muted/60 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15
+    @apply min-h-11 w-full rounded-lg border border-field bg-surface px-3 text-[15px] text-text
+      placeholder:text-muted/80 transition-[border-color,box-shadow] duration-fast ease-out
+      hover:border-muted focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15
       disabled:cursor-not-allowed disabled:opacity-60;
   }
 
@@ -176,27 +268,24 @@
     animation: shimmer 1.4s infinite;
   }
 
-  /*
-   * Glass surfaces. Used for chrome (header, menus, dialogs, toasts) and hero/preview cards that
-   * sit over the ambient background. Opacity stays high enough that text contrast never depends
-   * on what happens to be behind the panel.
-   */
   .glass {
     background: rgb(var(--color-surface) / var(--glass-alpha));
     border: 1px solid rgb(var(--color-border));
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / var(--glass-highlight)),
-      0 1px 2px rgb(15 23 32 / 0.04),
-      0 12px 40px -16px rgb(15 23 32 / 0.18);
+      inset 0 1px 0 rgb(var(--color-highlight) / var(--glass-highlight)),
+      var(--shadow-md);
     -webkit-backdrop-filter: blur(var(--blur-chrome));
     backdrop-filter: blur(var(--blur-chrome));
   }
   .glass-strong {
     @apply glass;
     --glass-alpha: 0.98;
+    box-shadow:
+      inset 0 1px 0 rgb(var(--color-highlight) / var(--glass-highlight)),
+      var(--shadow-lg);
   }
 
-  /* Cursor-following highlight; --mx/--my are set by <SpotlightCard>. */
+  /* Cursor-following highlight; --mx/--my are set by <SpotlightCard> / trackSpotlight. */
   .spotlight {
     position: relative;
     isolation: isolate;
@@ -208,11 +297,11 @@
     z-index: -1;
     border-radius: inherit;
     opacity: 0;
-    transition: opacity var(--dur-base) ease-out;
+    transition: opacity 300ms ease-out;
     background: radial-gradient(
-      420px circle at var(--mx, 50%) var(--my, 50%),
-      rgb(var(--color-primary) / 0.12),
-      transparent 55%
+      520px circle at var(--mx, 50%) var(--my, 50%),
+      rgb(var(--color-primary) / 0.07),
+      transparent 60%
     );
   }
   .spotlight::after {
@@ -223,10 +312,10 @@
     border-radius: inherit;
     padding: 1px;
     opacity: 0;
-    transition: opacity var(--dur-base) ease-out;
+    transition: opacity 300ms ease-out;
     background: radial-gradient(
-      260px circle at var(--mx, 50%) var(--my, 50%),
-      rgb(var(--color-primary) / 0.55),
+      300px circle at var(--mx, 50%) var(--my, 50%),
+      rgb(var(--color-primary) / 0.4),
       transparent 60%
     );
     -webkit-mask:
@@ -240,6 +329,65 @@
   .spotlight:focus-within::before,
   .spotlight:focus-within::after {
     opacity: 1;
+  }
+
+  /*
+   * Press feedback for interactive cards and links. Uses the individual `scale` property so it
+   * composes with Tailwind hover translations (which use `transform`) instead of replacing them.
+   */
+  .pressable {
+    transition: scale var(--dur-fast) var(--ease-out);
+  }
+  .pressable:active {
+    scale: 0.98;
+  }
+
+  /*
+   * Matte film grain. Place `<div class="grain" aria-hidden="true" />` inside a positioned
+   * container; it fills it, never intercepts input, and sits at ~3 % (light) / ~7 % (dark).
+   */
+  .grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+
+  /*
+   * 1 px violet→teal gradient border for AI surfaces ONLY (Ask AI panel, AI result cards).
+   * Needs a positioned element; drawn with a masked pseudo-element so the interior stays clear.
+   */
+  .border-ai-gradient {
+    position: relative;
+  }
+  .border-ai-gradient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+      160deg,
+      rgb(var(--color-ai) / 0.85),
+      rgb(var(--color-ai) / 0.25) 45%,
+      rgb(var(--color-primary) / 0.7)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Primary AI action fill (Ask AI send button, avatar, icon tiles). Text uses on-ai. */
+  .ai-gradient {
+    background-image: linear-gradient(135deg, rgb(var(--color-ai)), rgb(var(--color-primary)));
+    color: rgb(var(--color-on-ai));
   }
 
   .text-gradient {
@@ -372,9 +520,16 @@ html[data-effects-paused] *::after {
     animation: none;
   }
 }
+/* Pointer glow needs a pointer. */
+@media (hover: none) {
+  .spotlight::before,
+  .spotlight::after {
+    display: none;
+  }
+}
 
 dialog::backdrop {
-  background: rgb(5 8 12 / 0.55);
+  background: rgb(var(--color-scrim) / 0.55);
   backdrop-filter: blur(2px);
 }
 
@@ -390,5 +545,8 @@ dialog::backdrop {
   .spotlight::before,
   .spotlight::after {
     display: none;
+  }
+  .pressable:active {
+    scale: 1;
   }
 }
