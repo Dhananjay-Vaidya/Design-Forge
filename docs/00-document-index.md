@@ -31,6 +31,7 @@ This directory is the complete technical documentation package for **DecisionFor
 | `12-implementation-roadmap.md` | Implementation Roadmap | Epics, stories (with IDs, value, acceptance criteria, complexity), dependencies, phases, milestones, DoR/DoD. |
 | `13-claude-code-execution-plan.md` | Claude Code Execution Plan | Repo creation order, file plan, phase instructions, per-phase verification commands, commit checkpoints, hard rules. |
 | `14-assumptions-open-questions.md` | Assumptions & Open Questions | Confirmed assumptions, unresolved questions, recommended defaults, source-document conflicts, product-owner decisions. |
+| `15-ui-design-inventory.md` | UI Design Inventory | As-built catalogue of design tokens, typography, motion, shared components, and the elements and effects used on every page and panel; cleanup candidates. |
 
 ## 3. Recommended Reading Order
 
