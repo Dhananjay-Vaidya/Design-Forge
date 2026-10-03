@@ -2,6 +2,8 @@ import {
   ArrowUpRight,
   Calculator,
   CalendarDays,
+  Check,
+  ChevronDown,
   CircleCheck,
   CircleDashed,
   FolderOpen,
@@ -12,12 +14,15 @@ import {
   Plus,
   Search,
   Tag,
+  FlaskConical,
+  LayoutTemplate,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { forwardRef, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import { ButtonLink } from "@/components/Button";
+import { ApiError } from "@/api/client";
+import { Button, ButtonLink } from "@/components/Button";
 import { EmptyState, ErrorState, Skeleton } from "@/components/States";
 import { CountUp } from "@/components/fx/CountUp";
 import { trackSpotlight } from "@/components/fx/spotlight";
@@ -25,7 +30,9 @@ import { StatusChip } from "@/features/decisions/components/StatusChip";
 import { useDecisions } from "@/features/decisions/hooks";
 import { ACTIVE_STATUSES, COMPLETED_STATUSES } from "@/features/decisions/status";
 import { daysUntil, deadlineLabel, parseLocalDate, timeAgo } from "@/lib/format";
+import { useCreateDemo } from "@/features/templates/hooks";
 import { useAuthStore } from "@/stores/authStore";
+import { toast } from "@/stores/toastStore";
 import type { Decision } from "@/types/decision";
 
 type Filter = "all" | "active" | "completed" | "archived";
@@ -45,6 +52,108 @@ const sorts: { value: Sort; label: string }[] = [
   { value: "deadline", label: "Deadline soonest" },
   { value: "title", label: "Title A–Z" },
 ];
+
+const sortIcons: Record<Sort, LucideIcon> = {
+  updated: CircleDashed,
+  created: Plus,
+  deadline: CalendarDays,
+  title: Tag,
+};
+
+function SortMenu({ value, onChange }: { value: Sort; onChange: (value: Sort) => void }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const active = sorts.find((item) => item.value === value) ?? sorts[0];
+  const ActiveIcon = sortIcons[active.value];
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative z-20 min-w-[14rem]">
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Sort decisions"
+        onClick={() => setOpen((current) => !current)}
+        className={`group flex min-h-9 w-full items-center gap-2 rounded-lg border px-3 text-left text-sm transition-[border-color,box-shadow,background-color] duration-base ease-out ${
+          open
+            ? "border-primary bg-primary/10 text-text ring-4 ring-primary/15"
+            : "border-border bg-surface/70 text-text hover:border-primary/50 hover:bg-surface"
+        }`}
+      >
+        <ActiveIcon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        <span className="min-w-0 flex-1 truncate font-medium">{active.label}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-muted transition-transform duration-base ${open ? "rotate-180 text-primary" : ""}`}
+          aria-hidden="true"
+        />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -5, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
+            role="listbox"
+            aria-label="Sort decisions by"
+            className="absolute right-0 top-[calc(100%+0.5rem)] w-full min-w-[15rem] overflow-hidden rounded-xl border border-border bg-surface shadow-xl ring-1 ring-primary/10"
+          >
+            <div className="border-b border-border/70 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+              Sort by
+            </div>
+            <div className="p-1.5">
+              {sorts.map((item) => {
+                const Icon = sortIcons[item.value];
+                const selected = item.value === value;
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    onClick={() => {
+                      onChange(item.value);
+                      setOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
+                      selected
+                        ? "bg-primary/10 text-text"
+                        : "text-muted hover:bg-surface-2 hover:text-text"
+                    }`}
+                  >
+                    <span
+                      className={`grid h-7 w-7 place-items-center rounded-md ${selected ? "bg-primary/15 text-primary" : "bg-surface-2 text-muted"}`}
+                    >
+                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                    <span className="flex-1 font-medium">{item.label}</span>
+                    {selected && <Check className="h-4 w-4 text-primary" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const VIEW_KEY = "df-dashboard-view";
 
@@ -75,6 +184,34 @@ function compare(sort: Sort) {
     }
     return b.updated_at.localeCompare(a.updated_at);
   };
+}
+
+/** First run: three ways in. Blank wizard, a template, or a ready-made sample to explore. */
+function FirstRunActions() {
+  const navigate = useNavigate();
+  const demo = useCreateDemo();
+  const startSample = () =>
+    demo.mutate(undefined, {
+      onSuccess: (decision) => navigate(`/app/decisions/${decision.id}/ranking?tour=1`),
+      onError: (e) =>
+        toast.error("Couldn't create the sample", e instanceof ApiError ? e.message : undefined),
+    });
+  return (
+    <div className="flex flex-wrap justify-center gap-2">
+      <ButtonLink to="/app/decisions/new">
+        <Plus className="h-4 w-4" aria-hidden="true" />
+        Create your first decision
+      </ButtonLink>
+      <ButtonLink to="/app/templates" variant="secondary">
+        <LayoutTemplate className="h-4 w-4" aria-hidden="true" />
+        Use a template
+      </ButtonLink>
+      <Button variant="ghost" onClick={startSample} isLoading={demo.isPending}>
+        <FlaskConical className="h-4 w-4" aria-hidden="true" />
+        Try a sample
+      </Button>
+    </div>
+  );
 }
 
 function greeting() {
@@ -273,10 +410,7 @@ export function DashboardPage() {
             A working library of questions, evidence, and reasoned choices.
           </p>
         </div>
-        <ButtonLink
-          to="/app/decisions/new"
-          className="group shadow-glow-primary"
-        >
+        <ButtonLink to="/app/decisions/new" className="group shadow-glow-primary">
           <Plus
             className="h-4 w-4 transition-transform duration-base group-hover:rotate-90"
             aria-hidden="true"
@@ -309,12 +443,7 @@ export function DashboardPage() {
           icon={FolderOpen}
           title="Frame your first decision"
           description="Name what you're deciding, list the options, choose the criteria that matter, and get a ranking you can explain."
-          action={
-            <ButtonLink to="/app/decisions/new">
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Create your first decision
-            </ButtonLink>
-          }
+          action={<FirstRunActions />}
           className="glass py-16"
         />
       ) : (
@@ -394,18 +523,7 @@ export function DashboardPage() {
                   className="input-base min-h-9 bg-surface/70 pl-9 text-sm"
                 />
               </div>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as Sort)}
-                aria-label="Sort decisions"
-                className="input-base min-h-9 w-auto cursor-pointer bg-surface/70 pr-8 text-sm"
-              >
-                {sorts.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
+              <SortMenu value={sort} onChange={setSort} />
               <div
                 role="group"
                 aria-label="Layout"

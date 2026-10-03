@@ -504,6 +504,66 @@
         "title": "DecisionCreateRequest",
         "type": "object"
       },
+      "DecisionFromTemplateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "context": {
+            "default": "",
+            "title": "Context",
+            "type": "string"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Options",
+            "type": "array"
+          },
+          "template_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Template Id",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "template_id",
+          "title"
+        ],
+        "title": "DecisionFromTemplateRequest",
+        "type": "object"
+      },
       "DecisionPatchRequest": {
         "additionalProperties": false,
         "description": "API-11 \u2014 `status` may only be set to ARCHIVED (other transitions are automatic/dedicated).",
@@ -657,6 +717,27 @@
           "archived_at"
         ],
         "title": "DecisionRead",
+        "type": "object"
+      },
+      "DemoStatus": {
+        "properties": {
+          "decision_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Id"
+          }
+        },
+        "required": [
+          "decision_id"
+        ],
+        "title": "DemoStatus",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -977,6 +1058,126 @@
           "margin"
         ],
         "title": "SensitivitySchema",
+        "type": "object"
+      },
+      "TemplateCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "decision_id": {
+            "format": "uuid",
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision_id",
+          "name"
+        ],
+        "title": "TemplateCreateRequest",
+        "type": "object"
+      },
+      "TemplateCriterionRead": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "benefit",
+              "cost"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "weight",
+          "direction"
+        ],
+        "title": "TemplateCriterionRead",
+        "type": "object"
+      },
+      "TemplateRead": {
+        "description": "`id` is `builtin:<slug>` for catalogue templates and a UUID for the caller's own.",
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateCriterionRead"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "builtin",
+              "mine"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "option_hints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Option Hints",
+            "type": "array"
+          },
+          "title_hint": {
+            "title": "Title Hint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "description",
+          "category",
+          "title_hint",
+          "criteria",
+          "option_hints"
+        ],
+        "title": "TemplateRead",
         "type": "object"
       },
       "UserProfileRead": {
@@ -1597,6 +1798,52 @@
         "summary": "Create Decision",
         "tags": [
           "decisions"
+        ]
+      }
+    },
+    "/api/v1/decisions/from-template": {
+      "post": {
+        "operationId": "create_decision_from_template_api_v1_decisions_from_template_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionFromTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Decision From Template",
+        "tags": [
+          "templates"
         ]
       }
     },
@@ -2229,6 +2476,58 @@
         ]
       }
     },
+    "/api/v1/demo": {
+      "get": {
+        "operationId": "demo_status_api_v1_demo_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Demo Status",
+        "tags": [
+          "templates"
+        ]
+      }
+    },
+    "/api/v1/demo/decision": {
+      "post": {
+        "operationId": "create_demo_decision_api_v1_demo_decision_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Demo Decision",
+        "tags": [
+          "templates"
+        ]
+      }
+    },
     "/api/v1/me": {
       "get": {
         "operationId": "get_me_api_v1_me_get",
@@ -2317,6 +2616,120 @@
         "summary": "Update Profile",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/api/v1/templates": {
+      "get": {
+        "operationId": "list_templates_api_v1_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateRead"
+                  },
+                  "title": "Response List Templates Api V1 Templates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Templates",
+        "tags": [
+          "templates"
+        ]
+      },
+      "post": {
+        "operationId": "save_template_api_v1_templates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save Template",
+        "tags": [
+          "templates"
+        ]
+      }
+    },
+    "/api/v1/templates/{template_id}": {
+      "delete": {
+        "operationId": "delete_template_api_v1_templates__template_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Template",
+        "tags": [
+          "templates"
         ]
       }
     },

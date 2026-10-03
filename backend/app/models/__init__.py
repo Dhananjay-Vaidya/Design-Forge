@@ -1,4 +1,5 @@
 from app.models.decision import Alternative, AlternativeScore, Criterion, Decision
+from app.models.template import UserTemplate
 from app.models.user import RefreshToken, User, UserProfile
 
 __all__ = [
@@ -9,4 +10,5 @@ __all__ = [
     "Alternative",
     "Criterion",
     "AlternativeScore",
+    "UserTemplate",
 ]

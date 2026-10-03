@@ -303,6 +303,11 @@ async def _refresh_decision_status(db: AsyncSession, decision: Decision) -> None
         await db.flush()
 
 
+async def refresh_status(db: AsyncSession, decision: Decision) -> None:
+    """Public hook for services that create scored data in bulk (demo mode, CSV import)."""
+    await _refresh_decision_status(db, decision)
+
+
 async def calculate_ranking(db: AsyncSession, decision: Decision) -> engine.RankingResult:
     """UC-07. Raises engine.ScoringError subclasses on BR-002/003/005 guard failures."""
     alternatives = await decision_repository.list_alternatives(db, decision_id=decision.id)

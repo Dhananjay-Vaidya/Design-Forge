@@ -140,7 +140,9 @@ without it. No connection strings, hosts, credentials or exception text are ever
 
 | Metric | Labels | Recorded by | Live today? |
 |--------|--------|-------------|-------------|
-| `decisionforge_decisions_created_total` | none | `decision_service.create_decision` | **Yes** |
+| `decisionforge_decisions_created_total` | none | `decision_service.create_decision`, `template_service.create_from_template` | **Yes** |
+| `decisionforge_decisions_from_template_total` | `source`: builtin / mine / demo | `template_service.create_from_template` | **Yes** |
+| `decisionforge_templates_saved_total` | none | `template_service.save_from_decision` | **Yes** |
 | `decisionforge_ranking_calculations_total` | `status`: success / rejected / failure | `metrics.ranking_timer` in `GET /decisions/{id}/ranking` | **Yes** (`rejected` = unrankable input, a 4xx; not a system failure) |
 | `decisionforge_ranking_duration_seconds` | none | same | **Yes** |
 | `decisionforge_sensitivity_analyses_total` | `status` | ranking endpoint (sensitivity runs inside every ranking) | **Yes** |

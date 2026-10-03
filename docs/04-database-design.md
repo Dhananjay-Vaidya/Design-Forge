@@ -376,6 +376,24 @@ Append-only (no UPDATE/DELETE in app). Index (actor_id, created_at); index (targ
 | token_count | int | NOT NULL default 0 |
 **UNIQUE (user_id, usage_date, operation)** — daily quota accounting (BR-013); no prompt text (data reqs).
 
+### 4.15 `decision_templates` [REC — FX-16]
+User-saved templates. The six built-in templates are an immutable catalogue in code
+(`backend/app/domain/templates.py`), not rows, so they can never drift between environments.
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| owner_id | uuid | FK→user.id, NOT NULL, ON DELETE CASCADE |
+| name | varchar(120) | NOT NULL; **UNIQUE (owner_id, name)** |
+| description | text | NOT NULL |
+| category | varchar(64) | NOT NULL |
+| title_hint | varchar(200) | NOT NULL |
+| criteria_json | jsonb | NOT NULL — `[{name, description, weight, direction}]`, active criteria only |
+| created_at | timestamptz | NOT NULL default now() |
+Immutable (delete and re-save to change). Capped at 50 per user. Creating a decision from a template
+clones `criteria_json` into ordinary `criterion` rows, so scoring and ranking never see a template.
+Demo mode (FX-20) stores the id of the user's sample decision in `profile.preferences.demo_decision_id`
+(no schema change); it is ignored unless that decision still exists and the user owns it.
+
 ## 5. Indexes (summary)
 
 | Table | Index | Reason |

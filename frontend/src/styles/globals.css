@@ -384,6 +384,16 @@
     mask-composite: exclude;
   }
 
+  /*
+   * Guided tour: a ring around the target with a huge spread shadow that dims everything else.
+   * Position/size are set inline per step and change instantly (nothing animates layout).
+   */
+  .tour-spotlight {
+    box-shadow:
+      0 0 0 2px rgb(var(--color-primary)),
+      0 0 0 100vmax rgb(var(--color-scrim) / 0.5);
+  }
+
   /* Primary AI action fill (Ask AI send button, avatar, icon tiles). Text uses on-ai. */
   .ai-gradient {
     background-image: linear-gradient(135deg, rgb(var(--color-ai)), rgb(var(--color-primary)));

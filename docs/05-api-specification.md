@@ -154,6 +154,16 @@ Legend: 🔒 = auth required + ownership enforced.
 ### Export
 | API-37 | `GET /decisions/{id}/export?format=json\|pdf` 🔒 | Export one decision | FR-017 |
 
+### Templates and demo mode [REC — FX-01 / FX-16 / FX-20]
+| ID | Endpoint | Purpose | Notes |
+|----|----------|---------|-------|
+| API-41 | `GET /templates` 🔒 | Built-in catalogue + the caller's own templates | `id` is `builtin:<slug>` or a UUID; `kind` is `builtin` or `mine` |
+| API-42 | `POST /templates` 🔒 | Save one of the caller's decisions as a template `{decision_id, name, description?}` | 201; 400 if no active criteria or the name already exists; 404 for someone else's decision |
+| API-43 | `DELETE /templates/{id}` 🔒 | Delete one of the caller's own templates | 204; 404 for built-ins, unknown or other users' ids |
+| API-44 | `POST /decisions/from-template` 🔒 | Create a decision with its criteria (and optional options) in one transaction `{template_id, title, context?, category?, deadline?, options?[≤20]}` | 201 `DecisionRead`; 404 unknown/foreign template; 400 duplicate or oversized options; nothing is created on failure |
+| API-45 | `GET /demo` 🔒 | The caller's sample decision id, or `null` | Ignores a deleted sample |
+| API-46 | `POST /demo/decision` 🔒 | Create (or reset) the fully scored sample decision | 201; replaces any previous sample; deliberately a close call |
+
 ### Ops
 | API-38 | `GET /healthz` | Liveness | OBS-06 |
 | API-39 | `GET /readyz` | Readiness (DB/Redis) | OBS-06 |

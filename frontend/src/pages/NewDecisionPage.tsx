@@ -469,6 +469,18 @@ export function NewDecisionPage() {
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Dashboard
       </Link>
+      {step === 0 && (
+        <p className="mt-3 text-sm text-muted">
+          Deciding something common?{" "}
+          <Link
+            to="/app/templates"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Start from a template
+          </Link>{" "}
+          to preload the criteria.
+        </p>
+      )}
 
       <div className="mt-6">
         <Stepper current={step} />

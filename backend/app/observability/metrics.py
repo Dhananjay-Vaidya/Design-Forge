@@ -59,6 +59,15 @@ OUTCOME_REVIEWS = Counter(
     "decisionforge_outcome_reviews_total",
     "Total outcome reviews.",
 )
+DECISIONS_FROM_TEMPLATE = Counter(
+    "decisionforge_decisions_from_template_total",
+    "Decisions created from a template, by template source.",
+    ["source"],
+)
+TEMPLATES_SAVED = Counter(
+    "decisionforge_templates_saved_total",
+    "Templates a user saved from one of their decisions.",
+)
 
 AI_REQUESTS = Counter(
     "decisionforge_ai_requests_total",
@@ -162,6 +171,17 @@ def record_sensitivity(status: str = "success") -> None:
 
 def record_scenario_comparison(status: str = "success") -> None:
     SCENARIO_COMPARISONS.labels(status=bounded(status, ALLOWED_STATUS, "failure")).inc()
+
+
+ALLOWED_TEMPLATE_SOURCE = {"builtin", "mine", "demo"}
+
+
+def record_decision_from_template(source: str) -> None:
+    DECISIONS_FROM_TEMPLATE.labels(source=bounded(source, ALLOWED_TEMPLATE_SOURCE)).inc()
+
+
+def record_template_saved() -> None:
+    TEMPLATES_SAVED.inc()
 
 
 def record_outcome_review() -> None:

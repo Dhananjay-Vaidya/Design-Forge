@@ -95,6 +95,8 @@ Memory used, evicted keys, connected clients, commands processed, keyspace hits/
 | Metric | Type | Purpose |
 |--------|------|---------|
 | `decisionforge_decisions_created_total` | Counter | Core activity (DPR) |
+| `decisionforge_decisions_from_template_total{source}` | Counter | Template adoption; `source` is bounded to `builtin`, `mine` or `demo` [REC FX-01/20] |
+| `decisionforge_templates_saved_total` | Counter | Templates saved from decisions [REC FX-16] |
 | `decisionforge_active_decisions` | Gauge | Open decisions (DPR) |
 | `decisionforge_analyses_requested_total` | Counter | AI demand |
 | `decisionforge_analyses_completed_total` | Counter | AI completion (validity trend) |

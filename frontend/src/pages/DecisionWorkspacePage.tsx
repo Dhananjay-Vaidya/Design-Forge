@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Archive,
+  BookmarkPlus,
   CalendarDays,
   Check,
   ChevronRight,
@@ -14,10 +15,18 @@ import {
   Trash2,
   Trophy,
 } from "lucide-react";
-import { type ReactNode, useId, useState } from "react";
+import { type ReactNode, useEffect, useId, useState } from "react";
 import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
-import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 
 import { ApiError } from "@/api/client";
 import { Button, ButtonLink } from "@/components/Button";
@@ -33,6 +42,9 @@ import {
   useReadiness,
   useUpdateDecision,
 } from "@/features/decisions/hooks";
+import { DemoBanner } from "@/features/templates/components/DemoBanner";
+import { SaveTemplateDialog } from "@/features/templates/components/SaveTemplateDialog";
+import { GuidedTour, type TourStep } from "@/features/tour/GuidedTour";
 import { deadlineLabel, timeAgo } from "@/lib/format";
 import {
   CATEGORY_SUGGESTIONS,
@@ -41,6 +53,35 @@ import {
 } from "@/schemas/decision";
 import { toast } from "@/stores/toastStore";
 import type { Decision } from "@/types/decision";
+
+/** Walks the ranking screen of the sample decision; targets are `data-tour` attributes. */
+const TOUR_STEPS: TourStep[] = [
+  {
+    target: '[data-tour="stage-tabs"]',
+    title: "Four stages, one flow",
+    body: "Options, Criteria, Scores, then Ranking. The badges show what is complete and what still needs work.",
+  },
+  {
+    target: '[data-tour="leader"]',
+    title: "The calculated leader",
+    body: "A weighted sum of your own scores. The same inputs always give the same answer, and no AI is involved.",
+  },
+  {
+    target: '[data-tour="stability"]',
+    title: "Is the lead safe?",
+    body: "This sample is a deliberate close call: a small change to a weight or score could flip the winner.",
+  },
+  {
+    target: '[data-tour="breakdown"]',
+    title: "Why it ranks this way",
+    body: "The points each criterion contributed to every option, so nothing is a black box.",
+  },
+  {
+    target: '[data-tour="ask-ai"]',
+    title: "Ask AI, as an advisor",
+    body: "Optional questions, risks and counter-arguments. It is clearly marked advisory and can never change your ranking.",
+  },
+];
 
 function EditDecisionDialog({
   decision,
@@ -207,7 +248,11 @@ function WorkspaceTabs({ readiness }: { readiness: Readiness }) {
           ))}
         </select>
       </label>
-      <nav aria-label="Decision stages" className="hidden overflow-x-auto sm:block">
+      <nav
+        aria-label="Decision stages"
+        data-tour="stage-tabs"
+        className="hidden overflow-x-auto sm:block"
+      >
         <ol className="flex min-w-max items-center gap-1 border-b border-border">
           {tabs.map((tab, i) => (
             <li key={tab.to} className="flex items-center">
@@ -268,8 +313,25 @@ export function DecisionWorkspacePage() {
   const readiness = useReadiness(decisionId);
   const update = useUpdateDecision(decisionId);
   const remove = useDeleteDecision(decisionId);
-  const [dialog, setDialog] = useState<"edit" | "archive" | "delete" | null>(null);
+  const [dialog, setDialog] = useState<"edit" | "archive" | "delete" | "template" | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const ready = !isLoading && !!decision;
+
+  // Arriving from "Try a sample" (?tour=1) starts the tour once the screen has loaded.
+  useEffect(() => {
+    if (ready && searchParams.get("tour") === "1") {
+      setTourOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [ready, searchParams, setSearchParams]);
+
+  const startTour = () => {
+    if (!location.pathname.endsWith("/ranking")) navigate("ranking");
+    setTourOpen(true);
+  };
 
   if (isLoading) return <HeaderSkeleton />;
 
@@ -366,6 +428,7 @@ export function DecisionWorkspacePage() {
           <div className="flex shrink-0 flex-wrap gap-2">
             <button
               type="button"
+              data-tour="ask-ai"
               onClick={() => setAiOpen(true)}
               className="group relative inline-flex h-9 cursor-pointer items-center gap-1.5 overflow-hidden rounded-lg border border-ai/30 bg-ai/10 px-3 text-sm font-medium text-ai transition-colors hover:bg-ai/20 active:scale-[0.98]"
             >
@@ -376,6 +439,10 @@ export function DecisionWorkspacePage() {
               <Sparkles className="relative h-3.5 w-3.5" aria-hidden="true" />
               <span className="relative">Ask AI</span>
             </button>
+            <Button variant="secondary" size="sm" onClick={() => setDialog("template")}>
+              <BookmarkPlus className="h-3.5 w-3.5" aria-hidden="true" />
+              Save as template
+            </Button>
             <Button variant="secondary" size="sm" onClick={() => setDialog("edit")}>
               <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
               Edit
@@ -399,12 +466,20 @@ export function DecisionWorkspacePage() {
         </div>
       </div>
 
+      <DemoBanner decisionId={decision.id} onStartTour={startTour} />
       <WorkspaceTabs readiness={readiness} />
 
       <div className="animate-fade-in">
         <Outlet />
       </div>
 
+      <SaveTemplateDialog
+        decisionId={decision.id}
+        decisionTitle={decision.title}
+        open={dialog === "template"}
+        onClose={() => setDialog(null)}
+      />
+      <GuidedTour steps={TOUR_STEPS} open={tourOpen} onClose={() => setTourOpen(false)} />
       <AskAiPanel
         decisionId={decision.id}
         decisionTitle={decision.title}

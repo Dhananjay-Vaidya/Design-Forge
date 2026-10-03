@@ -172,6 +172,7 @@ function BreakdownTable({ ranking, criteria }: { ranking: Ranking; criteria: Cri
   return (
     <div
       className="card overflow-x-auto"
+      data-tour="breakdown"
       role="region"
       aria-label="Criterion contribution table; scroll for all criteria"
       tabIndex={0}
@@ -290,6 +291,7 @@ export function RankingTab() {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <section
           aria-labelledby="leader-heading"
+          data-tour="leader"
           className="glass winner-panel relative overflow-hidden rounded-2xl p-6"
         >
           <div
@@ -319,6 +321,7 @@ export function RankingTab() {
               </p>
             )}
             <div
+              data-tour="stability"
               className={`mt-6 flex items-start gap-3 rounded-lg border p-3.5 ${
                 stable ? "border-success/25 bg-success/5" : "border-warning/30 bg-warning/5"
               }`}

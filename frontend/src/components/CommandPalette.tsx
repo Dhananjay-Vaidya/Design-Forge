@@ -2,6 +2,7 @@ import {
   CornerDownLeft,
   FileText,
   LayoutDashboard,
+  LayoutTemplate,
   type LucideIcon,
   Moon,
   Plus,
@@ -63,6 +64,13 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         icon: LayoutDashboard,
         group: "Actions",
         run: go("/app"),
+      },
+      {
+        id: "templates",
+        label: "Browse templates",
+        icon: LayoutTemplate,
+        group: "Actions",
+        run: go("/app/templates"),
       },
       {
         id: "theme",

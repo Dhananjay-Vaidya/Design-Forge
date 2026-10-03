@@ -117,6 +117,16 @@ Implemented in `backend/tests/api/test_observability.py`, `test_observability_mo
 - Live query validation: `python -m scripts.check_dashboards` executes every dashboard query
   against a running Prometheus (part of `make verify-observability`).
 
+## 14a. Feature-expansion tests (FX-*)
+
+- **Templates / demo (Phase A)** — `backend/tests/api/test_templates.py`: catalogue shape, exact criteria/option clone
+  (weights, directions, positions, trimming), atomic failure (nothing created), personal-template ownership in every
+  direction (list, use, delete, save-from-foreign-decision), name uniqueness, demo create/reset/ignore-deleted, bounded
+  metric labels. Frontend: `tests/features/templates.test.tsx`, `GuidedTour.test.tsx` (focus, keyboard, focus return),
+  `DemoBanner.test.tsx` (reset navigates and does not refetch the deleted sample).
+- Every FX feature must also be verified with **Gemini disabled**; features that need no AI (templates, demo) are
+  independent of `GEMINI_ENABLED` by construction.
+
 ## 15. Test Fixtures
 
 - Factories (factory_boy [REC]) for User, Decision, Alternative, Criterion, AlternativeScore, Snapshot, Job/Result.
