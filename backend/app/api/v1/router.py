@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     ai,
+    ai_actions,
     alternatives,
     auth,
     commitments,
@@ -26,5 +27,6 @@ api_router.include_router(scores.router)
 api_router.include_router(rankings.router)
 api_router.include_router(snapshots.router)
 api_router.include_router(commitments.router)
+api_router.include_router(ai_actions.router)
 api_router.include_router(insights.router)
 api_router.include_router(ai.router)

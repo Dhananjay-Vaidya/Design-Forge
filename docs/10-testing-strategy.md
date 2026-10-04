@@ -137,6 +137,14 @@ Implemented in `backend/tests/api/test_observability.py`, `test_observability_mo
   committed-option protection, decision delete with commitments, lazy DUE transition on get and list, submit/cancel,
   review cap, calibration scoping and latest-review-per-commitment, ownership on every endpoint). Frontend:
   `tests/features/commitments.test.tsx`.
+- **AI-action framework (AX phase 1)** — `tests/unit/test_guardrails.py` (PII/secret redaction vs dates and numbers,
+  delimiter forging, invisible characters, injection flags with look-alike non-matches, output markup stripping that
+  leaves "salary < 50k" alone) and `tests/api/test_ai_actions.py`, which registers two throwaway actions so the
+  framework is tested on its own: run writes nothing and leaves the ranking unchanged; minimised, delimited prompt
+  (no email, user id or decision id); AI off degrades cleanly and costs nothing; invalid JSON, schema and referential
+  failures are discarded and refunded; markup stripped; cache hit spends no quota; daily budget and breaker; provider
+  outage refunds; per-item accept/reject, double-accept refused, one failing item does not stop the rest, expiry,
+  advisory cannot be accepted, ownership on every endpoint, no prompt text stored. All with `FakeChatProvider`.
 - Every FX feature must also be verified with **Gemini disabled**; features that need no AI (templates, demo) are
   independent of `GEMINI_ENABLED` by construction.
 

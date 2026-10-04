@@ -419,6 +419,26 @@ clones `criteria_json` into ordinary `criterion` rows, so scoring and ranking ne
 Demo mode (FX-20) stores the id of the user's sample decision in `profile.preferences.demo_decision_id`
 (no schema change); it is ignored unless that decision still exists and the user owns it.
 
+### 4.16 `ai_proposals` [REC — AX-INF-1]
+Staged AI suggestions. Nothing here is a score, weight or ranking, and nothing is applied until a person accepts
+an item (doc 18 §1). Migration `a6b7c8d9e0f1`.
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| decision_id | uuid | FK→decisions_decision.id, NOT NULL, ON DELETE CASCADE |
+| snapshot_id | uuid | FK→decision_snapshots.id, NULL (the version the model saw; null if the 100-version cap was reached) |
+| action | varchar(48) | NOT NULL — a registered action name |
+| kind | varchar(12) | **CHECK** in ('proposal','advisory') |
+| status | varchar(12) | **CHECK** in ('QUEUED','READY','ACCEPTED','REJECTED','EXPIRED'); `QUEUED` is reserved, actions run inline today |
+| prompt_version, model | varchar | NOT NULL — the audit trail for "this came from an AI suggestion" |
+| payload_json | jsonb | NOT NULL — `{summary, items[]}` for proposals, `{summary, sections[]}` for advisory; sanitised model output, never prompt text |
+| resolution_json | jsonb | NOT NULL default `{}` — per item: `accepted` (+ `created` reference), `rejected`, or `failed` (+ reason) |
+| input_tokens, output_tokens | int | NULL (counts only) |
+| cache_hit | boolean | NOT NULL |
+| created_at, expires_at, resolved_at | timestamptz | `expires_at` = created + 7 days; expiry is applied when read |
+Index `(decision_id, created_at)`. Accepting an item calls the ordinary service (for example `create_criterion`), so
+the resulting row is a normal teal record; `resolution_json[item].created` points at it.
+
 ## 5. Indexes (summary)
 
 | Table | Index | Reason |

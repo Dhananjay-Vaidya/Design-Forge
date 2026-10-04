@@ -1,3 +1,4 @@
+from app.models.ai_proposal import AIProposal
 from app.models.commitment import Commitment, OutcomeReview
 from app.models.decision import Alternative, AlternativeScore, Criterion, Decision
 from app.models.snapshot import DecisionSnapshot
@@ -16,4 +17,5 @@ __all__ = [
     "DecisionSnapshot",
     "Commitment",
     "OutcomeReview",
+    "AIProposal",
 ]

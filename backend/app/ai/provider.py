@@ -53,7 +53,7 @@ class ChatProvider(Protocol):
     model: str
 
     def stream_chat(
-        self, system: str, messages: Sequence[ChatMessage]
+        self, system: str, messages: Sequence[ChatMessage], *, json_mode: bool = False
     ) -> AsyncIterator[ChatChunk]: ...
 
 
@@ -71,7 +71,7 @@ class GeminiChatProvider:
         )
 
     async def stream_chat(
-        self, system: str, messages: Sequence[ChatMessage]
+        self, system: str, messages: Sequence[ChatMessage], *, json_mode: bool = False
     ) -> AsyncIterator[ChatChunk]:
         from google.genai import errors
 
@@ -85,10 +85,12 @@ class GeminiChatProvider:
         ]
         config = types.GenerateContentConfig(
             system_instruction=system,
-            temperature=0.6,
+            # Structured actions want steadier output than chat does.
+            temperature=0.3 if json_mode else 0.6,
+            response_mime_type="application/json" if json_mode else None,
             # Thinking models count their reasoning against this budget; too small a budget ends
             # the stream before any visible text (verified with gemini-3.8-flash).
-            max_output_tokens=4096,
+            max_output_tokens=6144 if json_mode else 4096,
             thinking_config=_thinking_config(types, self.model),
             # No tools are declared; disabling AFC avoids its per-request warning and overhead.
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
@@ -153,11 +155,13 @@ class FakeChatProvider:
         self.reply = reply
         self.error = error
         self.calls: list[tuple[str, list[ChatMessage]]] = []
+        self.json_modes: list[bool] = []
 
     async def stream_chat(
-        self, system: str, messages: Sequence[ChatMessage]
+        self, system: str, messages: Sequence[ChatMessage], *, json_mode: bool = False
     ) -> AsyncIterator[ChatChunk]:
         self.calls.append((system, list(messages)))
+        self.json_modes.append(json_mode)
         if self.error is not None:
             raise self.error
         text = self.reply or f"(fake) You asked: {messages[-1].content[:80]}"

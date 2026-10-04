@@ -104,6 +104,10 @@ Memory used, evicted keys, connected clients, commands processed, keyspace hits/
 | `decisionforge_commitments_total{kind}` | Counter | Final choices; `kind` is `first` or `changed` (changed mind) [REC FX-06] |
 | `decisionforge_outcome_reviews_total{status}` | Counter | Review events; `status` bounded to `scheduled`, `submitted`, `cancelled` [REC FX-06] |
 | `decisionforge_calibration_views_total` | Counter | Calibration summaries requested [REC FX-06] |
+| `decisionforge_ai_proposals_total{action,status}` | Counter | AI proposals; `action` bounded to registered actions, `status` to created / accepted / rejected / expired / failed [REC AX-INF-1] |
+| `decisionforge_ai_proposal_acceptance_total{action,outcome}` | Counter | Per-item decisions: accepted / rejected / failed. Acceptance rate = accepted ÷ all [REC AX-INF-7] |
+| `decisionforge_ai_injection_flags_total{action}` | Counter | Inputs containing a likely prompt-injection phrase (flag only) [REC AX-INF-6] |
+| `decisionforge_ai_schema_failures_total{action}` | Counter | Answers discarded as invalid; schema-pass rate = 1 − failures ÷ requests (BRD target ≥ 95%) [REC AX-INF-7] |
 | `decisionforge_active_decisions` | Gauge | Open decisions (DPR) |
 | `decisionforge_analyses_requested_total` | Counter | AI demand |
 | `decisionforge_analyses_completed_total` | Counter | AI completion (validity trend) |

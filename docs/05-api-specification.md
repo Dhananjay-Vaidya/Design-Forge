@@ -195,6 +195,23 @@ API-36 response (one data point per commitment: its latest submitted review): `r
 confidence bands: `count`, `avg_confidence`, `success_rate`, `avg_satisfaction`), `categories` (judged only from 3
 reviews), `streaks` (`current`, `best`; a hit is a call on the right side of 50%) and a plain-language `note`.
 
+### AI actions and proposals [REC — AX-INF-1]
+One pipeline for every AI capability: prompt version → model → JSON → schema and referential checks → an
+`AIProposal` the user reviews. AI output never writes a score, weight or ranking; accepting an item performs the
+normal deterministic write. Owner-scoped throughout. With Gemini off these return the standard 503 and nothing else
+in the product is affected.
+| ID | Endpoint | Purpose | Notes |
+|----|----------|---------|-------|
+| API-55 | `GET /ai/actions` 🔒 | Registered capabilities (`name`, `title`, `kind`, `prompt_version`) | |
+| API-56 | `POST /decisions/{id}/ai/{action}` 🔒 | Run one: `{input: {...}}` validated by the action | **201** `{status:"READY", proposal, remaining_today}`; **200** `{status:"FAILED", failure_code, message}` when the answer failed validation (discarded, quota refunded, nothing stored); 400 bad input or not rankable; 404 unknown action; 429 `quota_exhausted`; 503 AI off, breaker open or provider down |
+| API-57 | `GET /decisions/{id}/ai/proposals` 🔒 | This decision's proposals, newest first (max 50) | |
+| API-58 | `GET /ai/proposals/{id}` 🔒 | One proposal (`payload`, `resolution`, `prompt_version`, `model`, `cache_hit`, `advisory: true`) | Past `expires_at` it reads as `EXPIRED` |
+| API-59 | `POST /ai/proposals/{id}/accept` 🔒 | `{item_ids: [1..50]}` — apply those items through the normal services | Each item is independent: `accepted`, or `failed` with the reason; closes the proposal when nothing is left; 400 for advisory, closed, unknown or already-decided items |
+| API-60 | `POST /ai/proposals/{id}/reject` 🔒 | `{item_ids?}` — discard (all undecided items when omitted); dismisses advisory text | |
+
+Deviation from the plan: actions complete inside the request instead of returning a queued `job_id`; the proposal id
+takes that role and `GET /ai/proposals/{id}` still serves reloads.
+
 ### Ops
 | API-38 | `GET /healthz` | Liveness | OBS-06 |
 | API-39 | `GET /readyz` | Readiness (DB/Redis) | OBS-06 |

@@ -25,6 +25,23 @@ structured analyses in §1 are still to do.
 | Storage | Conversations are not stored server-side; the browser keeps them per decision until reload. |
 | Tests (§19) | `backend/tests/api/test_ai_chat.py`, `backend/tests/unit/test_ai_provider.py`, `frontend/tests/components/AssistantText.test.tsx`; all use the fake provider, so no quota is consumed. |
 
+## 0a. AI action framework (AX-INF-1/5/6/8) — as built 2026-10-04
+
+Every structured capability is a registered `AIAction` (`backend/app/ai/actions.py`) executed by one runner
+(`backend/app/ai/runner.py`). See doc 18 for the capability catalogue and `AI_EXPANSION_STATUS.md` for what is built.
+
+| Concern | Implementation |
+|---------|----------------|
+| One pipeline | validate input → minimised context → prompt → cache → breaker → quota → model (JSON mode, one fallback attempt on 5xx/network) → schema check → the action's referential checks → sanitise → store an `ai_proposals` row. |
+| AI proposes, engine disposes | The runner can only create proposals. `ai_proposal_service.accept` calls the action's `apply_item`, which uses the existing services, only for items a person chose. Tested: a run changes nothing and leaves the ranking identical. |
+| Invalid output (AC-007) | Parse, schema or referential failure → discarded, daily quota **refunded**, nothing stored, `200 FAILED`. Counted in `decisionforge_ai_schema_failures_total`. |
+| Guardrails (`app/ai/guardrails.py`) | User text is cleaned (control/zero-width characters), bounded, scrubbed of emails, phone-like numbers, credentialed URLs and key/JWT-shaped tokens, and wrapped in `<untrusted_context label=...>` that cannot be closed or forged from inside. Injection phrases are flagged (metric), not blocked. Output text has markup and control characters removed. The system prompt always carries the safety rules (data is not instructions; cannot change scores; plain text only). |
+| Cache (§15) | Redis, key = SHA-256 of action + prompt version + model + prompt; hit = no quota, no provider call; Redis failure = miss. Each run still creates its own proposal. |
+| Routing (AX-INF-5) | `model_tier` `reasoning` uses `GEMINI_MODEL`, `light` uses `GEMINI_FALLBACK_MODEL`; no model name appears in code. An embedding model is added with Tier 2. |
+| Budget (AX-INF-8) | The existing per-user daily counter (`GEMINI_DAILY_USER_QUOTA`) is shared by chat and actions: one unit per uncached model call. `GET /ai/status` returns `remaining_today`; every run response includes it. |
+| Audit | Each proposal stores `prompt_version`, `model`, and per-item `resolution` with a reference to what an accepted item created. The ledger and cache hold counts and validated output only, never prompt text (tested). |
+| Snapshots | Each run records the version the model saw (`reason = analysis`); if the version cap is full the run still proceeds without one. |
+
 ## 1. AI Use Cases (DPR §Gemini usage strategy)
 
 | Analysis type | Output | Control |

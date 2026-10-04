@@ -19,6 +19,10 @@ ALLOWED_ANALYSIS_TYPE = {
     "chat",
     "unknown",
 }
+# Registered AI action names (app/ai/actions.register adds to this and to ALLOWED_ANALYSIS_TYPE).
+ALLOWED_AI_ACTIONS: set[str] = set()
+ALLOWED_PROPOSAL_STATUS = {"created", "accepted", "rejected", "expired", "failed"}
+ALLOWED_ITEM_OUTCOME = {"accepted", "rejected", "failed"}
 ALLOWED_RESULT = {"hit", "miss", "success", "failure"}
 ALLOWED_TOKEN_TYPE = {"input", "output"}
 ALLOWED_ERROR_CATEGORY = {
@@ -92,6 +96,26 @@ OUTCOME_REVIEWS = Counter(
 CALIBRATION_VIEWS = Counter(
     "decisionforge_calibration_views_total",
     "Calibration summaries requested.",
+)
+AI_PROPOSALS = Counter(
+    "decisionforge_ai_proposals_total",
+    "AI proposals by action and lifecycle status.",
+    ["action", "status"],
+)
+AI_PROPOSAL_ITEMS = Counter(
+    "decisionforge_ai_proposal_acceptance_total",
+    "What people did with individual AI-proposed items (acceptance rate = accepted / all).",
+    ["action", "outcome"],
+)
+AI_INJECTION_FLAGS = Counter(
+    "decisionforge_ai_injection_flags_total",
+    "User-supplied AI inputs that contained a likely prompt-injection phrase (flag only).",
+    ["action"],
+)
+AI_SCHEMA_FAILURES = Counter(
+    "decisionforge_ai_schema_failures_total",
+    "AI answers discarded because they failed schema or referential validation.",
+    ["action"],
 )
 TEMPLATES_SAVED = Counter(
     "decisionforge_templates_saved_total",
@@ -242,6 +266,26 @@ def record_outcome_review(status: str) -> None:
 
 def record_calibration_view() -> None:
     CALIBRATION_VIEWS.inc()
+
+
+def record_ai_proposal(action: str, status: str) -> None:
+    AI_PROPOSALS.labels(
+        action=bounded(action, ALLOWED_AI_ACTIONS), status=bounded(status, ALLOWED_PROPOSAL_STATUS)
+    ).inc()
+
+
+def record_ai_proposal_item(action: str, outcome: str, count: int = 1) -> None:
+    AI_PROPOSAL_ITEMS.labels(
+        action=bounded(action, ALLOWED_AI_ACTIONS), outcome=bounded(outcome, ALLOWED_ITEM_OUTCOME)
+    ).inc(count)
+
+
+def record_ai_injection_flag(action: str) -> None:
+    AI_INJECTION_FLAGS.labels(action=bounded(action, ALLOWED_AI_ACTIONS)).inc()
+
+
+def record_ai_schema_failure(action: str) -> None:
+    AI_SCHEMA_FAILURES.labels(action=bounded(action, ALLOWED_AI_ACTIONS)).inc()
 
 
 def record_template_saved() -> None:
