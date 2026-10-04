@@ -301,6 +301,15 @@ UNIQUE (decision_id, name) [REC].
 | snapshot_json | jsonb | NOT NULL (immutable copy of inputs) |
 **UNIQUE (decision_id, version)**. Application-enforced immutability (no UPDATE) (BR-007).
 
+**As built (Phase B, FX-04) — table `decision_snapshots`, migration `e4f5a6b7c8d9`.** Two additions to the columns above:
+`label varchar(120) NOT NULL default ''` (user's name for a manual version) and `created_at timestamptz`. `reason` is
+CHECK-constrained to `manual`, `analysis`, `commitment` (`manual` = "Save version"; the other two are written by later
+phases). `snapshot_json` holds the decision fields, options, criteria (with weights, directions, active flag), every
+score and the ranking as calculated at that moment (absent when scores were incomplete). Insert-only: no endpoint
+updates or deletes a snapshot (PATCH/PUT/DELETE return 405) and rows leave only with their decision. Versions are
+numbered `max(version)+1` under a row lock on the decision, so concurrent saves never collide; capped at 100 per
+decision. Index `(decision_id, version)`.
+
 ### 4.9 `ai_analysis_job`
 | Column | Type | Constraints |
 |--------|------|-------------|

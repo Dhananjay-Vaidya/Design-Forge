@@ -41,6 +41,46 @@
         "title": "AIStatusResponse",
         "type": "object"
       },
+      "AlternativeChange": {
+        "properties": {
+          "alternative_id": {
+            "title": "Alternative Id",
+            "type": "string"
+          },
+          "before_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before Name"
+          },
+          "kind": {
+            "enum": [
+              "added",
+              "removed",
+              "renamed"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alternative_id",
+          "name",
+          "kind",
+          "before_name"
+        ],
+        "title": "AlternativeChange",
+        "type": "object"
+      },
       "AlternativeCreateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -258,6 +298,66 @@
           "messages"
         ],
         "title": "ChatRequest",
+        "type": "object"
+      },
+      "CriterionChange": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/FieldChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "added",
+              "removed",
+              "changed"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "share_after": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share After"
+          },
+          "share_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Before"
+          }
+        },
+        "required": [
+          "criterion_id",
+          "name",
+          "kind",
+          "changes",
+          "share_before",
+          "share_after"
+        ],
+        "title": "CriterionChange",
         "type": "object"
       },
       "CriterionCreateRequest": {
@@ -740,6 +840,141 @@
         "title": "DemoStatus",
         "type": "object"
       },
+      "ExplainDriver": {
+        "properties": {
+          "criterion": {
+            "title": "Criterion",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "number"
+          },
+          "share_percent": {
+            "title": "Share Percent",
+            "type": "number"
+          }
+        },
+        "required": [
+          "criterion",
+          "share_percent",
+          "points"
+        ],
+        "title": "ExplainDriver",
+        "type": "object"
+      },
+      "ExplainEdge": {
+        "properties": {
+          "criterion": {
+            "title": "Criterion",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "number"
+          }
+        },
+        "required": [
+          "criterion",
+          "points"
+        ],
+        "title": "ExplainEdge",
+        "type": "object"
+      },
+      "ExplanationResponse": {
+        "properties": {
+          "ahead_on": {
+            "items": {
+              "$ref": "#/components/schemas/ExplainEdge"
+            },
+            "title": "Ahead On",
+            "type": "array"
+          },
+          "behind_on": {
+            "items": {
+              "$ref": "#/components/schemas/ExplainEdge"
+            },
+            "title": "Behind On",
+            "type": "array"
+          },
+          "deterministic": {
+            "default": true,
+            "title": "Deterministic",
+            "type": "boolean"
+          },
+          "drivers": {
+            "items": {
+              "$ref": "#/components/schemas/ExplainDriver"
+            },
+            "title": "Drivers",
+            "type": "array"
+          },
+          "flip_hint": {
+            "title": "Flip Hint",
+            "type": "string"
+          },
+          "headline": {
+            "title": "Headline",
+            "type": "string"
+          },
+          "stability": {
+            "title": "Stability",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "headline",
+          "drivers",
+          "ahead_on",
+          "behind_on",
+          "stability",
+          "flip_hint",
+          "text"
+        ],
+        "title": "ExplanationResponse",
+        "type": "object"
+      },
+      "FieldChange": {
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "before",
+          "after"
+        ],
+        "title": "FieldChange",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -751,6 +986,29 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LeaderRef": {
+        "properties": {
+          "alternative_id": {
+            "title": "Alternative Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "number"
+          }
+        },
+        "required": [
+          "alternative_id",
+          "name",
+          "points"
+        ],
+        "title": "LeaderRef",
         "type": "object"
       },
       "LoginRequest": {
@@ -835,6 +1093,96 @@
         "title": "ProfileUpdateRequest",
         "type": "object"
       },
+      "RankMove": {
+        "properties": {
+          "alternative_id": {
+            "title": "Alternative Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "points_after": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points After"
+          },
+          "points_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points Before"
+          },
+          "points_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points Delta"
+          },
+          "rank_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank After"
+          },
+          "rank_before": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Before"
+          },
+          "rank_delta": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Delta"
+          }
+        },
+        "required": [
+          "alternative_id",
+          "name",
+          "rank_before",
+          "rank_after",
+          "points_before",
+          "points_after",
+          "points_delta",
+          "rank_delta"
+        ],
+        "title": "RankMove",
+        "type": "object"
+      },
       "RankedAlternativeSchema": {
         "properties": {
           "alternative_id": {
@@ -871,6 +1219,61 @@
           "breakdown"
         ],
         "title": "RankedAlternativeSchema",
+        "type": "object"
+      },
+      "RankingDiff": {
+        "properties": {
+          "available_after": {
+            "title": "Available After",
+            "type": "boolean"
+          },
+          "available_before": {
+            "title": "Available Before",
+            "type": "boolean"
+          },
+          "leader_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leader After"
+          },
+          "leader_before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leader Before"
+          },
+          "leader_changed": {
+            "title": "Leader Changed",
+            "type": "boolean"
+          },
+          "moves": {
+            "items": {
+              "$ref": "#/components/schemas/RankMove"
+            },
+            "title": "Moves",
+            "type": "array"
+          }
+        },
+        "required": [
+          "available_before",
+          "available_after",
+          "leader_before",
+          "leader_after",
+          "leader_changed",
+          "moves"
+        ],
+        "title": "RankingDiff",
         "type": "object"
       },
       "RankingResponse": {
@@ -998,6 +1401,101 @@
         "title": "ScoreCellRequest",
         "type": "object"
       },
+      "ScoreChange": {
+        "properties": {
+          "after": {
+            "title": "After",
+            "type": "number"
+          },
+          "alternative": {
+            "title": "Alternative",
+            "type": "string"
+          },
+          "alternative_id": {
+            "title": "Alternative Id",
+            "type": "string"
+          },
+          "before": {
+            "title": "Before",
+            "type": "number"
+          },
+          "criterion": {
+            "title": "Criterion",
+            "type": "string"
+          },
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alternative_id",
+          "alternative",
+          "criterion_id",
+          "criterion",
+          "before",
+          "after"
+        ],
+        "title": "ScoreChange",
+        "type": "object"
+      },
+      "ScoreFlip": {
+        "properties": {
+          "alternative_id": {
+            "title": "Alternative Id",
+            "type": "string"
+          },
+          "alternative_name": {
+            "title": "Alternative Name",
+            "type": "string"
+          },
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "criterion_name": {
+            "title": "Criterion Name",
+            "type": "string"
+          },
+          "current_score": {
+            "title": "Current Score",
+            "type": "number"
+          },
+          "delta": {
+            "title": "Delta",
+            "type": "number"
+          },
+          "feasible": {
+            "title": "Feasible",
+            "type": "boolean"
+          },
+          "flip_score": {
+            "title": "Flip Score",
+            "type": "number"
+          },
+          "role": {
+            "enum": [
+              "leader_down",
+              "challenger_up"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alternative_id",
+          "alternative_name",
+          "criterion_id",
+          "criterion_name",
+          "role",
+          "current_score",
+          "flip_score",
+          "delta",
+          "feasible"
+        ],
+        "title": "ScoreFlip",
+        "type": "object"
+      },
       "ScoreUpsertRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1036,6 +1534,66 @@
         "title": "ScoreUpsertResponse",
         "type": "object"
       },
+      "SensitivityResponse": {
+        "properties": {
+          "deterministic": {
+            "default": true,
+            "title": "Deterministic",
+            "type": "boolean"
+          },
+          "leader": {
+            "$ref": "#/components/schemas/LeaderRef"
+          },
+          "margin_points": {
+            "title": "Margin Points",
+            "type": "number"
+          },
+          "runner_up": {
+            "$ref": "#/components/schemas/LeaderRef"
+          },
+          "score_flips": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreFlip"
+            },
+            "title": "Score Flips",
+            "type": "array"
+          },
+          "tornado": {
+            "items": {
+              "$ref": "#/components/schemas/TornadoBar"
+            },
+            "title": "Tornado",
+            "type": "array"
+          },
+          "tornado_high_factor": {
+            "title": "Tornado High Factor",
+            "type": "number"
+          },
+          "tornado_low_factor": {
+            "title": "Tornado Low Factor",
+            "type": "number"
+          },
+          "weight_flips": {
+            "items": {
+              "$ref": "#/components/schemas/WeightFlip"
+            },
+            "title": "Weight Flips",
+            "type": "array"
+          }
+        },
+        "required": [
+          "leader",
+          "runner_up",
+          "margin_points",
+          "tornado",
+          "weight_flips",
+          "score_flips",
+          "tornado_low_factor",
+          "tornado_high_factor"
+        ],
+        "title": "SensitivityResponse",
+        "type": "object"
+      },
       "SensitivitySchema": {
         "properties": {
           "leader_stable": {
@@ -1058,6 +1616,277 @@
           "margin"
         ],
         "title": "SensitivitySchema",
+        "type": "object"
+      },
+      "SnapshotCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "default": "",
+            "maxLength": 120,
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "title": "SnapshotCreateRequest",
+        "type": "object"
+      },
+      "SnapshotDiff": {
+        "properties": {
+          "a": {
+            "$ref": "#/components/schemas/SnapshotRef"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/AlternativeChange"
+            },
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "b": {
+            "$ref": "#/components/schemas/SnapshotRef"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionChange"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
+          "decision_changes": {
+            "items": {
+              "$ref": "#/components/schemas/FieldChange"
+            },
+            "title": "Decision Changes",
+            "type": "array"
+          },
+          "ranking": {
+            "$ref": "#/components/schemas/RankingDiff"
+          },
+          "score_cells_added": {
+            "title": "Score Cells Added",
+            "type": "integer"
+          },
+          "score_cells_removed": {
+            "title": "Score Cells Removed",
+            "type": "integer"
+          },
+          "scores": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreChange"
+            },
+            "title": "Scores",
+            "type": "array"
+          },
+          "summary": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Summary",
+            "type": "array"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "summary",
+          "decision_changes",
+          "alternatives",
+          "criteria",
+          "scores",
+          "score_cells_added",
+          "score_cells_removed",
+          "ranking"
+        ],
+        "title": "SnapshotDiff",
+        "type": "object"
+      },
+      "SnapshotRead": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "leader": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leader"
+          },
+          "leader_points": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leader Points"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "reason": {
+            "enum": [
+              "manual",
+              "analysis",
+              "commitment"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "reason",
+          "label",
+          "created_at",
+          "complete",
+          "leader",
+          "leader_points",
+          "payload"
+        ],
+        "title": "SnapshotRead",
+        "type": "object"
+      },
+      "SnapshotRef": {
+        "description": "One side of a comparison. `version` is null (and `is_current` true) for the live decision.",
+        "properties": {
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "is_current": {
+            "title": "Is Current",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "version",
+          "label",
+          "created_at",
+          "is_current"
+        ],
+        "title": "SnapshotRef",
+        "type": "object"
+      },
+      "SnapshotSummary": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "leader": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leader"
+          },
+          "leader_points": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leader Points"
+          },
+          "reason": {
+            "enum": [
+              "manual",
+              "analysis",
+              "commitment"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "reason",
+          "label",
+          "created_at",
+          "complete",
+          "leader",
+          "leader_points"
+        ],
+        "title": "SnapshotSummary",
         "type": "object"
       },
       "TemplateCreateRequest": {
@@ -1180,6 +2009,59 @@
         "title": "TemplateRead",
         "type": "object"
       },
+      "TornadoBar": {
+        "properties": {
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "flips": {
+            "title": "Flips",
+            "type": "boolean"
+          },
+          "high_leader": {
+            "title": "High Leader",
+            "type": "string"
+          },
+          "high_margin_points": {
+            "title": "High Margin Points",
+            "type": "number"
+          },
+          "low_leader": {
+            "title": "Low Leader",
+            "type": "string"
+          },
+          "low_margin_points": {
+            "title": "Low Margin Points",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "share_percent": {
+            "title": "Share Percent",
+            "type": "number"
+          },
+          "swing_points": {
+            "title": "Swing Points",
+            "type": "number"
+          }
+        },
+        "required": [
+          "criterion_id",
+          "name",
+          "share_percent",
+          "low_margin_points",
+          "high_margin_points",
+          "low_leader",
+          "high_leader",
+          "swing_points",
+          "flips"
+        ],
+        "title": "TornadoBar",
+        "type": "object"
+      },
       "UserProfileRead": {
         "properties": {
           "display_name": {
@@ -1269,6 +2151,68 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WeightFlip": {
+        "properties": {
+          "challenger_id": {
+            "title": "Challenger Id",
+            "type": "string"
+          },
+          "challenger_name": {
+            "title": "Challenger Name",
+            "type": "string"
+          },
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "current_share_percent": {
+            "title": "Current Share Percent",
+            "type": "number"
+          },
+          "current_weight": {
+            "title": "Current Weight",
+            "type": "number"
+          },
+          "delta_points": {
+            "title": "Delta Points",
+            "type": "number"
+          },
+          "direction": {
+            "enum": [
+              "increase",
+              "decrease"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "flip_share_percent": {
+            "title": "Flip Share Percent",
+            "type": "number"
+          },
+          "flip_weight": {
+            "title": "Flip Weight",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "criterion_id",
+          "name",
+          "challenger_id",
+          "challenger_name",
+          "direction",
+          "current_weight",
+          "flip_weight",
+          "current_share_percent",
+          "flip_share_percent",
+          "delta_points"
+        ],
+        "title": "WeightFlip",
         "type": "object"
       }
     },
@@ -2320,6 +3264,54 @@
         ]
       }
     },
+    "/api/v1/decisions/{decision_id}/explanation": {
+      "get": {
+        "operationId": "get_explanation_api_v1_decisions__decision_id__explanation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplanationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Explanation",
+        "tags": [
+          "insights"
+        ]
+      }
+    },
     "/api/v1/decisions/{decision_id}/ranking": {
       "get": {
         "operationId": "get_ranking_api_v1_decisions__decision_id__ranking_get",
@@ -2476,6 +3468,233 @@
         ]
       }
     },
+    "/api/v1/decisions/{decision_id}/sensitivity": {
+      "get": {
+        "operationId": "get_sensitivity_api_v1_decisions__decision_id__sensitivity_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SensitivityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Sensitivity",
+        "tags": [
+          "insights"
+        ]
+      }
+    },
+    "/api/v1/decisions/{decision_id}/snapshots": {
+      "get": {
+        "operationId": "list_versions_api_v1_decisions__decision_id__snapshots_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SnapshotSummary"
+                  },
+                  "title": "Response List Versions Api V1 Decisions  Decision Id  Snapshots Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Versions",
+        "tags": [
+          "snapshots"
+        ]
+      },
+      "post": {
+        "operationId": "save_version_api_v1_decisions__decision_id__snapshots_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnapshotCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save Version",
+        "tags": [
+          "snapshots"
+        ]
+      }
+    },
+    "/api/v1/decisions/{decision_id}/snapshots/compare": {
+      "get": {
+        "operationId": "compare_versions_api_v1_decisions__decision_id__snapshots_compare_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Earlier version number",
+            "in": "query",
+            "name": "a",
+            "required": true,
+            "schema": {
+              "description": "Earlier version number",
+              "minimum": 1,
+              "title": "A",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Later version number, or 'current' for the live decision",
+            "in": "query",
+            "name": "b",
+            "required": true,
+            "schema": {
+              "description": "Later version number, or 'current' for the live decision",
+              "title": "B",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotDiff"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Compare Versions",
+        "tags": [
+          "snapshots"
+        ]
+      }
+    },
     "/api/v1/demo": {
       "get": {
         "operationId": "demo_status_api_v1_demo_get",
@@ -2616,6 +3835,54 @@
         "summary": "Update Profile",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/api/v1/snapshots/{snapshot_id}": {
+      "get": {
+        "operationId": "get_version_api_v1_snapshots__snapshot_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Version",
+        "tags": [
+          "snapshots"
         ]
       }
     },

@@ -41,6 +41,8 @@ _test_session_factory = async_sessionmaker(bind=_test_engine, expire_on_commit=F
 # Children first, so CASCADE isn't strictly required, but TRUNCATE ... CASCADE handles ordering
 # regardless -- listed for readability.
 APP_TABLES = [
+    "decision_snapshots",
+    "decision_templates",
     "decisions_alternativescore",
     "refresh_tokens",
     "decisions_alternative",

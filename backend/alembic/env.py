@@ -14,6 +14,7 @@ from app.core.database import Base
 
 # Import all models so they register on Base.metadata before autogenerate runs.
 from app.models import decision as _decision_models  # noqa: F401
+from app.models import snapshot as _snapshot_models  # noqa: F401
 from app.models import template as _template_models  # noqa: F401
 from app.models import user as _user_models  # noqa: F401
 

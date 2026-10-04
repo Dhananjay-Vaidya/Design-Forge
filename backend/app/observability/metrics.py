@@ -64,6 +64,25 @@ DECISIONS_FROM_TEMPLATE = Counter(
     "Decisions created from a template, by template source.",
     ["source"],
 )
+SNAPSHOTS_CREATED = Counter(
+    "decisionforge_snapshots_created_total",
+    "Immutable decision snapshots created, by reason.",
+    ["reason"],
+)
+SNAPSHOT_COMPARES = Counter(
+    "decisionforge_snapshot_compares_total",
+    "Snapshot comparisons (version diffs) requested.",
+)
+SENSITIVITY_LAB = Counter(
+    "decisionforge_sensitivity_lab_requests_total",
+    "Sensitivity lab (tornado + flip points) requests.",
+    ["status"],
+)
+EXPLANATIONS = Counter(
+    "decisionforge_explanations_total",
+    "Deterministic ranking explanations (template-based, no AI).",
+    ["status"],
+)
 TEMPLATES_SAVED = Counter(
     "decisionforge_templates_saved_total",
     "Templates a user saved from one of their decisions.",
@@ -178,6 +197,25 @@ ALLOWED_TEMPLATE_SOURCE = {"builtin", "mine", "demo"}
 
 def record_decision_from_template(source: str) -> None:
     DECISIONS_FROM_TEMPLATE.labels(source=bounded(source, ALLOWED_TEMPLATE_SOURCE)).inc()
+
+
+ALLOWED_SNAPSHOT_REASON = {"manual", "analysis", "commitment"}
+
+
+def record_snapshot_created(reason: str) -> None:
+    SNAPSHOTS_CREATED.labels(reason=bounded(reason, ALLOWED_SNAPSHOT_REASON, "manual")).inc()
+
+
+def record_snapshot_compare() -> None:
+    SNAPSHOT_COMPARES.inc()
+
+
+def record_sensitivity_lab(status: str) -> None:
+    SENSITIVITY_LAB.labels(status=bounded(status, ALLOWED_STATUS, "failure")).inc()
+
+
+def record_explanation(status: str) -> None:
+    EXPLANATIONS.labels(status=bounded(status, ALLOWED_STATUS, "failure")).inc()
 
 
 def record_template_saved() -> None:

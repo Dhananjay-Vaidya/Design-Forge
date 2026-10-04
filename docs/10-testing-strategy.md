@@ -124,6 +124,12 @@ Implemented in `backend/tests/api/test_observability.py`, `test_observability_mo
   direction (list, use, delete, save-from-foreign-decision), name uniqueness, demo create/reset/ignore-deleted, bounded
   metric labels. Frontend: `tests/features/templates.test.tsx`, `GuidedTour.test.tsx` (focus, keyboard, focus return),
   `DemoBanner.test.tsx` (reset navigates and does not refetch the deleted sample).
+- **Sensitivity / explainer / versions (Phase B)** — `tests/unit/test_sensitivity.py` (tornado, flip points checked
+  against the real engine by property test, exact ties, infeasible flips, 100% coverage of the module),
+  `tests/unit/test_explain_snapshot_diff.py` (explainer wording, payload shape, diff by id), and
+  `tests/api/test_snapshots_insights.py` (version numbering, concurrent saves, frozen copy, cap, immutability, diff
+  incl. against `current`, bad-version errors, ownership on every endpoint, AI provider forbidden during
+  sensitivity/explanation, bounded metrics). Frontend: `tests/features/insights.test.tsx`.
 - Every FX feature must also be verified with **Gemini disabled**; features that need no AI (templates, demo) are
   independent of `GEMINI_ENABLED` by construction.
 

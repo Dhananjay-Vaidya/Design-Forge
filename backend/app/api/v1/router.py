@@ -6,8 +6,10 @@ from app.api.v1.endpoints import (
     auth,
     criteria,
     decisions,
+    insights,
     rankings,
     scores,
+    snapshots,
     templates,
     users,
 )
@@ -21,4 +23,6 @@ api_router.include_router(alternatives.router)
 api_router.include_router(criteria.router)
 api_router.include_router(scores.router)
 api_router.include_router(rankings.router)
+api_router.include_router(snapshots.router)
+api_router.include_router(insights.router)
 api_router.include_router(ai.router)

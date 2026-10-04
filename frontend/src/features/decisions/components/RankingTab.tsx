@@ -31,6 +31,8 @@ import { timeAgo, toPoints } from "@/lib/format";
 import { useTokenColor } from "@/lib/useTokenColor";
 import type { Criterion, Ranking } from "@/types/decision";
 
+import { ExplainerCard } from "@/features/insights/components/ExplainerCard";
+
 import { useCriteria, useRanking } from "../hooks";
 
 const FIELD_LINKS: Record<string, { to: string; label: string; icon: typeof Layers }> = {
@@ -357,6 +359,7 @@ export function RankingTab() {
         </section>
       </div>
 
+      <ExplainerCard decisionId={decisionId} />
       <BreakdownTable ranking={ranking} criteria={criteria} />
       <p className="max-w-2xl text-xs leading-relaxed text-muted">
         Scores reflect your entered evidence, not a probability of success. Each criterion is

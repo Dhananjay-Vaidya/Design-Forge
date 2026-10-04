@@ -164,6 +164,18 @@ Legend: 🔒 = auth required + ownership enforced.
 | API-45 | `GET /demo` 🔒 | The caller's sample decision id, or `null` | Ignores a deleted sample |
 | API-46 | `POST /demo/decision` 🔒 | Create (or reset) the fully scored sample decision | 201; replaces any previous sample; deliberately a close call |
 
+### Versions, sensitivity and explanation [REC — FX-04 / FX-03 / FX-05]
+All owner-scoped: another user's decision or snapshot is a 404. Sensitivity and explanation are calculated by the
+ranking engine and templates; they never call Gemini and cannot change a score, weight or ranking.
+| ID | Endpoint | Purpose | Notes |
+|----|----------|---------|-------|
+| API-47 | `POST /decisions/{id}/snapshots` 🔒 | Save the current state as an immutable version `{label?}` | 201 `SnapshotSummary`; works for incomplete decisions (no ranking stored); 400 past 100 versions |
+| API-48 | `GET /decisions/{id}/snapshots` 🔒 | List versions, newest first | Summary only (version, label, reason, leader, points) |
+| API-49 | `GET /snapshots/{sid}` 🔒 | One version with its full stored payload | No PATCH/PUT/DELETE (405) |
+| API-50 | `GET /decisions/{id}/snapshots/compare?a=<n>&b=<n or current>` 🔒 | What changed between two versions, or a version and the live decision | Matches by id, so renames are renames; 400 bad `b`, 404 unknown version |
+| API-51 | `GET /decisions/{id}/sensitivity` 🔒 | Tornado (each weight ×0.5 / ×1.5), smallest weight changes and score changes that flip the leader | 400 with the same field errors as `/ranking` when not rankable; score flips are "at least" values one step past the boundary |
+| API-52 | `GET /decisions/{id}/explanation` 🔒 | Plain-language "why this ranks first" from templates | `deterministic: true`; 400 as above |
+
 ### Ops
 | API-38 | `GET /healthz` | Liveness | OBS-06 |
 | API-39 | `GET /readyz` | Readiness (DB/Redis) | OBS-06 |

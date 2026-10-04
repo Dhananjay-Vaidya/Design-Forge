@@ -35,6 +35,11 @@ const CriteriaTab = page(
   "CriteriaTab",
 );
 const ScoresTab = page(() => import("@/features/decisions/components/ScoresTab"), "ScoresTab");
+const SensitivityTab = page(
+  () => import("@/features/insights/components/SensitivityTab"),
+  "SensitivityTab",
+);
+const VersionsTab = page(() => import("@/features/insights/components/VersionsTab"), "VersionsTab");
 const RankingTab = page(() => import("@/features/decisions/components/RankingTab"), "RankingTab");
 
 const pageFallback = <Skeleton className="h-72 rounded-2xl" />;
@@ -67,6 +72,8 @@ export function App() {
               <Route path="criteria" element={<CriteriaTab />} />
               <Route path="scores" element={<ScoresTab />} />
               <Route path="ranking" element={<RankingTab />} />
+              <Route path="what-if" element={<SensitivityTab />} />
+              <Route path="versions" element={<VersionsTab />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFoundPage />} />

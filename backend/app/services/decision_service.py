@@ -303,6 +303,15 @@ async def _refresh_decision_status(db: AsyncSession, decision: Decision) -> None
         await db.flush()
 
 
+async def load_engine_inputs(db: AsyncSession, decision: Decision) -> tuple:
+    """(alternatives, criteria, scores, {criterion_id: name}) in the engine's own input types."""
+    alternatives = await decision_repository.list_alternatives(db, decision_id=decision.id)
+    criteria = await decision_repository.list_criteria(db, decision_id=decision.id)
+    scores = await decision_repository.list_scores(db, decision_id=decision.id)
+    alt_in, crit_in, score_in = _engine_inputs(alternatives, criteria, scores)
+    return alt_in, crit_in, score_in, {str(c.id): c.name for c in criteria}
+
+
 async def refresh_status(db: AsyncSession, decision: Decision) -> None:
     """Public hook for services that create scored data in bulk (demo mode, CSV import)."""
     await _refresh_decision_status(db, decision)
