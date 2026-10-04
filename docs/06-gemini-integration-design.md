@@ -42,6 +42,22 @@ Every structured capability is a registered `AIAction` (`backend/app/ai/actions.
 | Audit | Each proposal stores `prompt_version`, `model`, and per-item `resolution` with a reference to what an accepted item created. The ledger and cache hold counts and validated output only, never prompt text (tested). |
 | Snapshots | Each run records the version the model saw (`reason = analysis`); if the version cap is full the run still proceeds without one. |
 
+## 0b. Shipped capabilities (AX Tier 1) — as built 2026-10-04
+
+Registered in `backend/app/ai/capabilities.py`; all four use prompt version `v1` and the `reasoning` tier.
+
+| Action | Kind | Needs | What it returns | Guarantees enforced in code |
+|--------|------|-------|-----------------|-----------------------------|
+| `setup_draft` (AX-01) | proposal | a description (10-2000 chars) | options (max 6) and criteria with direction (max 8), accepted item by item | **No weights or scores are ever proposed**: a model-supplied weight is ignored, accepted criteria start with equal weight (1). Names already in the decision, duplicates and blanks are dropped; nothing new → `no_new_items`, refunded |
+| `devils_advocate` (AX-07) | advisory | a calculated ranking | case against the leader, steelman of the runner-up, questions | The leader and runner-up names come from the engine's ranking, not from the model |
+| `decision_brief` (AX-08) | advisory | an active commitment | summary, why, trade-offs, risks, next steps | A "Facts" section (commitment, confidence, calculated ranking, whether the choice was top-ranked) is computed by the app and marked `source: calculated` (teal); the prose is `source: ai` (violet) |
+| `outcome_coach` (AX-09) | advisory | a recorded outcome | what happened, confidence vs result, reflection questions, patterns | **Patterns are dropped unless there are at least 5 recorded outcomes**, and the response says why; aggregate calibration (never other decisions' text) is the only cross-decision data sent |
+
+Every system prompt is followed by the exact JSON Schema wanted and the always-on safety rules. Model output is parsed
+leniently and shaped strictly: lists clamped to their maximum, text bounded, empty and duplicate bullets dropped; an
+answer left with nothing usable is discarded and refunded. Not built: streaming (the actions return one validated
+JSON document, so the UI shows a "Thinking" state instead).
+
 ## 1. AI Use Cases (DPR §Gemini usage strategy)
 
 | Analysis type | Output | Control |

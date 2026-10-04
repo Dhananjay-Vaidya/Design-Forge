@@ -42,6 +42,7 @@ const SensitivityTab = page(
 const VersionsTab = page(() => import("@/features/insights/components/VersionsTab"), "VersionsTab");
 const CommitTab = page(() => import("@/features/commitments/components/CommitTab"), "CommitTab");
 const CalibrationPage = page(() => import("@/pages/CalibrationPage"), "CalibrationPage");
+const AiHelpTab = page(() => import("@/features/ai/actions/components/AiHelpTab"), "AiHelpTab");
 const RankingTab = page(() => import("@/features/decisions/components/RankingTab"), "RankingTab");
 
 const pageFallback = <Skeleton className="h-72 rounded-2xl" />;
@@ -78,6 +79,7 @@ export function App() {
               <Route path="what-if" element={<SensitivityTab />} />
               <Route path="versions" element={<VersionsTab />} />
               <Route path="commit" element={<CommitTab />} />
+              <Route path="ai" element={<AiHelpTab />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFoundPage />} />

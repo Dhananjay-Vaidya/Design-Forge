@@ -121,6 +121,16 @@ async def _complete(provider: ChatProvider, system: str, user: str) -> Completio
         return await _collect(fallback, system, user)
 
 
+def _system_prompt(action: actions.AIAction) -> str:
+    """The action's instructions, the exact JSON shape wanted, then the always-on safety rules."""
+    schema = json.dumps(action.response_model.model_json_schema(), separators=(",", ":"))
+    return (
+        f"{action.system_prompt}\n\nReply with ONE JSON object that matches this JSON Schema, and "
+        f"nothing else (no prose before or after, no code fences):\n{schema}\n"
+        f"{guardrails.GUARD_RULES}"
+    )
+
+
 def parse_json(text: str) -> Any:
     return json.loads(_FENCE.sub("", text.strip()))
 
@@ -219,9 +229,11 @@ async def run_action(
             "One or more fields are invalid.",
             fields={"scores": ["Finish scoring first; this analysis needs a calculated ranking."]},
         )
+    if action.prepare is not None:
+        await action.prepare(db, decision, context)
     _scan_for_injection(action, input_model)
     ctx = actions.ActionContext(decision=decision, context=context, input=input_model)
-    system = action.system_prompt + guardrails.GUARD_RULES
+    system = _system_prompt(action)
     user = action.build_user_prompt(ctx)
     active = provider_for_tier(provider, action.model_tier)
 

@@ -14,7 +14,7 @@ import uuid
 
 from fastapi import APIRouter, Response, status
 
-from app.ai import actions, runner
+from app.ai import actions, capabilities, runner
 from app.api.dependencies import CurrentUser, DbSession
 from app.api.v1.endpoints.ai import ChatProviderDep
 from app.core.exceptions import NotFoundError
@@ -30,6 +30,7 @@ from app.schemas.ai_actions import (
 from app.services import ai_proposal_service, decision_service
 
 router = APIRouter(tags=["ai-actions"])
+capabilities.register_all()  # idempotent: makes sure the shipped capabilities are registered
 
 
 def _read(p: AIProposal) -> ProposalRead:

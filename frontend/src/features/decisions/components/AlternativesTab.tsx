@@ -6,6 +6,7 @@ import {
   Layers,
   Pencil,
   Plus,
+  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
@@ -302,6 +303,12 @@ export function AlternativesTab() {
           icon={Layers}
           title="No options yet"
           description="Add the alternatives you're weighing up. You need at least two to rank them."
+          action={
+            <ButtonLink to="../ai" variant="soft">
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              Or draft options with AI
+            </ButtonLink>
+          }
         />
       ) : (
         <ul className="flex flex-col gap-2.5">

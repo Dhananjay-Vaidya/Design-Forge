@@ -248,6 +248,7 @@ function WorkspaceTabs({ readiness }: { readiness: Readiness }) {
       badge: null,
       sr: "record your choice and review it later",
     },
+    { to: "ai", label: "AI help", icon: Sparkles, badge: null, sr: "advisory suggestions" },
   ];
 
   return (

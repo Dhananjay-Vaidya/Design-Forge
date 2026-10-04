@@ -742,7 +742,7 @@ async def test_advisory_actions_need_a_ranking_and_use_the_light_model_tier(
     assert body["proposal"]["kind"] == "advisory"
     assert body["proposal"]["payload"] == {
         "summary": "Looks solid.",
-        "sections": [{"heading": "Points", "bullets": ["one", "two"]}],
+        "sections": [{"source": "ai", "heading": "Points", "bullets": ["one", "two"]}],
     }
 
 

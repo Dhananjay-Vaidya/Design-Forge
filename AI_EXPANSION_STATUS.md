@@ -31,7 +31,7 @@ were built first as FX Phase C (`FEATURE_EXPANSION_STATUS.md`).
 | Phase | Scope | Status |
 |-------|-------|--------|
 | 1 | AX-INF-1 action framework, AX-INF-6 guardrails, AX-INF-8 budget (backend) | **Verified** (backend) |
-| 2 | AX-01 conversational setup, AX-07 devil's advocate, AX-08 brief, AX-09 outcome coach, proposal-review UI, budget meter | Not started |
+| 2 | AX-01 conversational setup, AX-07 devil's advocate, AX-08 brief, AX-09 outcome coach, proposal-review UI, budget meter | **Verified** |
 | 3 | Memory and RAG | **Blocked on approval** |
 | 4 | AX-04, AX-15, AX-10 | **Blocked on approval** |
 
@@ -50,3 +50,24 @@ were built first as FX Phase C (`FEATURE_EXPANSION_STATUS.md`).
   "One or more fields are invalid" instead of the specific field message.
 - **Gemini-OFF:** every action returns `503` with a plain explanation and costs nothing; the rest of the app is
   unaffected (tested).
+
+## Phase 2 — Capabilities and review UI
+
+- **Backend:** `app/ai/capabilities.py` registers `setup_draft`, `devils_advocate`, `decision_brief`, `outcome_coach`
+  (doc 06 §0b); framework additions: a `prepare` hook for prerequisites, the response JSON Schema appended to every
+  system prompt, and a per-section `source` (`calculated` / `ai`).
+- **Frontend:** an "AI help" tab (capability cards gated by the decision's stage with the reason shown, budget meter,
+  "Thinking" state, discarded-answer and quota messages), a proposal review card (items pre-ticked, add selected,
+  dismiss, per-item outcome in words, provenance line with model and prompt version), advisory cards that show
+  calculated facts in teal and AI text in violet, and an entry point from the empty Options screen.
+- **Verified:** backend 421 tests (23 new), ruff, format, mypy, `alembic check` clean; OpenAPI snapshot regenerated; frontend lint, typecheck,
+  124 tests (21 new), build; real-browser walkthrough against the Docker stack **with the real Gemini model** (2
+  calls, throwaway account, synthetic data; 19 checks: draft proposal staged with nothing created, budget down by
+  one, deselected item not created, accepted items equal-weight, challenge names the calculated leader, ranking
+  untouched, dismiss, gating, dark, reduced motion, 390 px, second account 404 on every endpoint), no console errors;
+  account deleted.
+- **Deviations:** no streaming (one validated JSON document per action); AI never proposes weights, by design.
+- **Not done in this phase:** the golden-fixture evaluation harness (AX-INF-7) beyond the schema-failure and
+  acceptance metrics; per-action budgets (one shared counter).
+- **Gemini-OFF:** every capability is disabled in the UI with an explanation and returns 503 from the API; the rest
+  of the product is unaffected (tested).

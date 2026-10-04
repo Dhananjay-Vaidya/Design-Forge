@@ -52,6 +52,10 @@ class ActionContext:
 # (db, decision, item) -> {"type": "criterion", "id": "<uuid>"}; commits through the normal services.
 ApplyItem = Callable[[AsyncSession, Decision, dict[str, Any]], Awaitable[dict[str, Any]]]
 
+# (db, decision, context) -> None. Adds action-specific facts to the minimised context (for example the
+# commitment) and raises a 400 ValidationAppError when a prerequisite is missing. Runs before any cost.
+Prepare = Callable[[AsyncSession, Decision, dict[str, Any]], Awaitable[None]]
+
 
 @dataclass(frozen=True)
 class AIAction:
@@ -69,6 +73,7 @@ class AIAction:
     input_model: type[BaseModel] = EmptyInput
     apply_item: ApplyItem | None = None
     requires_ranking: bool = False
+    prepare: Prepare | None = None
     cacheable: bool = True
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -115,5 +120,12 @@ def proposal_payload(summary: str, items: list[dict[str, Any]]) -> dict[str, Any
 
 
 def advisory_payload(summary: str, sections: list[dict[str, Any]]) -> dict[str, Any]:
-    """sections: [{heading, bullets: [str]}]."""
-    return {"summary": summary, "sections": sections}
+    """sections: [{heading, bullets: [str], source?}].
+
+    `source` is "ai" (the default; shown as an AI draft) or "calculated" (a fact computed by the app
+    from the person's own data, shown as such). The UI uses it to keep teal and violet apart.
+    """
+    return {
+        "summary": summary,
+        "sections": [{"source": "ai", **section} for section in sections],
+    }

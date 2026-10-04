@@ -145,6 +145,13 @@ Implemented in `backend/tests/api/test_observability.py`, `test_observability_mo
   failures are discarded and refunded; markup stripped; cache hit spends no quota; daily budget and breaker; provider
   outage refunds; per-item accept/reject, double-accept refused, one failing item does not stop the rest, expiry,
   advisory cannot be accepted, ownership on every endpoint, no prompt text stored. All with `FakeChatProvider`.
+- **AI capabilities (AX phase 2)** — `tests/api/test_ai_capabilities.py`: setup draft proposes no weights, ignores a
+  model-supplied weight, clamps counts, drops existing names, creates ordinary entries with equal weights on accept
+  and leaves the decision a draft; devil's advocate uses the engine's leader (the model claims another) and dedupes;
+  brief needs a commitment and keeps calculated facts apart from AI prose; coach needs an outcome and drops patterns
+  below five reviews, keeps them at five; every capability degrades with AI off and is owner-scoped. Frontend:
+  `tests/features/aiActions.test.tsx` (budget meter, availability by stage, run and discard messaging, item review,
+  failed items in words, advisory teal/violet split, AI text rendered as text not HTML, dismiss).
 - Every FX feature must also be verified with **Gemini disabled**; features that need no AI (templates, demo) are
   independent of `GEMINI_ENABLED` by construction.
 
