@@ -1,3 +1,4 @@
+from app.models.commitment import Commitment, OutcomeReview
 from app.models.decision import Alternative, AlternativeScore, Criterion, Decision
 from app.models.snapshot import DecisionSnapshot
 from app.models.template import UserTemplate
@@ -13,4 +14,6 @@ __all__ = [
     "AlternativeScore",
     "UserTemplate",
     "DecisionSnapshot",
+    "Commitment",
+    "OutcomeReview",
 ]

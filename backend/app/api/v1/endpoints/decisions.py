@@ -7,7 +7,7 @@ from fastapi import APIRouter, Query, status
 from app.api import pagination
 from app.api.dependencies import CurrentUser, DbSession
 from app.schemas.decision import DecisionCreateRequest, DecisionPatchRequest, DecisionRead
-from app.services import decision_service
+from app.services import commitment_service, decision_service
 
 router = APIRouter(tags=["decisions"])
 
@@ -25,6 +25,7 @@ async def list_decisions(
     page_size: str | None = None,
 ) -> dict:
     page_number, size = pagination.resolve_page_params(page, page_size)
+    await commitment_service.sync_due(db, owner_id=current_user.id)
     items, total = await decision_service.list_decisions(
         db,
         owner_id=current_user.id,
@@ -65,6 +66,8 @@ async def get_decision(
     decision = await decision_service.get_owned_decision_or_404(
         db, decision_id=decision_id, owner_id=current_user.id
     )
+    await commitment_service.sync_due(db, decision_id=decision.id)  # reviews past due -> DUE
+    await db.refresh(decision)
     return DecisionRead.model_validate(decision)
 
 

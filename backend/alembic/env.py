@@ -11,6 +11,7 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.core.config import get_settings
 from app.core.database import Base
+from app.models import commitment as _commitment_models  # noqa: F401
 
 # Import all models so they register on Base.metadata before autogenerate runs.
 from app.models import decision as _decision_models  # noqa: F401

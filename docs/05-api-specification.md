@@ -176,6 +176,25 @@ ranking engine and templates; they never call Gemini and cannot change a score, 
 | API-51 | `GET /decisions/{id}/sensitivity` 🔒 | Tornado (each weight ×0.5 / ×1.5), smallest weight changes and score changes that flip the leader | 400 with the same field errors as `/ranking` when not rankable; score flips are "at least" values one step past the boundary |
 | API-52 | `GET /decisions/{id}/explanation` 🔒 | Plain-language "why this ranks first" from templates | `deterministic: true`; 400 as above |
 
+### Commitments, outcome reviews and calibration [REC — FX-06, as built]
+Owner-scoped throughout (another user's decision or review is a 404). None of it calls Gemini.
+| ID | Endpoint | Purpose | Notes |
+|----|----------|---------|-------|
+| API-31 | `POST /decisions/{id}/commit` 🔒 | `{alternative_id, confidence 0-100, rationale?}` | 201 `CommitmentRead` (+`alternative_name`, `snapshot_version`); 400 unless `SCORED`/`COMMITTED` and rankable, or option not in this decision; re-commit supersedes the active one |
+| API-32 | `GET /decisions/{id}/commitments` 🔒 | History, newest first | `is_active` marks the current one |
+| API-33 | `POST /decisions/{id}/outcomes` 🔒 | `{due_at?, satisfaction? 1-5, result_notes?}` — schedule, record, or both | 201; needs an active commitment; `due_at` must carry a time zone and be within 5 years; max 10 per commitment |
+| API-34 | `GET /decisions/{id}/outcomes` 🔒 | Reviews, with past-due ones moved to `DUE` first | Moves a `COMMITTED` decision to `UNDER_REVIEW` |
+| API-53 | `POST /outcomes/{id}/submit` 🔒 | `{satisfaction, result_notes?}` for a `SCHEDULED`/`DUE` review | 200; decision becomes `REVIEWED`; 400 if already final |
+| API-54 | `POST /outcomes/{id}/cancel` 🔒 | Cancel an open review | 200; decision returns to `COMMITTED` if nothing else is due |
+| API-36 | `GET /dashboard/calibration` 🔒 | Stated confidence vs how decisions worked out | `deterministic: true`; see below |
+
+API-36 response (one data point per commitment: its latest submitted review): `reviews_count`, `sufficient`
+(≥ 5), `avg_confidence`, `avg_satisfaction`, `success_rate` (share rated ≥ 4), `brier_score`, `brier_baseline`
+(`p(1-p)`), `brier_skill` (`1 - brier/baseline`, null when every outcome is the same), `verdict`
+(`overconfident` / `underconfident` / `well_calibrated`, null below 5 reviews, ±10 points), `buckets` (five
+confidence bands: `count`, `avg_confidence`, `success_rate`, `avg_satisfaction`), `categories` (judged only from 3
+reviews), `streaks` (`current`, `best`; a hit is a call on the right side of 50%) and a plain-language `note`.
+
 ### Ops
 | API-38 | `GET /healthz` | Liveness | OBS-06 |
 | API-39 | `GET /readyz` | Readiness (DB/Redis) | OBS-06 |

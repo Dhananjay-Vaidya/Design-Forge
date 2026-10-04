@@ -8,11 +8,13 @@ import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.exceptions import NotFoundError, ValidationAppError
 from app.domain.scoring import engine
+from app.models.commitment import Commitment
 from app.models.decision import Alternative, Criterion, Decision, DecisionStatus
 from app.observability import metrics
 from app.repositories import decision_repository
@@ -103,6 +105,9 @@ async def patch_decision(db: AsyncSession, decision: Decision, **fields) -> Deci
 
 
 async def delete_decision(db: AsyncSession, decision: Decision) -> None:
+    # Commitments reference options, and the ORM deletes options before the database gets to
+    # cascade; remove them first (their outcome reviews cascade from them).
+    await db.execute(delete(Commitment).where(Commitment.decision_id == decision.id))
     await decision_repository.delete_decision(db, decision)
     await db.commit()
 
@@ -138,6 +143,9 @@ async def patch_alternative(db: AsyncSession, alternative: Alternative, **fields
 
 
 async def delete_alternative(db: AsyncSession, alternative: Alternative) -> None:
+    from app.services import commitment_service  # local: commitment_service imports this module
+
+    await commitment_service.ensure_option_not_committed(db, alternative.id)
     decision_id = alternative.decision_id
     await decision_repository.delete_alternative(db, alternative)
     await db.flush()

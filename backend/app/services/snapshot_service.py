@@ -86,8 +86,15 @@ def to_summary(row: DecisionSnapshot) -> SnapshotSummary:
 
 
 async def create_snapshot(
-    db: AsyncSession, decision: Decision, *, reason: str = SnapshotReason.MANUAL, label: str = ""
+    db: AsyncSession,
+    decision: Decision,
+    *,
+    reason: str = SnapshotReason.MANUAL,
+    label: str = "",
+    commit: bool = True,
 ) -> DecisionSnapshot:
+    """`commit=False` only flushes, so the caller can make the snapshot part of a larger transaction
+    (and is then responsible for committing and for recording the snapshot metric)."""
     # Serialise version assignment per decision.
     await db.execute(select(Decision.id).where(Decision.id == decision.id).with_for_update())
     count, latest = (
@@ -111,9 +118,10 @@ async def create_snapshot(
     )
     db.add(row)
     await db.flush()
-    await db.commit()
-    await db.refresh(row)
-    metrics.record_snapshot_created(reason)
+    if commit:
+        await db.commit()
+        await db.refresh(row)
+        metrics.record_snapshot_created(reason)
     return row
 
 

@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
   Sun,
+  Target,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -71,6 +72,13 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         icon: LayoutTemplate,
         group: "Actions",
         run: go("/app/templates"),
+      },
+      {
+        id: "calibration",
+        label: "View calibration",
+        icon: Target,
+        group: "Actions",
+        run: go("/app/calibration"),
       },
       {
         id: "theme",

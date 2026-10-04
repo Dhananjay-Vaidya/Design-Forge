@@ -101,6 +101,9 @@ Memory used, evicted keys, connected clients, commands processed, keyspace hits/
 | `decisionforge_snapshot_compares_total` | Counter | Version comparisons requested [REC FX-04] |
 | `decisionforge_sensitivity_lab_requests_total{status}` | Counter | What-if analyses; `status` bounded (`success`, `rejected`, `failure`) [REC FX-03] |
 | `decisionforge_explanations_total{status}` | Counter | Template explanations; same bounded `status` [REC FX-05] |
+| `decisionforge_commitments_total{kind}` | Counter | Final choices; `kind` is `first` or `changed` (changed mind) [REC FX-06] |
+| `decisionforge_outcome_reviews_total{status}` | Counter | Review events; `status` bounded to `scheduled`, `submitted`, `cancelled` [REC FX-06] |
+| `decisionforge_calibration_views_total` | Counter | Calibration summaries requested [REC FX-06] |
 | `decisionforge_active_decisions` | Gauge | Open decisions (DPR) |
 | `decisionforge_analyses_requested_total` | Counter | AI demand |
 | `decisionforge_analyses_completed_total` | Counter | AI completion (validity trend) |

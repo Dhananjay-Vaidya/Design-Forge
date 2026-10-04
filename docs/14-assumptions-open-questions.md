@@ -46,6 +46,7 @@ This register captures every interpretation gap, recommended default, source-doc
 |----|----------|---------|-----------------|--------|
 | OQ-1 | Exact score scale & whether it's user-configurable per decision | Fixed 1–10 / 1–5 / configurable | D-1 (1–10 fixed) | DB check constraint, UI, engine |
 | OQ-2 | Calibration methodology detail | Simple buckets / Brier score / reliability curve | D-5 (buckets) | FR-016 depth, dashboard |
+|  | *Resolved 2026-10-04 (FX-06):* all three are shown. "Worked out" = satisfaction ≥ 4; Brier score and skill vs the user's own hit rate; five-band reliability curve; per-category over/under-confidence only from 3 reviews; no verdict below 5 reviews. | | | |
 | OQ-3 | Token storage & session model | httpOnly cookie+CSRF / in-memory bearer | D-7 | Security posture, CORS/CSRF config |
 | OQ-4 | Delete vs anonymize on decision/account deletion | Hard-delete / anonymize / user choice | D-8 (hard-delete) | BR-014 implementation, retention |
 | OQ-5 | Sensitivity method depth for MVP | Threshold flag only / one-at-a-time weight sweep | Threshold flag + short note | FR-008 scope |

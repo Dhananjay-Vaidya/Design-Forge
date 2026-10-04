@@ -55,10 +55,6 @@ SCENARIO_COMPARISONS = Counter(
     "Total scenario comparisons.",
     ["status"],
 )
-OUTCOME_REVIEWS = Counter(
-    "decisionforge_outcome_reviews_total",
-    "Total outcome reviews.",
-)
 DECISIONS_FROM_TEMPLATE = Counter(
     "decisionforge_decisions_from_template_total",
     "Decisions created from a template, by template source.",
@@ -82,6 +78,20 @@ EXPLANATIONS = Counter(
     "decisionforge_explanations_total",
     "Deterministic ranking explanations (template-based, no AI).",
     ["status"],
+)
+COMMITMENTS = Counter(
+    "decisionforge_commitments_total",
+    "Final choices recorded, by whether it was a first commitment or a changed mind.",
+    ["kind"],
+)
+OUTCOME_REVIEWS = Counter(
+    "decisionforge_outcome_reviews_total",
+    "Outcome review lifecycle events.",
+    ["status"],
+)
+CALIBRATION_VIEWS = Counter(
+    "decisionforge_calibration_views_total",
+    "Calibration summaries requested.",
 )
 TEMPLATES_SAVED = Counter(
     "decisionforge_templates_saved_total",
@@ -218,12 +228,24 @@ def record_explanation(status: str) -> None:
     EXPLANATIONS.labels(status=bounded(status, ALLOWED_STATUS, "failure")).inc()
 
 
+ALLOWED_COMMIT_KIND = {"first", "changed"}
+ALLOWED_OUTCOME_STATUS = {"scheduled", "submitted", "cancelled"}
+
+
+def record_commitment(kind: str) -> None:
+    COMMITMENTS.labels(kind=bounded(kind, ALLOWED_COMMIT_KIND, "first")).inc()
+
+
+def record_outcome_review(status: str) -> None:
+    OUTCOME_REVIEWS.labels(status=bounded(status, ALLOWED_OUTCOME_STATUS, "scheduled")).inc()
+
+
+def record_calibration_view() -> None:
+    CALIBRATION_VIEWS.inc()
+
+
 def record_template_saved() -> None:
     TEMPLATES_SAVED.inc()
-
-
-def record_outcome_review() -> None:
-    OUTCOME_REVIEWS.inc()
 
 
 @contextmanager

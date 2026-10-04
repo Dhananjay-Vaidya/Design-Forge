@@ -6,6 +6,7 @@ import {
   Check,
   ChevronRight,
   FileQuestion,
+  Flag,
   FlaskConical,
   Grid3x3,
   History,
@@ -240,6 +241,13 @@ function WorkspaceTabs({ readiness }: { readiness: Readiness }) {
       sr: readiness.isReady ? "explore sensitivity" : "needs a complete ranking",
     },
     { to: "versions", label: "Versions", icon: History, badge: null, sr: "saved copies and diffs" },
+    {
+      to: "commit",
+      label: "Commit",
+      icon: Flag,
+      badge: null,
+      sr: "record your choice and review it later",
+    },
   ];
 
   return (

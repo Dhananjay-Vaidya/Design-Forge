@@ -256,6 +256,259 @@
         "title": "AuthResponse",
         "type": "object"
       },
+      "CalibrationBucket": {
+        "properties": {
+          "avg_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Confidence"
+          },
+          "avg_satisfaction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Satisfaction"
+          },
+          "confidence_range": {
+            "title": "Confidence Range",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Rate"
+          }
+        },
+        "required": [
+          "confidence_range",
+          "count",
+          "avg_confidence",
+          "success_rate",
+          "avg_satisfaction"
+        ],
+        "title": "CalibrationBucket",
+        "type": "object"
+      },
+      "CalibrationResponse": {
+        "properties": {
+          "avg_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Confidence"
+          },
+          "avg_satisfaction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Satisfaction"
+          },
+          "brier_baseline": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier Baseline"
+          },
+          "brier_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier Score"
+          },
+          "brier_skill": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier Skill"
+          },
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/CalibrationBucket"
+            },
+            "title": "Buckets",
+            "type": "array"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryCalibration"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "deterministic": {
+            "default": true,
+            "title": "Deterministic",
+            "type": "boolean"
+          },
+          "min_reviews": {
+            "title": "Min Reviews",
+            "type": "integer"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "reviews_count": {
+            "title": "Reviews Count",
+            "type": "integer"
+          },
+          "streaks": {
+            "$ref": "#/components/schemas/Streaks"
+          },
+          "success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Share rated >= success_threshold",
+            "title": "Success Rate"
+          },
+          "success_threshold": {
+            "title": "Success Threshold",
+            "type": "integer"
+          },
+          "sufficient": {
+            "title": "Sufficient",
+            "type": "boolean"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "enum": [
+                  "overconfident",
+                  "underconfident",
+                  "well_calibrated"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict"
+          }
+        },
+        "required": [
+          "reviews_count",
+          "sufficient",
+          "min_reviews",
+          "success_threshold",
+          "avg_confidence",
+          "avg_satisfaction",
+          "success_rate",
+          "brier_score",
+          "brier_baseline",
+          "brier_skill",
+          "verdict",
+          "buckets",
+          "categories",
+          "streaks",
+          "note"
+        ],
+        "title": "CalibrationResponse",
+        "type": "object"
+      },
+      "CategoryCalibration": {
+        "properties": {
+          "avg_confidence": {
+            "title": "Avg Confidence",
+            "type": "number"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "gap_points": {
+            "title": "Gap Points",
+            "type": "number"
+          },
+          "success_rate": {
+            "title": "Success Rate",
+            "type": "number"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "enum": [
+                  "overconfident",
+                  "underconfident",
+                  "well_calibrated"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "not_enough_data",
+                "type": "string"
+              }
+            ],
+            "title": "Verdict"
+          }
+        },
+        "required": [
+          "category",
+          "count",
+          "avg_confidence",
+          "success_rate",
+          "gap_points",
+          "verdict"
+        ],
+        "title": "CategoryCalibration",
+        "type": "object"
+      },
       "ChatMessageIn": {
         "additionalProperties": false,
         "properties": {
@@ -298,6 +551,92 @@
           "messages"
         ],
         "title": "ChatRequest",
+        "type": "object"
+      },
+      "CommitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "alternative_id": {
+            "format": "uuid",
+            "title": "Alternative Id",
+            "type": "string"
+          },
+          "confidence": {
+            "description": "Chance (0-100) this will work out",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "integer"
+          },
+          "rationale": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alternative_id",
+          "confidence"
+        ],
+        "title": "CommitRequest",
+        "type": "object"
+      },
+      "CommitmentRead": {
+        "properties": {
+          "alternative_id": {
+            "format": "uuid",
+            "title": "Alternative Id",
+            "type": "string"
+          },
+          "alternative_name": {
+            "title": "Alternative Name",
+            "type": "string"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_id": {
+            "format": "uuid",
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "snapshot_version": {
+            "title": "Snapshot Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "decision_id",
+          "alternative_id",
+          "alternative_name",
+          "confidence",
+          "rationale",
+          "is_active",
+          "snapshot_version",
+          "created_at"
+        ],
+        "title": "CommitmentRead",
         "type": "object"
       },
       "CriterionChange": {
@@ -1048,6 +1387,146 @@
           "criterion_id"
         ],
         "title": "MissingCellSchema",
+        "type": "object"
+      },
+      "OutcomeCreate": {
+        "additionalProperties": false,
+        "description": "Schedule a review (due_at), record one now (satisfaction), or both.",
+        "properties": {
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "result_notes": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Result Notes",
+            "type": "string"
+          },
+          "satisfaction": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Satisfaction"
+          }
+        },
+        "title": "OutcomeCreate",
+        "type": "object"
+      },
+      "OutcomeRead": {
+        "properties": {
+          "commitment_id": {
+            "format": "uuid",
+            "title": "Commitment Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_id": {
+            "format": "uuid",
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "due_at": {
+            "format": "date-time",
+            "title": "Due At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "result_notes": {
+            "title": "Result Notes",
+            "type": "string"
+          },
+          "satisfaction": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Satisfaction"
+          },
+          "status": {
+            "enum": [
+              "SCHEDULED",
+              "DUE",
+              "SUBMITTED",
+              "CANCELLED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          }
+        },
+        "required": [
+          "id",
+          "decision_id",
+          "commitment_id",
+          "due_at",
+          "status",
+          "satisfaction",
+          "result_notes",
+          "submitted_at",
+          "created_at"
+        ],
+        "title": "OutcomeRead",
+        "type": "object"
+      },
+      "OutcomeSubmit": {
+        "additionalProperties": false,
+        "properties": {
+          "result_notes": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Result Notes",
+            "type": "string"
+          },
+          "satisfaction": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Satisfaction",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "satisfaction"
+        ],
+        "title": "OutcomeSubmit",
         "type": "object"
       },
       "ProfileUpdateRequest": {
@@ -1889,6 +2368,24 @@
         "title": "SnapshotSummary",
         "type": "object"
       },
+      "Streaks": {
+        "properties": {
+          "best": {
+            "title": "Best",
+            "type": "integer"
+          },
+          "current": {
+            "title": "Current",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "current",
+          "best"
+        ],
+        "title": "Streaks",
+        "type": "object"
+      },
       "TemplateCreateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2587,6 +3084,32 @@
         ]
       }
     },
+    "/api/v1/dashboard/calibration": {
+      "get": {
+        "operationId": "get_calibration_api_v1_dashboard_calibration_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalibrationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Calibration",
+        "tags": [
+          "commitments"
+        ]
+      }
+    },
     "/api/v1/decisions": {
       "get": {
         "operationId": "list_decisions_api_v1_decisions_get",
@@ -3126,6 +3649,116 @@
         ]
       }
     },
+    "/api/v1/decisions/{decision_id}/commit": {
+      "post": {
+        "operationId": "commit_decision_api_v1_decisions__decision_id__commit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitmentRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Commit Decision",
+        "tags": [
+          "commitments"
+        ]
+      }
+    },
+    "/api/v1/decisions/{decision_id}/commitments": {
+      "get": {
+        "operationId": "list_commitments_api_v1_decisions__decision_id__commitments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CommitmentRead"
+                  },
+                  "title": "Response List Commitments Api V1 Decisions  Decision Id  Commitments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Commitments",
+        "tags": [
+          "commitments"
+        ]
+      }
+    },
     "/api/v1/decisions/{decision_id}/criteria": {
       "get": {
         "operationId": "list_criteria_api_v1_decisions__decision_id__criteria_get",
@@ -3309,6 +3942,114 @@
         "summary": "Get Explanation",
         "tags": [
           "insights"
+        ]
+      }
+    },
+    "/api/v1/decisions/{decision_id}/outcomes": {
+      "get": {
+        "operationId": "list_outcomes_api_v1_decisions__decision_id__outcomes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OutcomeRead"
+                  },
+                  "title": "Response List Outcomes Api V1 Decisions  Decision Id  Outcomes Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Outcomes",
+        "tags": [
+          "commitments"
+        ]
+      },
+      "post": {
+        "operationId": "create_outcome_api_v1_decisions__decision_id__outcomes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutcomeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Outcome",
+        "tags": [
+          "commitments"
         ]
       }
     },
@@ -3835,6 +4576,112 @@
         "summary": "Update Profile",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/api/v1/outcomes/{outcome_id}/cancel": {
+      "post": {
+        "operationId": "cancel_outcome_api_v1_outcomes__outcome_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outcome_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Outcome Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Outcome",
+        "tags": [
+          "commitments"
+        ]
+      }
+    },
+    "/api/v1/outcomes/{outcome_id}/submit": {
+      "post": {
+        "operationId": "submit_outcome_api_v1_outcomes__outcome_id__submit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outcome_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Outcome Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutcomeSubmit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit Outcome",
+        "tags": [
+          "commitments"
         ]
       }
     },

@@ -130,6 +130,13 @@ Implemented in `backend/tests/api/test_observability.py`, `test_observability_mo
   `tests/api/test_snapshots_insights.py` (version numbering, concurrent saves, frozen copy, cap, immutability, diff
   incl. against `current`, bad-version errors, ownership on every endpoint, AI provider forbidden during
   sensitivity/explanation, bounded metrics). Frontend: `tests/features/insights.test.tsx`.
+- **Commitments / outcomes / calibration (Phase C)** — `tests/unit/test_calibration.py` (Brier, skill, reliability
+  bands and their edges, streaks, per-category verdicts, small-sample behaviour; expected values worked out by hand in
+  the comments) and `tests/api/test_commitments.py` (commit + snapshot in one transaction, re-commit history, one
+  active commitment enforced by the database, confidence bounds, status gating incl. archived/under review/reviewed,
+  committed-option protection, decision delete with commitments, lazy DUE transition on get and list, submit/cancel,
+  review cap, calibration scoping and latest-review-per-commitment, ownership on every endpoint). Frontend:
+  `tests/features/commitments.test.tsx`.
 - Every FX feature must also be verified with **Gemini disabled**; features that need no AI (templates, demo) are
   independent of `GEMINI_ENABLED` by construction.
 

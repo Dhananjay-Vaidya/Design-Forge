@@ -19,7 +19,7 @@ Tracks the build of the recommended tier from the feature-expansion plan (FX-01,
 |-------|----------|--------|-------|
 | A | FX-01 templates, FX-16 save-as-template, FX-20 demo + tour | **Verified** | See below |
 | B | FX-03 sensitivity lab, FX-05 explainer, FX-04 version diff | **Verified** | See below |
-| C | FX-06 calibration (+ commit/outcome prerequisites) | Not started | |
+| C | FX-06 calibration (+ commit/outcome prerequisites) | **Verified** | See below |
 | D | FX-15 PDF, FX-14 CSV, FX-10 brief | Not started | |
 | E | FX-08 devil's advocate | Not started | |
 | F | FX-19 PWA / offline | Not started | |
@@ -59,3 +59,22 @@ Tracks the build of the recommended tier from the feature-expansion plan (FX-01,
   (exact ties are decided by decimal noise, so the tool never claims a precise tie-break); only one weight or one
   score changes at a time.
 - **Gemini-OFF:** none of these endpoints touch the AI provider (a test fails if they try).
+
+## Phase C — Commitments, outcome reviews, calibration
+
+- **Backend:** migration `f5a6b7c8d9e0` (`commitments`, `outcome_reviews`); pure `app/domain/calibration.py`;
+  `commitment_service`; API-31..34, API-36 and two additions, API-53 (submit) and API-54 (cancel); metrics
+  `commitments_total{kind}`, `outcome_reviews_total{status}` (replacing a never-used unlabelled placeholder),
+  `calibration_views_total`. Committing writes a `commitment` snapshot in the same transaction.
+- **Frontend:** Commit tab (choose option, confidence slider usable by keyboard, rationale, history, schedule a review
+  with quick dates, record an outcome with a 1-5 picker), `/app/calibration` page (read in words, Brier, reliability
+  table with said-vs-worked-out bars, per-category table, streaks), sidebar and command-palette entries.
+- **Verified:** backend 342 tests (50 new; 43 of them in the two new test files: 30 API + 13 calibration unit), ruff, format, mypy,
+  `alembic check` clean; OpenAPI snapshot regenerated; frontend lint, typecheck, 103 tests (16 new), build;
+  real-browser walkthrough against the Docker stack (25 checks: empty state, draft refused, commit by keyboard,
+  schedule, record, status chips, calibration read, light/dark, reduced motion, 390 px no horizontal scroll, second
+  account 404 on every endpoint and an empty calibration, no AI requests); throwaway accounts deleted.
+- **Deviations (decided, not hidden):** FKs to options/snapshots are NO ACTION rather than RESTRICT (see doc 04 §4.12);
+  review reminders are not background jobs, so AC-010 is **not met**: reviews become "due" when read; API-35
+  (dashboard counts) was not part of this phase; a committed option can't be deleted (409), only renamed.
+- **Gemini-OFF:** nothing here calls Gemini.

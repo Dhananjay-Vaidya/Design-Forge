@@ -363,6 +363,22 @@ Never stores secrets or prompt text beyond the validated payload (BRD data reqs)
 | submitted_at | timestamptz | NULL |
 Index (status, due_at) for the reminder scan.
 
+**As built (Phase C, FX-06) — migration `f5a6b7c8d9e0`, tables `commitments` and `outcome_reviews`.**
+Differences from the tables above: `commitments` also has `created_at`; `alternative_id` and `snapshot_id` are plain
+foreign keys (NO ACTION) rather than RESTRICT, because RESTRICT is checked immediately and would fail the ORM's
+delete of a whole decision (it deletes options before the database cascades). The same protection is kept: a
+committed option cannot be deleted (`409`, rename instead) and `delete_decision` removes commitments first.
+`commitments.rationale` and `outcome_reviews.result_notes` default to `''`. `outcome_reviews.commitment_id` is
+NOT NULL. Constraints: `confidence BETWEEN 0 AND 100`, `satisfaction IS NULL OR BETWEEN 1 AND 5`, status CHECK, partial
+unique index `unique_active_commitment (decision_id) WHERE is_active`; indexes `(status, due_at)` and `(decision_id)`.
+
+Status flow (derived by the server; the client can only set `ARCHIVED`):
+`SCORED → COMMITTED → UNDER_REVIEW (a review passes its due date) → REVIEWED (an outcome is recorded)`.
+Re-committing is allowed while `SCORED`/`COMMITTED`: the earlier commitment becomes inactive (kept for audit) and its
+open reviews are cancelled. Once a review is due or recorded the commitment is final. Committing writes a
+`decision_snapshots` row (`reason = commitment`) in the same transaction. "Due" is applied lazily when the owner's
+decisions or reviews are read; there is no background scheduler yet (AC-010 reminder jobs are not built).
+
 ### 4.13 `activity_event` [REC]
 | Column | Type | Constraints |
 |--------|------|-------------|

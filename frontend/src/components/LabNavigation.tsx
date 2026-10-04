@@ -5,6 +5,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Target,
 } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -23,6 +24,7 @@ function NavigationLinks({
         { to: "/app", label: "Decision library", icon: LayoutDashboard },
         { to: "/app/decisions/new", label: "New decision", icon: Plus },
         { to: "/app/templates", label: "Templates", icon: LayoutTemplate },
+        { to: "/app/calibration", label: "Calibration", icon: Target },
       ].map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}

@@ -167,7 +167,9 @@ without it. No connection strings, hosts, credentials or exception text are ever
 | `decisionforge_cache_operations_total` | `cache_name`, `result` | `observe_cache` | Wrapper ready; no cache exists yet |
 | `decisionforge_cache_operation_duration_seconds` | `cache_name`, `operation` | `observe_cache` | same |
 | `decisionforge_scenario_comparisons_total` | `status` | `metrics.record_scenario_comparison` | Feature not built |
-| `decisionforge_outcome_reviews_total` | none | `metrics.record_outcome_review` | Feature not built |
+| `decisionforge_outcome_reviews_total` | `status`: scheduled / submitted / cancelled | `commitment_service` | **Yes** |
+| `decisionforge_commitments_total` | `kind`: first / changed | `commitment_service.commit` | **Yes** |
+| `decisionforge_calibration_views_total` | none | `GET /dashboard/calibration` | **Yes** |
 
 The AI, cache, scenario and outcome helpers are fully unit-tested
 (`tests/unit/test_instrumentation.py`). When the Gemini provider lands, wrap each provider request:
