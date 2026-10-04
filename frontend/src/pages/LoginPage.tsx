@@ -7,6 +7,7 @@ export function LoginPage() {
   return (
     <AuthLayout
       title="Welcome back"
+      constellation
       subtitle={
         <>
           New here?{" "}

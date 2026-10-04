@@ -1,5 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowUp, CircleAlert, Info, RotateCcw, Sparkles, Square, Trash2, X } from "lucide-react";
+import {
+  ArrowUp,
+  CircleAlert,
+  Info,
+  Minimize2,
+  RotateCcw,
+  Sparkles,
+  Square,
+  Trash2,
+  X,
+} from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
 
@@ -56,6 +66,7 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
   const [draft, setDraft] = useState("");
   const [streaming, setStreaming] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [minimized, setMinimized] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -67,15 +78,20 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
 
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (open && dialog && !dialog.open) dialog.showModal();
+    if (open && !minimized && dialog && !dialog.open) dialog.showModal();
     if (!open && dialog?.open) dialog.close();
-    if (!open) return;
+    if (!open) {
+      setMinimized(false);
+      return;
+    }
+    if (minimized && dialog?.open) dialog.close();
+    if (minimized) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previous;
     };
-  }, [open]);
+  }, [open, minimized]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -161,14 +177,35 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
-            className="fixed inset-0 z-40 bg-scrim/35 backdrop-blur-[2px]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => !busy && onClose()}
-            aria-hidden="true"
-          />
+          {minimized && (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, y: 12, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.92 }}
+              transition={{ type: "spring", stiffness: 420, damping: 30 }}
+              onClick={() => setMinimized(false)}
+              aria-label="Reopen Ask AI"
+              className="glass-strong fixed bottom-4 right-4 z-50 flex cursor-pointer items-center gap-2 rounded-xl border border-ai/30 px-3 py-2 text-sm font-medium text-text shadow-glow-ai transition-colors hover:border-ai/60 hover:bg-ai/10 sm:bottom-6 sm:right-6"
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg ai-gradient">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              </span>
+              <span>Ask AI</span>
+              {busy && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ai" aria-label="AI is thinking" />}
+            </motion.button>
+          )}
+          {!minimized && (
+            <motion.div
+              className="fixed inset-0 z-40 bg-scrim/35 backdrop-blur-[2px]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !busy && onClose()}
+              aria-hidden="true"
+            />
+          )}
+          {!minimized && (
           <motion.dialog
             ref={dialogRef}
             onKeyDown={trapDialogTab}
@@ -212,6 +249,15 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
                   <Trash2 className="h-4 w-4" />
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setMinimized(true)}
+                aria-label="Minimize Ask AI"
+                title="Minimize Ask AI"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted hover:bg-surface-2 hover:text-text"
+              >
+                <Minimize2 className="h-4 w-4" />
+              </button>
               <button
                 type="button"
                 onClick={onClose}
@@ -434,6 +480,7 @@ export function AskAiPanel({ decisionId, decisionTitle, open, onClose }: AskAiPa
               </p>
             </form>
           </motion.dialog>
+          )}
         </>
       )}
     </AnimatePresence>

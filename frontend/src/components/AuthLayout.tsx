@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { AmbientBackground } from "./fx/AmbientBackground";
+import { DecisionConstellationBackground } from "./fx/DecisionConstellationBackground";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -16,11 +17,13 @@ interface AuthLayoutProps {
   title: string;
   subtitle: ReactNode;
   children: ReactNode;
+  constellation?: boolean;
 }
 
-export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
+export function AuthLayout({ title, subtitle, children, constellation = false }: AuthLayoutProps) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[1fr_1.05fr]">
+    <div className={`relative isolate grid min-h-dvh lg:grid-cols-[1fr_1.05fr] ${constellation ? "auth-constellation-page" : ""}`}>
+      {constellation && <DecisionConstellationBackground />}
       <div className="relative isolate flex flex-col px-5 py-6 sm:px-10">
         <AmbientBackground />
         <div className="flex items-center justify-between">
