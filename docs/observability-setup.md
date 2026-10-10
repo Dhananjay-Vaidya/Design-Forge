@@ -174,6 +174,10 @@ without it. No connection strings, hosts, credentials or exception text are ever
 | `decisionforge_ai_proposal_acceptance_total` | `action`, `outcome`: accepted / rejected / failed | `ai_proposal_service` | **Yes** |
 | `decisionforge_ai_injection_flags_total` | `action` | `app/ai/runner.py` | **Yes** |
 | `decisionforge_ai_schema_failures_total` | `action` | `app/ai/runner.py` | **Yes** |
+| `decisionforge_guide_draft_total` | `result`: ok / capped / rate_limited / refused / degraded | `public_drafter`, `guide` endpoint | **Yes** |
+| `decisionforge_guide_draft_duration_seconds` | none | `public_drafter.draft` | **Yes** |
+| `decisionforge_guide_budget_remaining` | none | `public_drafter` | **Yes** |
+| `decisionforge_scaffold_handoffs_total` | `result`: created / invalid / reused | `scaffold_service` | **Yes** |
 
 The AI, cache, scenario and outcome helpers are fully unit-tested
 (`tests/unit/test_instrumentation.py`). When the Gemini provider lands, wrap each provider request:

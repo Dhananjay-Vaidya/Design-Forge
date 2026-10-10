@@ -71,3 +71,25 @@ were built first as FX Phase C (`FEATURE_EXPANSION_STATUS.md`).
   acceptance metrics; per-action budgets (one shared counter).
 - **Gemini-OFF:** every capability is disabled in the UI with an explanation and returns 503 from the API; the rest
   of the product is unaffected (tested).
+
+## AX-22 — Home-page decision drafter (doc 20, public lane)
+
+- **Doc 19 dependency:** doc 20 assumes the doc 19 "public lane" (Guide + tour) exists. It was not built (that request
+  was interrupted). The guardrails AX-22 needs were built here as `app/ai/public_guard.py`; the Guide Q&A and the
+  landing tour remain **not built**.
+- **Backend:** `public_guard.py` (per-visitor + global rate limits, free-draft cap, global daily budget, separate
+  breaker, single-use token claims; visitors keyed by HMAC of IP), `public_drafter.py`, `scaffold_service.py`,
+  API-61..63, settings `GUIDE_*`, metrics `guide_draft_total`, `guide_draft_duration_seconds`,
+  `guide_budget_remaining`, `scaffold_handoffs_total`. No migration (provenance reuses `ai_proposals`).
+- **Frontend:** a "Try it now" section under the hero (`features/landing/HomeDrafter.tsx`): describe → teal matrix
+  preview with the violet "AI-drafted · you review everything" badge, empty score cells, equal-weight bar, add/remove
+  options and criteria, "Nothing is saved yet", Save & start scoring → register; capped/degraded → Start from a
+  template. `DraftHandoff` in the signed-in shell saves the draft after sign-up or log-in and lands on Scores.
+- **Verified:** backend 451 tests (27 in `test_guide.py`), ruff, format, mypy, `alembic check`; OpenAPI regenerated;
+  frontend lint, typecheck, 141 tests (17 new), build; real-browser run against the Docker stack and the real model
+  (1 model call, synthetic text, throwaway account; 23 checks: preview with nothing scored, tweak persisted and
+  survives reload, 390 px no horizontal scroll, sign-up lands on Scores with the draft as an owned decision, equal
+  weights, no scores, provenance excludes the visitor's own option, draft cleared, cache hit, cap, injection refused,
+  capped UI offers templates), no console errors; account deleted and the public counters reset afterwards.
+- **Deviations:** no suggested weights (by design); no streaming (one validated JSON response, with a "Drafting…"
+  status); the free-draft cap is per visitor IP (a client session id is trivially reset, so it is not used).

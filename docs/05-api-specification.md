@@ -212,6 +212,13 @@ in the product is affected.
 Deviation from the plan: actions complete inside the request instead of returning a queued `job_id`; the proposal id
 takes that role and `GET /ai/proposals/{id}` still serves reloads.
 
+### Home-page drafter [REC — AX-22, public lane]
+| ID | Endpoint | Purpose | Notes |
+|----|----------|---------|-------|
+| API-61 | `GET /guide/status` (public) | `{enabled, free_drafts_per_day, drafts_remaining}` for this visitor | No auth; counts only |
+| API-62 | `POST /guide/draft-decision` (public) | `{description: 10-1000 chars}` → `{status: ok\|capped\|refused\|degraded, scaffold?, draft_token?, drafts_remaining, message?, from_cache, advisory: true}` | Scaffold = `title, category, options[{name, note}], criteria[{name, description, direction}]`; **no scores or weights**. Nothing is persisted. `429 rate_limited` (per visitor 5/min, global 60/min). `capped` after `GUIDE_FREE_DRAFTS` per visitor per day. `degraded` when AI is off, the public budget or breaker is exhausted, or the answer was unusable (the UI offers Templates) |
+| API-63 | `POST /decisions/from-scaffold` 🔒 | `{scaffold, draft_token}` → 201 `DecisionRead` | One transaction: decision + options + criteria (equal weight 1, no scores), owned by the caller. The signed token (2 h, single use) marks which items the AI drafted; recorded as an accepted `ai_proposals` row (`action = public_draft`). 400 for an invalid, expired or reused token, duplicates, or extra fields such as `weight`/`scores` |
+
 ### Ops
 | API-38 | `GET /healthz` | Liveness | OBS-06 |
 | API-39 | `GET /readyz` | Readiness (DB/Redis) | OBS-06 |

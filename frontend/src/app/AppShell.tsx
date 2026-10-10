@@ -10,6 +10,7 @@ import { LabNavigation } from "@/components/LabNavigation";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { DraftHandoff } from "@/features/landing/DraftHandoff";
 import { AmbientBackground } from "@/components/fx/AmbientBackground";
 import { logoutRequest } from "@/features/auth/api";
 import { useAuthStore } from "@/stores/authStore";
@@ -160,6 +161,7 @@ export function AppShell() {
       <div className="fixed inset-0 -z-10">
         <AmbientBackground />
       </div>
+      <DraftHandoff />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2 focus:shadow-lift"

@@ -20,7 +20,7 @@ ALLOWED_ANALYSIS_TYPE = {
     "unknown",
 }
 # Registered AI action names (app/ai/actions.register adds to this and to ALLOWED_ANALYSIS_TYPE).
-ALLOWED_AI_ACTIONS: set[str] = set()
+ALLOWED_AI_ACTIONS: set[str] = {"public_draft"}
 ALLOWED_PROPOSAL_STATUS = {"created", "accepted", "rejected", "expired", "failed"}
 ALLOWED_ITEM_OUTCOME = {"accepted", "rejected", "failed"}
 ALLOWED_RESULT = {"hit", "miss", "success", "failure"}
@@ -116,6 +116,25 @@ AI_SCHEMA_FAILURES = Counter(
     "decisionforge_ai_schema_failures_total",
     "AI answers discarded because they failed schema or referential validation.",
     ["action"],
+)
+GUIDE_DRAFTS = Counter(
+    "decisionforge_guide_draft_total",
+    "Public home-page draft requests, by result.",
+    ["result"],
+)
+GUIDE_DRAFT_DURATION = Histogram(
+    "decisionforge_guide_draft_duration_seconds",
+    "Time to answer a public home-page draft request.",
+    buckets=(0.05, 0.25, 0.5, 1, 2.5, 5, 10, 20, 30),
+)
+GUIDE_BUDGET_REMAINING = Gauge(
+    "decisionforge_guide_budget_remaining",
+    "Model calls left today in the public lane's global budget.",
+)
+SCAFFOLD_HANDOFFS = Counter(
+    "decisionforge_scaffold_handoffs_total",
+    "Home-page drafts saved as decisions after sign-up, by result.",
+    ["result"],
 )
 TEMPLATES_SAVED = Counter(
     "decisionforge_templates_saved_total",
@@ -286,6 +305,26 @@ def record_ai_injection_flag(action: str) -> None:
 
 def record_ai_schema_failure(action: str) -> None:
     AI_SCHEMA_FAILURES.labels(action=bounded(action, ALLOWED_AI_ACTIONS)).inc()
+
+
+ALLOWED_GUIDE_RESULT = {"ok", "capped", "rate_limited", "refused", "degraded"}
+ALLOWED_HANDOFF_RESULT = {"created", "invalid", "reused"}
+
+
+def record_guide_draft(result: str) -> None:
+    GUIDE_DRAFTS.labels(result=bounded(result, ALLOWED_GUIDE_RESULT, "degraded")).inc()
+
+
+def observe_guide_draft_duration(seconds: float) -> None:
+    GUIDE_DRAFT_DURATION.observe(max(seconds, 0))
+
+
+def set_guide_budget_remaining(value: int) -> None:
+    GUIDE_BUDGET_REMAINING.set(value)
+
+
+def record_scaffold_handoff(result: str) -> None:
+    SCAFFOLD_HANDOFFS.labels(result=bounded(result, ALLOWED_HANDOFF_RESULT, "invalid")).inc()
 
 
 def record_template_saved() -> None:

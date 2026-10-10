@@ -1235,6 +1235,95 @@
         "title": "DemoStatus",
         "type": "object"
       },
+      "DraftRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description"
+        ],
+        "title": "DraftRequest",
+        "type": "object"
+      },
+      "DraftResponse": {
+        "properties": {
+          "advisory": {
+            "const": true,
+            "default": true,
+            "title": "Advisory",
+            "type": "boolean"
+          },
+          "draft_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Token"
+          },
+          "drafts_remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drafts Remaining"
+          },
+          "from_cache": {
+            "default": false,
+            "title": "From Cache",
+            "type": "boolean"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "scaffold": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScaffoldOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "capped",
+              "refused",
+              "degraded"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "DraftResponse",
+        "type": "object"
+      },
       "ExplainDriver": {
         "properties": {
           "criterion": {
@@ -1368,6 +1457,49 @@
           "after"
         ],
         "title": "FieldChange",
+        "type": "object"
+      },
+      "FromScaffoldRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "draft_token": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Draft Token",
+            "type": "string"
+          },
+          "scaffold": {
+            "$ref": "#/components/schemas/ScaffoldIn"
+          }
+        },
+        "required": [
+          "scaffold",
+          "draft_token"
+        ],
+        "title": "FromScaffoldRequest",
+        "type": "object"
+      },
+      "GuideStatus": {
+        "properties": {
+          "drafts_remaining": {
+            "title": "Drafts Remaining",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "free_drafts_per_day": {
+            "title": "Free Drafts Per Day",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "free_drafts_per_day",
+          "drafts_remaining"
+        ],
+        "title": "GuideStatus",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -2092,6 +2224,136 @@
           "proposal"
         ],
         "title": "RunActionResponse",
+        "type": "object"
+      },
+      "ScaffoldCriterion": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "benefit",
+              "cost"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "direction"
+        ],
+        "title": "ScaffoldCriterion",
+        "type": "object"
+      },
+      "ScaffoldIn": {
+        "additionalProperties": false,
+        "description": "What the browser sends back. No score or weight fields exist, so none can be smuggled in.",
+        "properties": {
+          "category": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Category",
+            "type": "string"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/ScaffoldCriterion"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Criteria",
+            "type": "array"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/ScaffoldOption"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Options",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "options",
+          "criteria"
+        ],
+        "title": "ScaffoldIn",
+        "type": "object"
+      },
+      "ScaffoldOption": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ScaffoldOption",
+        "type": "object"
+      },
+      "ScaffoldOut": {
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/ScaffoldCriterion"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/ScaffoldOption"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "category",
+          "options",
+          "criteria"
+        ],
+        "title": "ScaffoldOut",
         "type": "object"
       },
       "ScoreCellRequest": {
@@ -3717,6 +3979,52 @@
         ]
       }
     },
+    "/api/v1/decisions/from-scaffold": {
+      "post": {
+        "operationId": "create_from_scaffold_api_v1_decisions_from_scaffold_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FromScaffoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create From Scaffold",
+        "tags": [
+          "guide"
+        ]
+      }
+    },
     "/api/v1/decisions/from-template": {
       "post": {
         "operationId": "create_decision_from_template_api_v1_decisions_from_template_post",
@@ -5053,6 +5361,68 @@
         "summary": "Create Demo Decision",
         "tags": [
           "templates"
+        ]
+      }
+    },
+    "/api/v1/guide/draft-decision": {
+      "post": {
+        "operationId": "draft_decision_api_v1_guide_draft_decision_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Draft Decision",
+        "tags": [
+          "guide"
+        ]
+      }
+    },
+    "/api/v1/guide/status": {
+      "get": {
+        "operationId": "guide_status_api_v1_guide_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuideStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Guide Status",
+        "tags": [
+          "guide"
         ]
       }
     },

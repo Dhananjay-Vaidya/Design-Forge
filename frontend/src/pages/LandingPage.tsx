@@ -22,6 +22,7 @@ import { Marquee } from "@/components/fx/Marquee";
 import { Reveal } from "@/components/fx/Reveal";
 import { Faq } from "@/features/landing/Faq";
 import { FeatureGrid } from "@/features/landing/FeatureGrid";
+import { HomeDrafter } from "@/features/landing/HomeDrafter";
 import { LiveDemo } from "@/features/landing/LiveDemo";
 import { DecisionNetwork } from "@/features/landing/DecisionNetwork";
 import { rankOptions } from "@/lib/scoring";
@@ -264,11 +265,7 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
             className="mt-9 flex flex-wrap gap-3"
           >
-            <ButtonLink
-              to="/register"
-              size="lg"
-              className="group shadow-glow-primary"
-            >
+            <ButtonLink to="/register" size="lg" className="group shadow-glow-primary">
               Start deciding
               <ArrowRight
                 className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
@@ -333,6 +330,22 @@ export function LandingPage() {
               </span>
             ))}
           />
+        </section>
+
+        <section
+          id="draft"
+          className="scroll-mt-24 mx-auto max-w-5xl px-4 pt-24 sm:px-6"
+          aria-labelledby="draft-heading"
+        >
+          <SectionHeading
+            id="draft-heading"
+            eyebrow="Try it now, no account needed"
+            title="Turn a messy choice into a clear structure."
+            text="Describe it in a sentence. AI drafts the options and criteria; you score them, and the engine ranks them."
+          />
+          <Reveal className="mt-10" delay={0.05}>
+            <HomeDrafter />
+          </Reveal>
         </section>
 
         <section

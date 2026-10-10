@@ -58,6 +58,23 @@ leniently and shaped strictly: lists clamped to their maximum, text bounded, emp
 answer left with nothing usable is discarded and refunded. Not built: streaming (the actions return one validated
 JSON document, so the UI shows a "Thinking" state instead).
 
+## 0c. Public lane: home-page drafter (AX-22) — as built 2026-10-11
+
+`backend/app/ai/public_drafter.py` + `public_guard.py`. Pre-auth, so it is isolated from everything signed-in:
+its own Redis keys, rate limits (per visitor and global, per minute), free-draft cap (`GUIDE_FREE_DRAFTS` per visitor
+per day, reserved atomically and released when nothing usable comes back), global daily budget
+(`GUIDE_DAILY_BUDGET`), and its own circuit breaker. It never reads decision data and never touches the signed-in
+quota or breaker (tested). Visitors are identified only by an HMAC of their IP with the server secret.
+
+Order: input bounds → rate limits → injection phrase (refused, no model call, no draft used) → free-draft cap →
+cache (1 h, keyed on the normalised, PII-scrubbed description) → breaker → budget → model (`GEMINI_MODEL`, JSON mode,
+the visitor text delimited and scrubbed) → schema → `in_scope` → shaping (2-6 options, 2-8 criteria, deduped,
+bounded, markup stripped). The plan's optional "suggested weights" are **not** produced: importance is the person's
+call, as in the signed-in setup draft. The response carries a signed `draft_token` (JWT `token_type = ai_draft`, 2 h)
+listing the AI's item names; saving after sign-up claims it once in Redis and records provenance.
+
+Doc 19 (public Q&A Guide and landing tour) is **not built**; this lane provides the shared guardrails it would reuse.
+
 ## 1. AI Use Cases (DPR §Gemini usage strategy)
 
 | Analysis type | Output | Control |

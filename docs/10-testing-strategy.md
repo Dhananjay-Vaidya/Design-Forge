@@ -152,6 +152,16 @@ Implemented in `backend/tests/api/test_observability.py`, `test_observability_mo
   below five reviews, keeps them at five; every capability degrades with AI off and is owner-scoped. Frontend:
   `tests/features/aiActions.test.tsx` (budget meter, availability by stage, run and discard messaging, item review,
   failed items in words, advisory teal/violet split, AI text rendered as text not HTML, dismiss).
+- **Home-page drafter (AX-22)** — `tests/api/test_guide.py`: scaffold only (model-supplied weights and scores
+  dropped), nothing written pre-auth, delimited and scrubbed prompt with no secrets, nothing personal kept in Redis
+  (no description, no raw IP), signed-in quota untouched, injection refused with no model call, off-topic refused,
+  unusable answers cost no draft, markup stripped, free-draft cap, per-visitor and global 429, budget exhausted and
+  AI off degrade, public breaker trips without touching the signed-in one, cache; handoff creates an owned decision
+  with equal weights and no scores, provenance only for AI items, single-use across users, invalid/expired/foreign
+  tokens refused, `weight`/`scores` fields rejected, validation failure doesn't burn the token. Frontend:
+  `tests/features/homeDrafter.test.tsx` (storage TTL and corruption, preview, tweaks and minimums, start over,
+  capped/degraded → templates, refusal, 429, AI off, text-not-HTML, handoff → Scores, 400 → new decision, network
+  error keeps the draft, expired draft skipped).
 - Every FX feature must also be verified with **Gemini disabled**; features that need no AI (templates, demo) are
   independent of `GEMINI_ENABLED` by construction.
 

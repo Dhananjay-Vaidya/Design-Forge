@@ -87,6 +87,18 @@ Traces to BRD NFR-001/002/010, BR-008/014/015, DPR §Security and privacy. Addit
 - AI text is rendered as **escaped plain text** in the UI (no `dangerouslySetInnerHTML`), preventing stored-XSS via model output.
 - List sizes/string lengths are capped to bound injected content.
 
+## 11a. Public AI endpoint (AX-22)
+
+`POST /guide/draft-decision` is the only unauthenticated AI route. Controls: input bounded to 1000 characters;
+per-visitor (5/min) and global (60/min) rate limits with a friendly `429`; a per-visitor daily free-draft cap; a
+global daily model budget and a breaker separate from the signed-in lane; injection phrases refused before any model
+call; emails, phone numbers, credentialed URLs and key/JWT-shaped strings removed before the call; output schema-
+validated, bounded and stripped of markup, rendered as text. Nothing a visitor types is stored in the database;
+Redis holds counters, a 1-hour cache of the drafted structure (keyed by a hash), and used-token markers. Visitors
+are keyed by an HMAC of the IP address; the raw IP is not stored or logged. `X-Forwarded-For` is ignored unless
+`GUIDE_TRUST_FORWARDED_FOR=true` (set only behind a proxy that overwrites it). The draft token is signed with the
+server secret, typed (`ai_draft`, so it can never act as an access token), lasts 2 hours and is single-use.
+
 ## 12. Dependency Security
 
 - Pin dependencies; use lockfiles (`package-lock.json`/`poetry.lock` or `requirements.txt` hashes).

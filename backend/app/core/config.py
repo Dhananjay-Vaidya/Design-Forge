@@ -83,6 +83,15 @@ class Settings(BaseSettings):
         default=60, alias="GEMINI_BREAKER_COOLDOWN_SECONDS"
     )
 
+    # ---- Public home-page drafter (doc 20, AX-22): its own limits, never the signed-in quota ----
+    guide_enabled: bool = Field(default=True, alias="GUIDE_ENABLED")
+    guide_free_drafts: int = Field(default=2, alias="GUIDE_FREE_DRAFTS")
+    guide_daily_budget: int = Field(default=300, alias="GUIDE_DAILY_BUDGET")
+    guide_rate_per_minute: int = Field(default=5, alias="GUIDE_RATE_PER_MINUTE")
+    guide_global_per_minute: int = Field(default=60, alias="GUIDE_GLOBAL_PER_MINUTE")
+    # Only enable behind a proxy you control that overwrites X-Forwarded-For.
+    guide_trust_forwarded_for: bool = Field(default=False, alias="GUIDE_TRUST_FORWARDED_FOR")
+
     # ---- Observability ----
     prometheus_metrics_enabled: bool = Field(
         default=True, validation_alias=AliasChoices("ENABLE_METRICS", "PROMETHEUS_METRICS_ENABLED")

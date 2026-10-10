@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     commitments,
     criteria,
     decisions,
+    guide,
     insights,
     rankings,
     scores,
@@ -28,5 +29,6 @@ api_router.include_router(rankings.router)
 api_router.include_router(snapshots.router)
 api_router.include_router(commitments.router)
 api_router.include_router(ai_actions.router)
+api_router.include_router(guide.router)
 api_router.include_router(insights.router)
 api_router.include_router(ai.router)
