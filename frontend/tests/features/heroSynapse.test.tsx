@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HeroSynapse } from "@/features/landing/hero/HeroSynapse";
@@ -9,9 +9,6 @@ import {
   scatter,
   seededRandom,
 } from "@/features/landing/hero/synapseMath";
-import * as sceneModule from "@/features/landing/hero/synapseScene";
-
-vi.mock("@/features/landing/hero/synapseScene", () => ({ createSynapseScene: vi.fn() }));
 
 describe("synapseMath", () => {
   const points = scatter(140, { x: 640, y: 360, z: 220 }, seededRandom(7));
@@ -67,88 +64,145 @@ describe("synapseMath", () => {
   });
 });
 
-describe("HeroSynapse", () => {
-  const create = vi.mocked(sceneModule.createSynapseScene);
-  const dispose = vi.fn();
-  let media: Record<string, boolean>;
-  const originalGetContext = HTMLCanvasElement.prototype.getContext;
+describe("HeroSynapse (worker + OffscreenCanvas)", () => {
+  type Msg = { type: string; [k: string]: unknown };
+  class FakeWorker {
+    static last: FakeWorker | null = null;
+    messages: Msg[] = [];
+    transfers: unknown[][] = [];
+    terminated = false;
+    onmessage: ((e: { data: unknown }) => void) | null = null;
+    onerror: (() => void) | null = null;
+    constructor() {
+      FakeWorker.last = this;
+    }
+    postMessage(message: Msg, transfer: unknown[] = []) {
+      this.messages.push(message);
+      this.transfers.push(transfer);
+    }
+    terminate() {
+      this.terminated = true;
+    }
+  }
+  class NoopObserver {
+    observe() {}
+    disconnect() {}
+  }
+  const saved: Record<string, unknown> = {};
+  const GLOBALS = [
+    "matchMedia",
+    "Worker",
+    "OffscreenCanvas",
+    "WebGLRenderingContext",
+    "ResizeObserver",
+    "IntersectionObserver",
+    "requestIdleCallback",
+    "cancelIdleCallback",
+  ] as const;
 
-  function stubEnvironment({ desktop = true, reduced = false, webgl = true } = {}) {
-    media = {
+  function stubEnvironment({ desktop = true, reduced = false, offscreen = true } = {}) {
+    const media: Record<string, boolean> = {
       "(min-width: 1024px) and (pointer: fine)": desktop,
       "(prefers-reduced-motion: reduce)": reduced,
     };
-    window.matchMedia = vi.fn((query: string) => ({
+    const w = window as unknown as Record<string, unknown>;
+    w.matchMedia = (query: string) => ({
       matches: media[query] ?? false,
-      media: query,
-      onchange: null,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })) as unknown as typeof window.matchMedia;
-    // Fire "idle" work immediately so the deferred three.js import runs inside the test.
-    window.requestIdleCallback = ((cb: IdleRequestCallback) => {
-      cb({ didTimeout: false, timeRemaining: () => 50 });
+    });
+    w.Worker = FakeWorker;
+    w.WebGLRenderingContext = function WebGLRenderingContext() {};
+    w.ResizeObserver = NoopObserver;
+    w.IntersectionObserver = NoopObserver;
+    // Fire "idle" work immediately so the deferred start runs inside the test.
+    w.requestIdleCallback = (cb: () => void) => {
+      cb();
       return 1;
-    }) as typeof window.requestIdleCallback;
-    window.cancelIdleCallback = vi.fn();
-    HTMLCanvasElement.prototype.getContext = vi.fn(() =>
-      webgl
-        ? ({ getExtension: () => ({ loseContext: vi.fn() }) } as unknown as RenderingContext)
-        : null,
-    ) as unknown as typeof HTMLCanvasElement.prototype.getContext;
+    };
+    w.cancelIdleCallback = vi.fn();
+    if (offscreen) {
+      w.OffscreenCanvas = function OffscreenCanvas() {};
+      (
+        HTMLCanvasElement.prototype as unknown as Record<string, unknown>
+      ).transferControlToOffscreen = () => ({ offscreen: true });
+    }
   }
 
   beforeEach(() => {
-    create.mockReset();
-    dispose.mockReset();
-    create.mockReturnValue({ dispose });
+    FakeWorker.last = null;
+    const w = window as unknown as Record<string, unknown>;
+    GLOBALS.forEach((k) => (saved[k] = w[k]));
   });
   afterEach(() => {
-    HTMLCanvasElement.prototype.getContext = originalGetContext;
-    // @ts-expect-error jsdom has no matchMedia; remove the stub again
-    delete window.matchMedia;
-    // @ts-expect-error jsdom has no idle callbacks either
-    delete window.requestIdleCallback;
+    cleanup(); // unmount while the stubs still exist
+    const w = window as unknown as Record<string, unknown>;
+    GLOBALS.forEach((k) => {
+      if (saved[k] === undefined) delete w[k];
+      else w[k] = saved[k];
+    });
+    delete (HTMLCanvasElement.prototype as unknown as Record<string, unknown>)
+      .transferControlToOffscreen;
+    document.documentElement.classList.remove("dark");
+    document.documentElement.removeAttribute("data-effects-paused");
   });
 
-  it("loads the scene on a capable desktop, decoratively, and disposes it on unmount", async () => {
+  it("hands a transferred canvas to a worker, decoratively, and cleans up on unmount", () => {
     stubEnvironment();
     const { unmount } = render(<HeroSynapse />);
     const host = screen.getByTestId("hero-synapse");
     expect(host).toHaveAttribute("aria-hidden", "true");
     expect(host.className).toContain("pointer-events-none");
-    await waitFor(() => expect(create).toHaveBeenCalledWith(host));
+
+    const worker = FakeWorker.last!;
+    const init = worker.messages[0];
+    expect(init.type).toBe("init");
+    expect(init.canvas).toEqual({ offscreen: true });
+    expect(worker.transfers[0]).toEqual([{ offscreen: true }]); // ownership moves to the worker
+    expect((init.theme as { dark: boolean }).dark).toBe(false);
+    const canvas = host.querySelector("canvas")!;
+    expect(canvas).toHaveAttribute("aria-hidden", "true");
+
     unmount();
-    expect(dispose).toHaveBeenCalledTimes(1);
+    expect(worker.messages.at(-1)).toEqual({ type: "dispose" });
+    expect(worker.terminated).toBe(true);
+    expect(canvas.isConnected).toBe(false);
+  });
+
+  it("sends the new theme only after the toggled frame, and pauses with effects paused", async () => {
+    stubEnvironment();
+    render(<HeroSynapse />);
+    const worker = FakeWorker.last!;
+    document.documentElement.classList.add("dark");
+    await waitFor(() =>
+      expect(
+        worker.messages.some((m) => m.type === "theme" && (m.theme as { dark: boolean }).dark),
+      ).toBe(true),
+    );
+    document.documentElement.setAttribute("data-effects-paused", "");
+    await waitFor(() => expect(worker.messages.at(-1)).toEqual({ type: "run", on: false }));
+  });
+
+  it("falls back silently when WebGL fails inside the worker", async () => {
+    stubEnvironment();
+    render(<HeroSynapse />);
+    FakeWorker.last!.onmessage?.({ data: { type: "error" } });
+    await waitFor(() => expect(screen.queryByTestId("hero-synapse")).toBeNull());
   });
 
   it.each([
     ["a phone or tablet", { desktop: false }],
     ["reduced motion", { reduced: true }],
-    ["no WebGL", { webgl: false }],
-  ])("renders nothing for %s, leaving the static hero", async (_label, env) => {
+    ["no OffscreenCanvas", { offscreen: false }],
+  ])("renders nothing for %s, leaving the static hero", (_label, env) => {
     stubEnvironment(env);
     render(<HeroSynapse />);
     expect(screen.queryByTestId("hero-synapse")).toBeNull();
-    await new Promise((r) => setTimeout(r, 0));
-    expect(create).not.toHaveBeenCalled();
+    expect(FakeWorker.last).toBeNull();
   });
 
   it("renders nothing where matchMedia doesn't exist", () => {
-    HTMLCanvasElement.prototype.getContext = vi.fn(() => null) as never;
     render(<HeroSynapse />);
     expect(screen.queryByTestId("hero-synapse")).toBeNull();
-  });
-
-  it("falls back silently when the scene fails to start", async () => {
-    stubEnvironment();
-    create.mockImplementation(() => {
-      throw new Error("WebGL context lost");
-    });
-    render(<HeroSynapse />);
-    await waitFor(() => expect(screen.queryByTestId("hero-synapse")).toBeNull());
   });
 });
