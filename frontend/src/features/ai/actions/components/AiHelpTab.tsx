@@ -1,5 +1,5 @@
 import { FileText, GraduationCap, Info, type LucideIcon, Scale, Sparkles } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
@@ -168,6 +168,19 @@ export function AiHelpTab() {
   const run = useRunAction(decisionId);
   const [running, setRunning] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [revealId, setRevealId] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+
+  // A finished run should be impossible to miss: bring the new suggestion into view and focus it.
+  useEffect(() => {
+    if (!revealId) return;
+    const card = document.getElementById(`proposal-${revealId}`);
+    if (!card) return; // not rendered yet; runs again when the list refetches
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    card.scrollIntoView?.({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    card.focus({ preventScroll: true });
+    setRevealId(null);
+  }, [revealId, proposals.data]);
 
   if (isLoading) return <Skeleton className="h-64 rounded-xl" />;
   if (error || !decision) {
@@ -179,10 +192,14 @@ export function AiHelpTab() {
   const aiOff = status ? !status.enabled : false;
   const start = async (action: string, input: Record<string, unknown> = {}) => {
     setNotice(null);
+    setAnnouncement("");
     setRunning(action);
     try {
       const result = await run.mutateAsync({ action, input });
-      if (result.status === "FAILED") {
+      if (result.status === "READY" && result.proposal) {
+        setAnnouncement("Suggestion ready to review.");
+        setRevealId(result.proposal.id);
+      } else if (result.status === "FAILED") {
         setNotice({
           action,
           text: `${result.message ?? "The AI's answer couldn't be used."} It didn't use any of your daily AI actions.`,
@@ -229,12 +246,24 @@ export function AiHelpTab() {
             Thinking… this can take up to 20 seconds.
           </p>
         )}
+        {announcement && !running && <p className="sr-only">{announcement}</p>}
         {notice && (
           <p role="alert" className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm">
             {notice.text}
           </p>
         )}
       </div>
+
+      {open.length > 0 && (
+        <section aria-labelledby="open-suggestions" className="flex flex-col gap-4">
+          <h2 id="open-suggestions" className="text-sm font-semibold">
+            Suggestions to review ({open.length})
+          </h2>
+          {open.map((p) => (
+            <ProposalCard key={p.id} proposal={p} decisionId={decisionId} />
+          ))}
+        </section>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <SetupCard
@@ -258,13 +287,6 @@ export function AiHelpTab() {
         <Skeleton className="h-32 rounded-xl" />
       ) : (
         <>
-          {open.length > 0 && (
-            <section aria-label="Suggestions to review" className="flex flex-col gap-4">
-              {open.map((p) => (
-                <ProposalCard key={p.id} proposal={p} decisionId={decisionId} />
-              ))}
-            </section>
-          )}
           {earlier.length > 0 && (
             <details className="text-sm">
               <summary className="cursor-pointer font-medium text-muted hover:text-text">

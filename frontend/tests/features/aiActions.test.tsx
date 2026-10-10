@@ -386,3 +386,38 @@ describe("advisory suggestions", () => {
     expect(summary.closest("details")).not.toHaveAttribute("open");
   });
 });
+
+describe("after a run finishes", () => {
+  it("brings the new suggestion into view above the cards and moves focus to it", async () => {
+    setup("DRAFT");
+    const scrolled = vi.fn();
+    Element.prototype.scrollIntoView = scrolled;
+    vi.mocked(api.runAction).mockImplementation(async () => {
+      vi.mocked(api.listProposals).mockResolvedValue([proposal()]);
+      return {
+        status: "READY",
+        proposal: proposal(),
+        remaining_today: 6,
+        failure_code: null,
+        message: null,
+      };
+    });
+    renderTab();
+    await userEvent.type(
+      await screen.findByLabelText("Describe your decision"),
+      "Two job offers to compare",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Draft with AI" }));
+
+    const card = await screen.findByRole("article", { name: "setup_draft suggestion" });
+    await waitFor(() => expect(card).toHaveFocus());
+    expect(scrolled).toHaveBeenCalled();
+    expect(screen.getByText("Suggestion ready to review.")).toBeInTheDocument();
+    // The suggestion sits above the capability cards, not below them.
+    const heading = screen.getByRole("heading", { name: /Suggestions to review/ });
+    const setupCard = screen.getByRole("heading", { name: "Draft options and criteria" });
+    expect(
+      heading.compareDocumentPosition(setupCard) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+});

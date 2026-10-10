@@ -212,8 +212,10 @@ export function ProposalCard({ proposal, decisionId }: { proposal: Proposal; dec
 
   return (
     <article
+      id={`proposal-${proposal.id}`}
+      tabIndex={-1}
       aria-label={`${proposal.action} suggestion`}
-      className="rounded-2xl border border-ai/25 bg-ai/5 p-5 sm:p-6"
+      className="scroll-mt-24 rounded-2xl border border-ai/25 bg-ai/5 p-5 outline-none focus-visible:ring-2 focus-visible:ring-ai/40 sm:p-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <AiBadge />
