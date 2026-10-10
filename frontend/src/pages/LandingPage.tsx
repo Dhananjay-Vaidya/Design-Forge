@@ -23,6 +23,7 @@ import { Reveal } from "@/components/fx/Reveal";
 import { Faq } from "@/features/landing/Faq";
 import { FeatureGrid } from "@/features/landing/FeatureGrid";
 import { HomeDrafter } from "@/features/landing/HomeDrafter";
+import { HeroSynapse } from "@/features/landing/hero/HeroSynapse";
 import { LiveDemo } from "@/features/landing/LiveDemo";
 import { DecisionNetwork } from "@/features/landing/DecisionNetwork";
 import { rankOptions } from "@/lib/scoring";
@@ -225,6 +226,7 @@ function Hero() {
   return (
     <section className="relative isolate">
       <AmbientBackground variant="hero" />
+      <HeroSynapse />
       <div className="mx-auto grid max-w-6xl items-center gap-16 px-4 pb-24 pt-16 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:pb-32 lg:pt-24">
         <motion.div>
           <motion.span
