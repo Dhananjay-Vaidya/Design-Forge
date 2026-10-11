@@ -5,7 +5,45 @@ import type { TourId, TourStep } from "./types";
  * on the current screen is skipped, so a tour may list more stops than one route renders.
  */
 export const tours: Record<TourId, TourStep[]> = {
-  landing: [],
+  /** "Try the live demo" on the landing page: click-driven, never auto-started. */
+  landing: [
+    {
+      target: "drafter",
+      title: "Describe it",
+      body: "Type the decision in plain words; AI drafts options and criteria for you to review. It never sets the scores.",
+      tone: "ai",
+    },
+    {
+      target: "ranking",
+      title: "Score & rank",
+      body: "Score each option against your criteria and get a transparent, reproducible weighted ranking.",
+      tone: "calc",
+    },
+    {
+      target: "ranking-why",
+      title: "See the why",
+      body: "Every ranking explains which criteria decided it and how close the race is.",
+      tone: "calc",
+    },
+    {
+      target: "sensitivity",
+      title: "Stress-test it",
+      body: "Drag the weights and watch the leader change, so you know how robust the choice is.",
+      tone: "calc",
+    },
+    {
+      target: "ai-advisory",
+      title: "AI that advises",
+      body: "Risks, assumptions and a devil's-advocate pass — drafts for your review that never touch the numbers.",
+      tone: "ai",
+    },
+    {
+      target: "templates",
+      title: "Start from a template",
+      body: "Pick a ready-made structure and adapt it in seconds.",
+      tone: "calc",
+    },
+  ],
 
   /** Walks the ranking screen of the sample decision (FX-20). */
   workspace: [

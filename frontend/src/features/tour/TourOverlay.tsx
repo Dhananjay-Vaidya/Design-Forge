@@ -25,6 +25,8 @@ const MARGIN = 16;
 const NARROW = 620;
 /** Clear of the sticky headers when deciding whether a target is already in view. */
 const TOP_CLEARANCE = 80;
+/** How long after a step starts its target is tracked closely (smooth scroll, reveal-on-scroll). */
+const SETTLE_MS = 900;
 
 interface Box {
   top: number;
@@ -39,6 +41,11 @@ const toBox = (r: DOMRect): Box => ({
   width: r.width,
   height: r.height,
 });
+const sameBox = (a: Box, b: Box) =>
+  Math.abs(a.top - b.top) < 0.5 &&
+  Math.abs(a.left - b.left) < 0.5 &&
+  Math.abs(a.width - b.width) < 0.5 &&
+  Math.abs(a.height - b.height) < 0.5;
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), Math.max(lo, hi));
 
 /** Scrolls the target into the free part of the viewport (above the bottom sheet on phones). */
@@ -160,23 +167,36 @@ export function TourOverlay({
     if (!step) return;
     let el: HTMLElement | null = null;
     let timer = 0;
+    let settleTimer = 0;
     let frame = 0;
     let observer: ResizeObserver | undefined;
     const started = Date.now();
 
-    const measure = (glide: boolean) => {
+    // For a moment after a step starts the ring and card glide after the target, which may still be
+    // scrolling into view or revealing; after that, scroll and resize updates are instant.
+    let settleUntil = 0;
+    const measure = () => {
       if (!el?.isConnected) el = findTourTarget(step.target) ?? el;
       if (!el) return;
+      const box = toBox(el.getBoundingClientRect());
+      const glide = Date.now() < settleUntil;
       setNarrow(window.innerWidth <= NARROW);
-      setShown({ index, box: toBox(el.getBoundingClientRect()), glide });
+      setShown((s) =>
+        s?.index === index && s.glide === glide && sameBox(s.box, box) ? s : { index, box, glide },
+      );
     };
     const onViewportChange = () => {
       if (!frame) {
         frame = requestAnimationFrame(() => {
           frame = 0;
-          measure(false);
+          measure();
         });
       }
+    };
+    const track = () => {
+      onViewportChange();
+      if (Date.now() < settleUntil) settleTimer = window.setTimeout(track, 50);
+      else measure();
     };
     const find = () => {
       el = findTourTarget(step.target);
@@ -184,7 +204,9 @@ export function TourOverlay({
         const docked = window.innerWidth <= NARROW;
         const reserved = docked ? (cardRef.current?.offsetHeight ?? 220) + MARGIN * 2 : 0;
         revealTarget(el, reduced, reserved);
-        measure(true);
+        settleUntil = Date.now() + SETTLE_MS;
+        measure();
+        track();
         observer =
           typeof ResizeObserver === "function" ? new ResizeObserver(onViewportChange) : undefined;
         observer?.observe(el);
@@ -200,6 +222,7 @@ export function TourOverlay({
     window.addEventListener("resize", onViewportChange);
     return () => {
       window.clearTimeout(timer);
+      window.clearTimeout(settleTimer);
       cancelAnimationFrame(frame);
       observer?.disconnect();
       window.removeEventListener("scroll", onViewportChange, { capture: true });
@@ -275,23 +298,23 @@ export function TourOverlay({
         aria-describedby={bodyId}
         tabIndex={-1}
         onKeyDown={onKeyDown}
-        className={`glass-strong fixed rounded-2xl p-5 outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+        className={`glass-strong fixed rounded-2xl p-5 outline-none focus-visible:ring-2 ${ai ? "focus-visible:ring-ai/60" : "focus-visible:ring-primary/60"} ${
           narrow
             ? "tour-dock inset-x-4 mx-auto max-w-md"
             : "left-0 top-0 w-[min(22.5rem,calc(100vw-2rem))]"
         }`}
-        // Hidden (but focusable) until the first target is found and the card has a place.
-        style={{ visibility: step ? "visible" : "hidden" }}
+        // Transparent until the first target is found and the card has a place. Opacity, not
+        // visibility, so the card can take focus the moment the tour opens.
+        style={{ opacity: step ? 1 : 0, pointerEvents: step ? undefined : "none" }}
         initial={false}
         animate={at ? { x: at.x, y: at.y } : { x: 0, y: 0 }}
         transition={move}
       >
-        {step && shown && (
-          <>
+        {/* Mounted from the start (empty), so each step's text is announced as it arrives. */}
+        <div aria-live="polite" aria-atomic="true">
+          {step && shown && (
             <motion.div
               key={shown.index}
-              aria-live="polite"
-              aria-atomic="true"
               initial={reduced ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={reduced ? { duration: 0 } : motionPresets.feedback}
@@ -332,6 +355,10 @@ export function TourOverlay({
                 {step.body}
               </p>
             </motion.div>
+          )}
+        </div>
+        {step && (
+          <>
             <div className="mt-5 flex items-center justify-between gap-2">
               <Button variant="ghost" className="h-11 px-3" onClick={onSkip}>
                 Skip

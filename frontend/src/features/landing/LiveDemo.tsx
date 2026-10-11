@@ -77,7 +77,7 @@ export function LiveDemo() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
-      <div className="glass rounded-2xl p-6">
+      <div className="glass rounded-2xl p-6" data-tour="sensitivity">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold">What matters to you?</p>
           <button
@@ -106,7 +106,7 @@ export function LiveDemo() {
         </p>
       </div>
 
-      <div className="glass rounded-2xl p-6" aria-live="polite">
+      <div className="glass rounded-2xl p-6" aria-live="polite" data-tour="ranking">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm font-semibold">Ranking</p>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-medium text-primary">
@@ -167,6 +167,7 @@ export function LiveDemo() {
 
             <motion.div
               key={stable ? "stable" : "close"}
+              data-tour="ranking-why"
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               className={`mt-5 flex items-start gap-2.5 rounded-lg border p-3 text-sm ${

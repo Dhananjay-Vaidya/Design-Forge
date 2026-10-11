@@ -8,15 +8,25 @@ interface RevealProps {
   y?: number;
   className?: string;
   as?: "div" | "li" | "section";
+  /** Anchor for the guided tour. */
+  "data-tour"?: string;
 }
 
 /** Fades + rises into place the first time it scrolls into view (reduced motion: appears instantly). */
-export function Reveal({ children, delay = 0, y = 18, className, as = "div" }: RevealProps) {
+export function Reveal({
+  children,
+  delay = 0,
+  y = 18,
+  className,
+  as = "div",
+  "data-tour": tour,
+}: RevealProps) {
   const Tag = motion[as];
   const reduced = useReducedMotion();
   return (
     <Tag
       className={className}
+      data-tour={tour}
       initial={reduced ? false : { opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "0px 0px -12% 0px" }}

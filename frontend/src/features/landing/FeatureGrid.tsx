@@ -1,7 +1,7 @@
 import {
   Calculator,
-  ListOrdered,
   Keyboard,
+  LayoutTemplate,
   type LucideIcon,
   MoonStar,
   ShieldCheck,
@@ -20,6 +20,8 @@ interface Feature {
   className?: string;
   accent?: "primary" | "ai";
   visual?: "breakdown" | "keys";
+  /** Anchor for the landing tour. */
+  tour?: string;
 }
 
 /** Every item here describes something the product actually does today. */
@@ -37,9 +39,9 @@ const FEATURES: Feature[] = [
     text: "Flags a close call when a small change in weights or scores could flip the winner.",
   },
   {
-    icon: ListOrdered,
-    title: "Guided setup",
-    text: "A three-step wizard takes you from the question to options and criteria, then straight to scoring.",
+    icon: TrendingDown,
+    title: "Plain-language criteria",
+    text: "Mark each criterion “higher is better” or “lower is better”. Weights normalise to 100% for you.",
   },
   {
     icon: Keyboard,
@@ -49,15 +51,17 @@ const FEATURES: Feature[] = [
     visual: "keys",
   },
   {
-    icon: TrendingDown,
-    title: "Plain-language criteria",
-    text: "Mark each criterion “higher is better” or “lower is better”. Weights normalise to 100% for you.",
-  },
-  {
     icon: Sparkles,
     title: "AI that stays advisory",
     text: "Optional Gemini questions and risks are labelled and kept apart. They can never change the ranking.",
     accent: "ai",
+    tour: "ai-advisory",
+  },
+  {
+    icon: LayoutTemplate,
+    title: "Start from a template",
+    text: "Ready-made structures for common choices, or a three-step wizard from the question to options and criteria.",
+    tour: "templates",
   },
   {
     icon: MoonStar,
@@ -109,7 +113,13 @@ export function FeatureGrid() {
   return (
     <ul className="grid gap-4 md:grid-cols-3">
       {FEATURES.map((f, i) => (
-        <Reveal as="li" key={f.title} delay={(i % 3) * 0.06} className={f.className}>
+        <Reveal
+          as="li"
+          key={f.title}
+          delay={(i % 3) * 0.06}
+          className={f.className}
+          data-tour={f.tour}
+        >
           <Tilt max={2} className="h-full">
             <SpotlightCard className="group h-full rounded-2xl border border-border bg-surface p-6 transition-[transform,box-shadow] duration-base ease-out hover:-translate-y-1 hover:shadow-lift">
               <span

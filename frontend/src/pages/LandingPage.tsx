@@ -28,6 +28,7 @@ import { HomeDrafter } from "@/features/landing/HomeDrafter";
 import { HeroSynapse } from "@/features/landing/hero/HeroSynapse";
 import { LiveDemo } from "@/features/landing/LiveDemo";
 import { DecisionNetwork } from "@/features/landing/DecisionNetwork";
+import { preloadTour, useTour } from "@/features/tour";
 import { rankOptions } from "@/lib/scoring";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -229,6 +230,7 @@ function RankingPreview() {
 }
 
 function Hero() {
+  const { startTour } = useTour();
   return (
     <section className="relative isolate">
       <AmbientBackground variant="hero" />
@@ -282,8 +284,16 @@ function Hero() {
                 />
               </ButtonLink>
             </Magnetic>
+            {/* Opt-in guided tour; without JS the link still jumps to the demo section. */}
             <a
               href="#demo"
+              aria-haspopup="dialog"
+              onClick={(e) => {
+                e.preventDefault();
+                startTour("landing");
+              }}
+              onPointerEnter={preloadTour}
+              onFocus={preloadTour}
               className="glass inline-flex h-12 items-center gap-2 rounded-lg px-5 text-[15px] font-medium transition-transform hover:-translate-y-0.5"
             >
               Try the live demo
@@ -353,7 +363,7 @@ export function LandingPage() {
             title="Turn a messy choice into a clear structure."
             text="Describe it in a sentence. AI drafts the options and criteria; you score them, and the engine ranks them."
           />
-          <Reveal className="mt-10" delay={0.05}>
+          <Reveal className="mt-10" delay={0.05} data-tour="drafter">
             <HomeDrafter />
           </Reveal>
         </section>
