@@ -296,6 +296,12 @@ export function ScaffoldPreview({
           </Link>
         </p>
       </div>
+      <Link
+        to="/about"
+        className="mt-3 inline-flex min-h-11 items-center rounded-lg text-xs font-medium text-muted hover:text-primary"
+      >
+        {about.guideLink}
+      </Link>
     </section>
   );
 }

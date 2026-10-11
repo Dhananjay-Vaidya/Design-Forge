@@ -53,12 +53,12 @@ export function MarketingHeader() {
           <ThemeToggle />
           <Link
             to="/login"
-            className="hidden h-9 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:text-text sm:inline-flex"
+            className="hidden min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:text-text sm:inline-flex"
           >
             {marketing.nav.signIn}
           </Link>
           <Magnetic max={3}>
-            <ButtonLink to="/register" size="sm">
+            <ButtonLink to="/register" size="sm" className="min-h-11">
               {marketing.nav.start}
             </ButtonLink>
           </Magnetic>

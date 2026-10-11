@@ -1,5 +1,6 @@
 import { ArrowDownRight, Sparkles } from "lucide-react";
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 import { MarketingFooter, MarketingHeader } from "@/components/MarketingChrome";
 import { AmbientBackground } from "@/components/fx/AmbientBackground";
@@ -9,14 +10,22 @@ import { brand } from "@/content/marketing";
 import { site } from "@/content/site";
 
 export function AboutPage() {
+  const { hash } = useLocation();
   useEffect(() => {
     const previous = document.title;
     document.title = "About | DecisionForge AI";
-    window.scrollTo(0, 0);
     return () => {
       document.title = previous;
     };
   }, []);
+
+  useEffect(() => {
+    if (hash === "#connect") {
+      document.getElementById("connect")?.scrollIntoView({ block: "start" });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [hash]);
 
   return (
     <div className="relative isolate min-h-dvh overflow-x-clip">
