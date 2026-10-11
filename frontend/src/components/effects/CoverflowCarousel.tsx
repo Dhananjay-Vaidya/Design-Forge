@@ -29,7 +29,7 @@ interface CoverflowCarouselProps<T> {
 }
 
 const CARD_WIDTH = 340; // px, the centred slide
-const SPACING = 250; // px between slide centres
+const SPACING = 290; // px between slide centres (less overlap reads calmer)
 const VISIBLE = 2; // slides shown either side of the centre
 
 function ArrowButton({
@@ -190,7 +190,7 @@ export function CoverflowCarousel<T>({
               role="group"
               aria-roledescription="slide"
               aria-label={slideLabel(i)}
-              aria-hidden={distance > VISIBLE || undefined}
+              aria-hidden={!active || undefined}
               ref={(el) => {
                 slideRefs.current[i] = el;
               }}
@@ -206,7 +206,7 @@ export function CoverflowCarousel<T>({
                 x: offset * SPACING,
                 scale: 1 - Math.min(distance, VISIBLE + 1) * 0.07,
                 rotateY: Math.max(-1, Math.min(1, offset)) * -12,
-                opacity: distance > VISIBLE ? 0 : 1 - distance * 0.28,
+                opacity: distance > VISIBLE ? 0 : 1 - distance * 0.4,
               }}
               transition={springs.soft}
               onClick={() => !active && go(i)}

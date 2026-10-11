@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ApiError } from "@/api/client";
 import { Button } from "@/components/Button";
 import { ConfirmDialog } from "@/components/Dialog";
+import { CoverflowCarousel } from "@/components/effects/CoverflowCarousel";
 import { Tilt } from "@/components/effects/Tilt";
 import { EmptyState, ErrorState, Skeleton } from "@/components/States";
 import { TemplateCard } from "@/features/templates/components/TemplateCard";
@@ -84,13 +85,16 @@ export function TemplatesPage() {
             <h2 id="builtin-heading" className="mb-4 text-lg font-semibold tracking-tight">
               Built-in
             </h2>
-            <Grid label="Built-in templates">
-              {builtin.map((t, i) => (
-                <li key={t.id} className="animate-rise" style={{ animationDelay: `${i * 40}ms` }}>
-                  <TemplateCard template={t} onUse={setUsing} />
-                </li>
-              ))}
-            </Grid>
+            {/* TODO: reuse CoverflowCarousel for example gallery when FX-21 lands */}
+            <CoverflowCarousel
+              items={builtin}
+              getKey={(t) => t.id}
+              getLabel={(t) => t.name}
+              label="Built-in templates"
+              itemNoun="template"
+              height="22rem"
+              renderItem={(t) => <TemplateCard template={t} onUse={setUsing} />}
+            />
           </section>
 
           <section aria-labelledby="mine-heading">

@@ -150,9 +150,15 @@ describe("CoverflowCarousel", () => {
     stubFineMotion(true);
     render(<Carousel />);
     const region = screen.getByRole("region", { name: "Built-in templates" });
-    const slide = (name: string) => within(region).getByRole("group", { name: new RegExp(name) });
+    // Hidden slides have no accessible name by design, so find them by their label attribute.
+    const slide = (name: string) =>
+      region.querySelector<HTMLElement>(`[aria-roledescription="slide"][aria-label$="${name}"]`)!;
     expect(slide("Job offer").inert).toBe(false);
     expect(slide("Rent vs buy").inert).toBe(true);
+    // Off-centre slides are hidden from assistive tech as well as from focus and clicks.
+    expect(slide("Rent vs buy")).toHaveAttribute("aria-hidden", "true");
+    expect(slide("Job offer")).not.toHaveAttribute("aria-hidden");
+    expect(within(region).getAllByRole("button", { name: /^Use / })).toHaveLength(1);
     expect(screen.getByText("Template 1 of 3: Job offer")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Previous template" })).toBeDisabled();
 
