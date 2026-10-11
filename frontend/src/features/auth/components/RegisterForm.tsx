@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
 import { Button } from "@/components/Button";
+import { Magnetic } from "@/components/effects/Magnetic";
 import { FormField } from "@/components/FormField";
 import { type RegisterFormValues, registerSchema } from "@/schemas/auth";
 import { useAuthStore } from "@/stores/authStore";
@@ -80,9 +81,12 @@ export function RegisterForm() {
           </p>
         )}
       </div>
-      <Button type="submit" size="lg" className="mt-1 w-full" isLoading={mutation.isPending}>
-        {mutation.isPending ? "Creating account…" : "Create account"}
-      </Button>
+      {/* Wide button: a smaller pull so it never feels like it is sliding away. */}
+      <Magnetic max={3} className="mt-1 w-full">
+        <Button type="submit" size="lg" className="w-full" isLoading={mutation.isPending}>
+          {mutation.isPending ? "Creating account…" : "Create account"}
+        </Button>
+      </Magnetic>
     </form>
   );
 }

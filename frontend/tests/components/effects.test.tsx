@@ -123,8 +123,9 @@ describe("Magnetic", () => {
     pointerMove(wrap, "mouse", 1000, 20);
     await new Promise((r) => setTimeout(r, 600));
     const px = Number(/translateX\(([-\d.]+)px\)/.exec(wrap.style.transform)?.[1] ?? 0);
+    const py = Number(/translateY\(([-\d.]+)px\)/.exec(wrap.style.transform)?.[1] ?? 0);
     expect(px).toBeGreaterThan(0);
-    expect(px).toBeLessThanOrEqual(4.01);
+    expect(Math.hypot(px, py)).toBeLessThanOrEqual(4.01); // the distance is capped, even diagonally
 
     const link = screen.getByRole("link", { name: "Start deciding" });
     link.focus();

@@ -15,6 +15,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { ButtonLink } from "@/components/Button";
+import { Magnetic } from "@/components/effects/Magnetic";
 import { Tilt } from "@/components/effects/Tilt";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -125,9 +126,11 @@ function Header() {
           >
             Sign in
           </Link>
-          <ButtonLink to="/register" size="sm">
-            Get started
-          </ButtonLink>
+          <Magnetic max={3}>
+            <ButtonLink to="/register" size="sm">
+              Get started
+            </ButtonLink>
+          </Magnetic>
         </div>
       </div>
     </header>
@@ -270,13 +273,15 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
             className="mt-9 flex flex-wrap gap-3"
           >
-            <ButtonLink to="/register" size="lg" className="group shadow-glow-primary">
-              Start deciding
-              <ArrowRight
-                className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-                aria-hidden="true"
-              />
-            </ButtonLink>
+            <Magnetic>
+              <ButtonLink to="/register" size="lg" className="group shadow-glow-primary">
+                Start deciding
+                <ArrowRight
+                  className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </ButtonLink>
+            </Magnetic>
             <a
               href="#demo"
               className="glass inline-flex h-12 items-center gap-2 rounded-lg px-5 text-[15px] font-medium transition-transform hover:-translate-y-0.5"

@@ -5,8 +5,6 @@ import { motionPresets } from "@/lib/motion";
 
 import { useFineMotion } from "./useFineMotion";
 
-const clamp = (value: number, limit: number) => Math.max(-limit, Math.min(limit, value));
-
 /**
  * A small magnetic pull toward the cursor for PRIMARY CTAs only (doc 22). The pull is a fraction of
  * the cursor's offset, capped at a few pixels, and only while the pointer is over the button. It
@@ -39,8 +37,12 @@ export function Magnetic({
   const onPointerMove = (event: PointerEvent<HTMLSpanElement>) => {
     if (event.pointerType !== "mouse") return;
     const box = event.currentTarget.getBoundingClientRect();
-    x.set(clamp((event.clientX - (box.left + box.width / 2)) * strength, max));
-    y.set(clamp((event.clientY - (box.top + box.height / 2)) * strength, max));
+    const dx = (event.clientX - (box.left + box.width / 2)) * strength;
+    const dy = (event.clientY - (box.top + box.height / 2)) * strength;
+    // Cap the distance travelled, not each axis, so a diagonal pull is no larger than a straight one.
+    const scale = Math.min(1, max / (Math.hypot(dx, dy) || 1));
+    x.set(dx * scale);
+    y.set(dy * scale);
   };
 
   return (
