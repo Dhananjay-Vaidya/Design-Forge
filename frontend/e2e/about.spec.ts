@@ -52,5 +52,9 @@ for (const scenario of [
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
+    await page.getByRole("link", { name: "Back to About & contact" }).click();
+    await expect(page).toHaveURL(/\/about#connect$/);
+    await expect(page.getByRole("heading", { name: "Let's talk.", exact: true })).toBeInViewport();
+    expect(await page.evaluate(() => scrollY)).toBeGreaterThan(500);
   });
 }
