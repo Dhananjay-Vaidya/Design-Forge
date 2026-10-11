@@ -15,6 +15,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { ButtonLink } from "@/components/Button";
+import { Tilt } from "@/components/effects/Tilt";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AmbientBackground } from "@/components/fx/AmbientBackground";
@@ -166,58 +167,60 @@ function RankingPreview() {
         <Sparkles className="h-3.5 w-3.5 text-ai" /> AI stays advisory
       </FloatingChip>
 
-      <motion.figure
-        initial={{ opacity: 0, y: 24, rotateX: 8 }}
-        animate={{ opacity: 1, y: 0, rotateX: 0 }}
-        transition={{ duration: 0.9, delay: 0.15, ease: EASE }}
-        style={{ transformPerspective: 1200 }}
-        className="glass-strong overflow-hidden rounded-2xl"
-      >
-        <div className="flex items-center justify-between border-b border-border/70 px-5 py-3.5">
-          <div className="flex items-center gap-2">
-            <span className="flex gap-1" aria-hidden="true">
-              <span className="h-2.5 w-2.5 rounded-full bg-danger/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
-            </span>
-            <span className="ml-2 text-sm font-medium">Which job offer should I accept?</span>
-          </div>
-          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted">
-            Example
-          </span>
-        </div>
-        <div className="space-y-4 p-5">
-          {preview.ranked.map((row, i) => (
-            <div key={row.name}>
-              <div className="mb-1.5 flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 font-medium">
-                  <span className="font-mono text-xs text-muted">{i + 1}</span>
-                  {row.name}
-                  {i === 0 && <Trophy className="h-3.5 w-3.5 text-primary" aria-label="Leader" />}
-                </span>
-                <span className="font-mono tabular-nums text-muted">
-                  {(row.total * 100).toFixed(1)}
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-surface-2">
-                <div
-                  className={`h-full origin-left animate-grow-x rounded-full ${
-                    i === 0 ? "bg-gradient-to-r from-primary to-primary/70" : "bg-primary/35"
-                  }`}
-                  style={{ width: `${row.total * 100}%`, animationDelay: `${500 + i * 140}ms` }}
-                />
-              </div>
+      <Tilt max={2.5}>
+        <motion.figure
+          initial={{ opacity: 0, y: 24, rotateX: 8 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          transition={{ duration: 0.9, delay: 0.15, ease: EASE }}
+          style={{ transformPerspective: 1200 }}
+          className="glass-strong overflow-hidden rounded-2xl"
+        >
+          <div className="flex items-center justify-between border-b border-border/70 px-5 py-3.5">
+            <div className="flex items-center gap-2">
+              <span className="flex gap-1" aria-hidden="true">
+                <span className="h-2.5 w-2.5 rounded-full bg-danger/70" />
+                <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
+                <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
+              </span>
+              <span className="ml-2 text-sm font-medium">Which job offer should I accept?</span>
             </div>
-          ))}
-        </div>
-        <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 bg-surface-2/50 px-5 py-3 text-xs text-muted">
-          <span className="inline-flex items-center gap-1.5">
-            <Calculator className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-            Calculated, not AI
-          </span>
-          <span className="font-mono">Salary 40% · Growth 35% · Commute 25%</span>
-        </figcaption>
-      </motion.figure>
+            <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted">
+              Example
+            </span>
+          </div>
+          <div className="space-y-4 p-5">
+            {preview.ranked.map((row, i) => (
+              <div key={row.name}>
+                <div className="mb-1.5 flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 font-medium">
+                    <span className="font-mono text-xs text-muted">{i + 1}</span>
+                    {row.name}
+                    {i === 0 && <Trophy className="h-3.5 w-3.5 text-primary" aria-label="Leader" />}
+                  </span>
+                  <span className="font-mono tabular-nums text-muted">
+                    {(row.total * 100).toFixed(1)}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-surface-2">
+                  <div
+                    className={`h-full origin-left animate-grow-x rounded-full ${
+                      i === 0 ? "bg-gradient-to-r from-primary to-primary/70" : "bg-primary/35"
+                    }`}
+                    style={{ width: `${row.total * 100}%`, animationDelay: `${500 + i * 140}ms` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 bg-surface-2/50 px-5 py-3 text-xs text-muted">
+            <span className="inline-flex items-center gap-1.5">
+              <Calculator className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+              Calculated, not AI
+            </span>
+            <span className="font-mono">Salary 40% · Growth 35% · Commute 25%</span>
+          </figcaption>
+        </motion.figure>
+      </Tilt>
     </div>
   );
 }

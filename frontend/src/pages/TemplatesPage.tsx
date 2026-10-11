@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ApiError } from "@/api/client";
 import { Button } from "@/components/Button";
 import { ConfirmDialog } from "@/components/Dialog";
+import { Tilt } from "@/components/effects/Tilt";
 import { EmptyState, ErrorState, Skeleton } from "@/components/States";
 import { TemplateCard } from "@/features/templates/components/TemplateCard";
 import { UseTemplateDialog } from "@/features/templates/components/UseTemplateDialog";
@@ -106,7 +107,9 @@ export function TemplatesPage() {
               <Grid label="My templates">
                 {mine.map((t) => (
                   <li key={t.id}>
-                    <TemplateCard template={t} onUse={setUsing} onDelete={setDeleting} />
+                    <Tilt className="h-full">
+                      <TemplateCard template={t} onUse={setUsing} onDelete={setDeleting} />
+                    </Tilt>
                   </li>
                 ))}
               </Grid>

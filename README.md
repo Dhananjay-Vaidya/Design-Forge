@@ -43,6 +43,8 @@ curl -fsS http://localhost:8000/healthz
 Frontend dev server: http://localhost:5173 · API: http://localhost:8000/api/v1 ·
 OpenAPI/Swagger: http://localhost:8000/api/schema/swagger-ui/
 
+For PostgreSQL running locally on Windows, see [local database setup and table migrations](docs/local-postgres.md).
+
 Observability: liveness at http://localhost:8000/health, readiness at
 http://localhost:8000/ready, metrics at http://localhost:8000/metrics, Prometheus at
 http://localhost:9090, and Grafana at http://localhost:3001 (login `GRAFANA_ADMIN_USER` /

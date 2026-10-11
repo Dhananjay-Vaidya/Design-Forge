@@ -1,7 +1,37 @@
 import pytest
 from pydantic import ValidationError
+from sqlalchemy.engine import make_url
 
 from app.core.config import Settings
+
+
+def test_database_host_override_preserves_credentials(monkeypatch):
+    monkeypatch.setenv("DATABASE_HOST_OVERRIDE", "host.docker.internal")
+    monkeypatch.setenv(
+        "DATABASE_URL_ASYNC", "postgresql+asyncpg://user:p%40ss@localhost:5433/localdb"
+    )
+    monkeypatch.setenv(
+        "DATABASE_URL_SYNC", "postgresql+psycopg://user:p%40ss@localhost:5433/localdb"
+    )
+    settings = Settings()
+    for value in (settings.database_url, settings.sync_database_url):
+        url = make_url(value)
+        assert (url.host, url.port, url.database, url.password) == (
+            "host.docker.internal",
+            5433,
+            "localdb",
+            "p@ss",
+        )
+
+
+def test_database_host_override_derives_sync_url(monkeypatch):
+    monkeypatch.setenv("DATABASE_HOST_OVERRIDE", "host.docker.internal")
+    monkeypatch.setenv(
+        "DATABASE_URL_ASYNC", "postgresql+asyncpg://user:password@localhost:5432/localdb"
+    )
+    url = make_url(Settings(DATABASE_URL_SYNC=None).sync_database_url)
+    assert url.drivername == "postgresql+psycopg"
+    assert url.host == "host.docker.internal"
 
 
 def test_csv_env_lists_are_parsed(monkeypatch):

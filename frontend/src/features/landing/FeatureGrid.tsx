@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { Reveal } from "@/components/fx/Reveal";
+import { Tilt } from "@/components/effects/Tilt";
 import { SpotlightCard } from "@/components/fx/SpotlightCard";
 
 interface Feature {
@@ -109,19 +110,21 @@ export function FeatureGrid() {
     <ul className="grid gap-4 md:grid-cols-3">
       {FEATURES.map((f, i) => (
         <Reveal as="li" key={f.title} delay={(i % 3) * 0.06} className={f.className}>
-          <SpotlightCard className="group h-full rounded-2xl border border-border bg-surface p-6 transition-[transform,box-shadow] duration-base ease-out hover:-translate-y-1 hover:shadow-lift">
-            <span
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-base ease-out group-hover:scale-110 group-hover:-rotate-6 ${
-                f.accent === "ai" ? "bg-ai/10 text-ai" : "bg-primary-soft text-primary"
-              }`}
-            >
-              <f.icon className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <h3 className="mt-5 font-semibold">{f.title}</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted">{f.text}</p>
-            {f.visual === "breakdown" && <BreakdownVisual />}
-            {f.visual === "keys" && <KeysVisual />}
-          </SpotlightCard>
+          <Tilt max={2} className="h-full">
+            <SpotlightCard className="group h-full rounded-2xl border border-border bg-surface p-6 transition-[transform,box-shadow] duration-base ease-out hover:-translate-y-1 hover:shadow-lift">
+              <span
+                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-base ease-out group-hover:scale-110 group-hover:-rotate-6 ${
+                  f.accent === "ai" ? "bg-ai/10 text-ai" : "bg-primary-soft text-primary"
+                }`}
+              >
+                <f.icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <h3 className="mt-5 font-semibold">{f.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted">{f.text}</p>
+              {f.visual === "breakdown" && <BreakdownVisual />}
+              {f.visual === "keys" && <KeysVisual />}
+            </SpotlightCard>
+          </Tilt>
         </Reveal>
       ))}
     </ul>

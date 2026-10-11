@@ -30,6 +30,7 @@ import { StatusChip } from "@/features/decisions/components/StatusChip";
 import { useDecisions } from "@/features/decisions/hooks";
 import { ACTIVE_STATUSES, COMPLETED_STATUSES } from "@/features/decisions/status";
 import { daysUntil, deadlineLabel, parseLocalDate, timeAgo } from "@/lib/format";
+import { Tilt } from "@/components/effects/Tilt";
 import { useCreateDemo } from "@/features/templates/hooks";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "@/stores/toastStore";
@@ -258,31 +259,33 @@ const itemMotion = {
 const DecisionCard = forwardRef<HTMLLIElement, { decision: Decision }>(({ decision }, ref) => {
   return (
     <motion.li ref={ref} {...itemMotion}>
-      <Link
-        to={`/app/decisions/${decision.id}`}
-        onPointerMove={trackSpotlight}
-        className="spotlight group flex h-full flex-col rounded-2xl border border-border bg-surface/80 p-5 backdrop-blur-sm transition-[transform,box-shadow,border-color] duration-base ease-out hover:-translate-y-1 hover:border-primary/30 hover:shadow-lift"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <StatusChip status={decision.status} />
-          <ArrowUpRight
-            className="h-4 w-4 -translate-x-1 translate-y-1 text-muted opacity-0 transition-all duration-base group-hover:translate-x-0 group-hover:translate-y-0 group-hover:text-primary group-hover:opacity-100"
-            aria-hidden="true"
-          />
-        </div>
-        <h3 className="mt-4 line-clamp-2 font-semibold leading-snug tracking-tight transition-colors group-hover:text-primary">
-          {decision.title}
-        </h3>
-        {decision.context && (
-          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted">
-            {decision.context}
-          </p>
-        )}
-        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-5 text-xs text-muted">
-          <Meta decision={decision} />
-          <span className="ml-auto">{timeAgo(decision.updated_at)}</span>
-        </div>
-      </Link>
+      <Tilt className="h-full">
+        <Link
+          to={`/app/decisions/${decision.id}`}
+          onPointerMove={trackSpotlight}
+          className="spotlight group flex h-full flex-col rounded-2xl border border-border bg-surface/80 p-5 backdrop-blur-sm transition-[transform,box-shadow,border-color] duration-base ease-out hover:-translate-y-1 hover:border-primary/30 hover:shadow-lift"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <StatusChip status={decision.status} />
+            <ArrowUpRight
+              className="h-4 w-4 -translate-x-1 translate-y-1 text-muted opacity-0 transition-all duration-base group-hover:translate-x-0 group-hover:translate-y-0 group-hover:text-primary group-hover:opacity-100"
+              aria-hidden="true"
+            />
+          </div>
+          <h3 className="mt-4 line-clamp-2 font-semibold leading-snug tracking-tight transition-colors group-hover:text-primary">
+            {decision.title}
+          </h3>
+          {decision.context && (
+            <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted">
+              {decision.context}
+            </p>
+          )}
+          <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-5 text-xs text-muted">
+            <Meta decision={decision} />
+            <span className="ml-auto">{timeAgo(decision.updated_at)}</span>
+          </div>
+        </Link>
+      </Tilt>
     </motion.li>
   );
 });

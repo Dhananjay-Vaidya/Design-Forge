@@ -1,0 +1,31 @@
+# Use with docker-compose.yml and optionally docker-compose.dev.yml.
+# PostgreSQL runs on Windows; Redis and the application still run in Docker.
+services:
+  db:
+    profiles: !override [container-postgres]
+  web:
+    env_file: !override
+      - ./backend/.env
+    environment:
+      DATABASE_HOST_OVERRIDE: host.docker.internal
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on: !override
+      redis:
+        condition: service_healthy
+  worker:
+    env_file: !override
+      - ./backend/.env
+    environment:
+      DATABASE_HOST_OVERRIDE: host.docker.internal
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on: !override
+      redis:
+        condition: service_healthy
+  postgres-exporter:
+    environment:
+      DATA_SOURCE_URI: host.docker.internal:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-decisionforge}?sslmode=disable
+    depends_on: !reset {}

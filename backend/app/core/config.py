@@ -13,6 +13,7 @@ from typing import Annotated
 
 from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from sqlalchemy.engine import make_url
 
 
 class Settings(BaseSettings):
@@ -35,6 +36,7 @@ class Settings(BaseSettings):
     )
     # Sync URL for Alembic (psycopg, not asyncpg) — derived if not explicitly set.
     database_url_sync: str | None = Field(default=None, alias="DATABASE_URL_SYNC")
+    database_host_override: str | None = Field(default=None, alias="DATABASE_HOST_OVERRIDE")
     db_pool_size: int = Field(default=5, alias="DB_POOL_SIZE")
     db_max_overflow: int = Field(default=10, alias="DB_MAX_OVERFLOW")
 
@@ -105,6 +107,24 @@ class Settings(BaseSettings):
     confidence_max: int = 100
     satisfaction_min: int = 1
     satisfaction_max: int = 5
+
+    @model_validator(mode="after")
+    def _override_database_host(self) -> "Settings":
+        # Docker Desktop reaches the Windows PostgreSQL server through this override.
+        # Parse URLs to preserve encoded passwords and all other connection options.
+        if self.database_host_override:
+            self.database_url = (
+                make_url(self.database_url)
+                .set(host=self.database_host_override)
+                .render_as_string(hide_password=False)
+            )
+            if self.database_url_sync:
+                self.database_url_sync = (
+                    make_url(self.database_url_sync)
+                    .set(host=self.database_host_override)
+                    .render_as_string(hide_password=False)
+                )
+        return self
 
     @field_validator("allowed_hosts", "cors_allowed_origins", mode="before")
     @classmethod
