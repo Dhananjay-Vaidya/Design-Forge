@@ -66,3 +66,6 @@ disposable database, **never your normal local application database**, and a sep
 (the implementation was checked with Redis database 15). Upgrade the temporary database before
 testing. `alembic check` verifies migration/model agreement; it replaces the brief's Django migration
 command because this repository uses FastAPI, SQLAlchemy, and Alembic.
+
+The focused contact and OpenAPI contract run passed all 19 checks against a disposable database
+on local PostgreSQL. A fresh migration followed by `alembic check` reported no missing operations.
