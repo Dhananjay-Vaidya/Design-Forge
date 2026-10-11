@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Check } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 
@@ -25,15 +25,24 @@ export function ContactForm() {
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const receiptRef = useRef<HTMLDivElement>(null);
+  const focusField = useRef<(typeof fieldNames)[number] | null>(null);
   const {
     register,
     handleSubmit,
     setError,
+    setFocus,
     reset,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<ContactValues>({ resolver: zodResolver(contactSchema), defaultValues });
   const message = watch("message");
+
+  useEffect(() => {
+    if (!isSubmitting && focusField.current) {
+      setFocus(focusField.current);
+      focusField.current = null;
+    }
+  }, [isSubmitting, setFocus]);
 
   async function send(values: ContactValues) {
     setNotice("");
@@ -45,12 +54,11 @@ export function ContactForm() {
       if (error instanceof ApiError && error.status === 429) {
         setNotice(about.contact.rateLimited(error.retryAfterSeconds ?? 60));
       } else if (error instanceof ApiError && error.fields) {
-        let focus = true;
         for (const field of fieldNames) {
           const errorMessage = error.fields[field]?.[0];
           if (errorMessage) {
-            setError(field, { type: "server", message: errorMessage }, { shouldFocus: focus });
-            focus = false;
+            setError(field, { type: "server", message: errorMessage });
+            focusField.current ??= field;
           }
         }
         setNotice(about.contact.invalid);
@@ -76,7 +84,7 @@ export function ContactForm() {
         </div>
         <Button
           variant="secondary"
-          className="mt-6"
+          className="mt-6 min-h-11"
           onClick={() => {
             reset(defaultValues);
             setSentTo(null);
@@ -209,7 +217,7 @@ export function ContactForm() {
         </p>
       )}
       <div className="mt-5 flex justify-end border-t border-border pt-5">
-        <Button type="submit" isLoading={isSubmitting}>
+        <Button type="submit" className="min-h-11" isLoading={isSubmitting}>
           {about.contact.submit}
           <ArrowRight size={16} aria-hidden="true" />
         </Button>
