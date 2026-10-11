@@ -73,7 +73,9 @@ bounded, markup stripped). The plan's optional "suggested weights" are **not** p
 call, as in the signed-in setup draft. The response carries a signed `draft_token` (JWT `token_type = ai_draft`, 2 h)
 listing the AI's item names; saving after sign-up claims it once in Redis and records provenance.
 
-Doc 19 (public Q&A Guide and landing tour) is **not built**; this lane provides the shared guardrails it would reuse.
+Doc 19 (public Q&A Guide) is **not built**; this lane provides the shared guardrails it would reuse. The landing
+tour itself exists (doc 23); the Guide's `start_tour` action should call `startTourAction()` from `features/tour`,
+which ignores any tour id that is not registered.
 
 ## 1. AI Use Cases (DPR §Gemini usage strategy)
 

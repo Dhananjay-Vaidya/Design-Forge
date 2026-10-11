@@ -224,7 +224,11 @@ function WorkspaceTabs({ readiness }: { readiness: Readiness }) {
 
   return (
     <>
-      <label className="flex flex-col gap-2 text-xs font-medium text-muted sm:hidden">
+      {/* On phones this select stands in for the tab strip, so it carries the tabs' tour anchors. */}
+      <label
+        className="flex flex-col gap-2 text-xs font-medium text-muted sm:hidden"
+        data-tour="tab-alternatives tab-criteria tab-scores tab-ai"
+      >
         Decision stage
         <select
           className="input-base text-sm"
@@ -238,16 +242,13 @@ function WorkspaceTabs({ readiness }: { readiness: Readiness }) {
           ))}
         </select>
       </label>
-      <nav
-        aria-label="Decision stages"
-        data-tour="stage-tabs"
-        className="hidden overflow-x-auto sm:block"
-      >
+      <nav aria-label="Decision stages" className="hidden overflow-x-auto sm:block">
         <ol className="flex min-w-max items-center gap-1 border-b border-border">
           {tabs.map((tab, i) => (
             <li key={tab.to} className="flex items-center">
               <NavLink
                 to={tab.to}
+                data-tour={`tab-${tab.to}`}
                 className={({ isActive }) =>
                   `group relative -mb-px inline-flex h-11 items-center gap-2 px-3 text-sm font-medium transition-colors ${
                     isActive ? "text-text" : "text-muted hover:text-text"

@@ -151,6 +151,34 @@ AI-state captures. These are review artifacts, not pre-approved pixel-diff basel
   from compositing OffscreenCanvas frames. Revisit only if field INP shows the main-thread start-up cost.
 - **Source:** written in-house (the 21st.dev reference components were not fetched).
 
+## Guided tours (doc 23)
+
+`frontend/src/features/tour/`. One engine for every product tour: a dim layer, a 2 px ring around one
+target at a time (teal `--color-primary` for calculated steps, violet `--color-ai` for AI-advisory steps)
+and an info card with Skip / Back / Next / Done.
+
+- **Defining a tour:** add steps to `tours.ts` under an id (`landing`, `workspace`). A step is
+  `{ target, title, body, tone: "calc" | "ai" }`, where `target` is a `data-tour` id on the real component,
+  never a class or DOM position. One element may carry several ids (`data-tour="tab-alternatives
+  tab-criteria"`); the first visible match wins, which is how the phone-only stage select stands in for the
+  desktop tabs. A target that never appears (1.5 s grace for lazy routes) is skipped.
+- **Starting one:** `useTour().startTour(id)` in React; `startTour(id)` from anywhere else; and
+  `startTourAction(id)` for the landing Guide's `start_tour` action (doc 19, not built yet), which accepts
+  only registered ids because the id comes from model output. Tours are click-driven; nothing auto-starts.
+  The landing hero's "Try the live demo" runs `landing`; the sample decision's "Take the tour", `?tour=1`
+  and the dashboard's dismissible "Take a quick tour" nudge run `workspace`.
+- **Behaviour:** the card is a `role="dialog"` with `aria-modal` and an `aria-live` step region. Focus moves
+  in on open, is held there (Tab cycles), and returns to the trigger on close. Esc skips; Enter and → go next;
+  ← goes back. Body scroll is locked (programmatic scrolling to each target still works). The card sits
+  below, above or beside the target and never covers it; at ≤620 px it docks to the bottom with safe-area
+  padding, and targets scroll into the space above it. Controls are 44 px. Reduced motion: instant scrolling,
+  no ring or card glide. Closing marks the tour seen in `localStorage` (`df-tour-seen:<id>`), which only gates
+  the opt-in nudge.
+- **Cost:** the overlay is a lazy 3.0 kB (gzip) chunk, preloaded on hover/focus of the landing trigger; the
+  always-loaded part (provider and step text) is about 1.35 kB gzip. Measured against the build before doc 23
+  (desktop, interleaved runs): LCP 839 → 842 ms, TBT 94 → 101 ms (within noise), ordinary-interaction lab INP
+  72 → 64 ms; opening the tour 48 ms, Next 40 ms, Esc 56 ms (4× CPU).
+
 ## Extending the system
 
 Add semantic colors to CSS first, then map Tailwind utilities. Reuse shared field/button/dialog helpers.

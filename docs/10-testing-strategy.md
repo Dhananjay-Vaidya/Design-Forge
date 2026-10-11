@@ -122,7 +122,9 @@ Implemented in `backend/tests/api/test_observability.py`, `test_observability_mo
 - **Templates / demo (Phase A)** — `backend/tests/api/test_templates.py`: catalogue shape, exact criteria/option clone
   (weights, directions, positions, trimming), atomic failure (nothing created), personal-template ownership in every
   direction (list, use, delete, save-from-foreign-decision), name uniqueness, demo create/reset/ignore-deleted, bounded
-  metric labels. Frontend: `tests/features/templates.test.tsx`, `GuidedTour.test.tsx` (focus, keyboard, focus return),
+  metric labels. Frontend: `tests/features/templates.test.tsx`, `tour.test.tsx` + `tourReducedMotion.test.tsx` (tour engine: navigation, missing-target skip, keyboard,
+  focus return, scroll lock, reduced motion), `landingTour.test.tsx`, `tourHooks.test.tsx` (dashboard nudge, Guide
+  action),
   `DemoBanner.test.tsx` (reset navigates and does not refetch the deleted sample).
 - **Sensitivity / explainer / versions (Phase B)** — `tests/unit/test_sensitivity.py` (tornado, flip points checked
   against the real engine by property test, exact ties, infeasible flips, 100% coverage of the module),

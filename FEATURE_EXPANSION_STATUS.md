@@ -29,7 +29,8 @@ Tracks the build of the recommended tier from the feature-expansion plan (FX-01,
 - **Backend:** migration `d3e4f5a6b7c8` (`decision_templates`); `app/domain/templates.py` (6 built-ins, code);
   `template_service`; endpoints API-41..46; metrics `decisions_from_template_total{source}`, `templates_saved_total`.
 - **Frontend:** `/app/templates` gallery, use-template dialog, save-as-template dialog, sample decision banner with
-  reset, guided tour (`features/tour`), first-run actions on the dashboard, sidebar + command-palette entries.
+  reset, guided tour (`features/tour`, generalised into the reusable tour engine by doc 23; see
+  `docs/ui-effects-design-system.md`), first-run actions on the dashboard, sidebar + command-palette entries.
 - **Verified:** backend 239 tests (15 new + 6 contract checks that every new frontend call exists in OpenAPI), mypy/ruff clean, `alembic check` clean; frontend lint, typecheck,
   75 tests (16 new), build (main bundle +0.74 kB, templates page is a 9 kB lazy chunk); real-browser walkthrough
   against the Docker stack (register → template → create → save as template → delete → sample → tour by keyboard →

@@ -45,17 +45,32 @@ export const tours: Record<TourId, TourStep[]> = {
     },
   ],
 
-  /** Walks the ranking screen of the sample decision (FX-20). */
+  /**
+   * The decision workspace: the stage tabs, then the ranking screen, then AI help. Started from the
+   * sample decision (FX-20) via "Take the tour", ?tour=1, or the dashboard's first-run nudge.
+   */
   workspace: [
     {
-      target: "stage-tabs",
-      title: "Four stages, one flow",
-      body: "Options, Criteria, Scores, then Ranking. The badges show what is complete and what still needs work.",
+      target: "tab-alternatives",
+      title: "Options",
+      body: "The alternatives you're choosing between. The badge counts them; you need at least two.",
+      tone: "calc",
+    },
+    {
+      target: "tab-criteria",
+      title: "Criteria",
+      body: "What matters and how much, and whether higher or lower is better for each.",
+      tone: "calc",
+    },
+    {
+      target: "tab-scores",
+      title: "Scores",
+      body: "Score every option 1–10 against every criterion. The badge shows how much of the matrix is filled.",
       tone: "calc",
     },
     {
       target: "leader",
-      title: "The calculated leader",
+      title: "Ranking: the calculated leader",
       body: "A weighted sum of your own scores. The same inputs always give the same answer, and no AI is involved.",
       tone: "calc",
     },
@@ -70,6 +85,12 @@ export const tours: Record<TourId, TourStep[]> = {
       title: "Why it ranks this way",
       body: "The points each criterion contributed to every option, so nothing is a black box.",
       tone: "calc",
+    },
+    {
+      target: "tab-ai",
+      title: "AI help",
+      body: "Suggestions you accept or reject one by one. They are advisory and never change your scores or the ranking.",
+      tone: "ai",
     },
     {
       target: "ask-ai",

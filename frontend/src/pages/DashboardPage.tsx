@@ -32,6 +32,7 @@ import { ACTIVE_STATUSES, COMPLETED_STATUSES } from "@/features/decisions/status
 import { daysUntil, deadlineLabel, parseLocalDate, timeAgo } from "@/lib/format";
 import { Tilt } from "@/components/effects/Tilt";
 import { useCreateDemo } from "@/features/templates/hooks";
+import { WorkspaceTourNudge } from "@/features/tour/WorkspaceTourNudge";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "@/stores/toastStore";
 import type { Decision } from "@/types/decision";
@@ -421,6 +422,8 @@ export function DashboardPage() {
           New decision
         </ButtonLink>
       </div>
+
+      <WorkspaceTourNudge />
 
       {isLoading ? (
         <>

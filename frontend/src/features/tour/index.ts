@@ -1,3 +1,4 @@
+export { startTourAction } from "./actions";
 export { TourProvider } from "./TourProvider";
 export { preloadTour, startTour, useTour } from "./tourContext";
 export type { TourContextValue } from "./tourContext";
