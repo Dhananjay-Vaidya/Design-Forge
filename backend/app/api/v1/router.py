@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     alternatives,
     auth,
     commitments,
+    contact,
     criteria,
     decisions,
     guide,
@@ -18,6 +19,7 @@ from app.api.v1.endpoints import (
 )
 
 api_router = APIRouter()
+api_router.include_router(contact.router)
 api_router.include_router(auth.router)
 api_router.include_router(users.router)
 api_router.include_router(templates.router)

@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
 import { ButtonLink } from "@/components/Button";
+import { about } from "@/content/about";
 import { AiBadge, AiButton } from "@/features/ai/actions/components/AiParts";
 
 import { type DraftResponse, draftDecision, getGuideStatus, type GuideStatus } from "./draftApi";
@@ -409,6 +410,13 @@ export function HomeDrafter() {
           </AiButton>
         </div>
       </form>
+
+      <Link
+        to="/about"
+        className="mt-2 inline-flex min-h-11 items-center rounded-lg text-xs font-medium text-muted hover:text-primary"
+      >
+        {about.guideLink}
+      </Link>
 
       <div aria-live="polite" aria-atomic="true" className="mt-3">
         {busy && (

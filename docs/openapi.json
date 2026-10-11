@@ -695,6 +695,73 @@
         "title": "CommitmentRead",
         "type": "object"
       },
+      "ContactRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "consent": {
+            "const": true,
+            "title": "Consent",
+            "type": "boolean"
+          },
+          "email": {
+            "format": "email",
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "default": "general",
+            "enum": [
+              "general",
+              "feedback",
+              "partnership",
+              "support",
+              "press"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "website": {
+            "default": "",
+            "description": "Leave empty.",
+            "maxLength": 200,
+            "title": "Website",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "message",
+          "consent"
+        ],
+        "title": "ContactRequest",
+        "type": "object"
+      },
+      "ContactResponse": {
+        "properties": {
+          "ok": {
+            "const": true,
+            "default": true,
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "title": "ContactResponse",
+        "type": "object"
+      },
       "CriterionChange": {
         "properties": {
           "changes": {
@@ -3695,6 +3762,47 @@
         "summary": "Register",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/contact": {
+      "post": {
+        "operationId": "submit_contact_api_v1_contact_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Contact",
+        "tags": [
+          "contact"
         ]
       }
     },

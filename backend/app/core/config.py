@@ -94,6 +94,11 @@ class Settings(BaseSettings):
     # Only enable behind a proxy you control that overwrites X-Forwarded-For.
     guide_trust_forwarded_for: bool = Field(default=False, alias="GUIDE_TRUST_FORWARDED_FOR")
 
+    # Public contact inbox; fail closed if its shared Redis limiter is unavailable.
+    contact_rate_per_minute: int = Field(default=3, ge=1, alias="CONTACT_RATE_PER_MINUTE")
+    contact_global_per_minute: int = Field(default=60, ge=1, alias="CONTACT_GLOBAL_PER_MINUTE")
+    contact_trust_forwarded_for: bool = Field(default=False, alias="CONTACT_TRUST_FORWARDED_FOR")
+
     # ---- Observability ----
     prometheus_metrics_enabled: bool = Field(
         default=True, validation_alias=AliasChoices("ENABLE_METRICS", "PROMETHEUS_METRICS_ENABLED")

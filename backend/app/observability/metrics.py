@@ -25,6 +25,11 @@ ALLOWED_PROPOSAL_STATUS = {"created", "accepted", "rejected", "expired", "failed
 ALLOWED_ITEM_OUTCOME = {"accepted", "rejected", "failed"}
 ALLOWED_RESULT = {"hit", "miss", "success", "failure"}
 ALLOWED_TOKEN_TYPE = {"input", "output"}
+CONTACT_SUBMISSIONS = Counter(
+    "decisionforge_contact_submissions_total",
+    "Contact submissions by bounded outcome, without personal information.",
+    ["result"],
+)
 ALLOWED_ERROR_CATEGORY = {
     "timeout",
     "rate_limit",

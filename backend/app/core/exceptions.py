@@ -173,6 +173,9 @@ def register_exception_handlers(app: FastAPI) -> None:
                 fields=exc.fields,
                 retry_after_seconds=exc.retry_after_seconds,
             ),
+            headers={"Retry-After": str(exc.retry_after_seconds)}
+            if exc.retry_after_seconds is not None
+            else None,
         )
 
     @app.exception_handler(RequestValidationError)

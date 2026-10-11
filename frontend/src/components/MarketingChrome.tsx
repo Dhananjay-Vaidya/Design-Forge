@@ -5,6 +5,7 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Magnetic } from "@/components/effects/Magnetic";
 import { brand, marketing } from "@/content/marketing";
+import { about, privacy } from "@/content/about";
 
 export function MarketingHeader() {
   const [scrolled, setScrolled] = useState(false);
@@ -25,21 +26,27 @@ export function MarketingHeader() {
         <Link to="/" aria-label="DecisionForge AI — home" className="rounded-lg">
           <Logo />
         </Link>
-        <nav aria-label={marketing.nav.label} className="hidden items-center gap-1 lg:flex">
+        <nav aria-label={marketing.nav.label} className="hidden items-center gap-1 xl:flex">
           {marketing.nav.sections.map(({ href, label }) => (
             <a
               key={href}
               href={href}
-              className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-2/70 hover:text-text"
+              className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm text-muted transition-colors hover:bg-surface-2/70 hover:text-text"
             >
               {label}
             </a>
           ))}
           <Link
             to="/why"
-            className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-2/70 hover:text-text"
+            className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm text-muted transition-colors hover:bg-surface-2/70 hover:text-text"
           >
             {marketing.nav.why}
+          </Link>
+          <Link
+            to="/about"
+            className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm text-muted transition-colors hover:bg-surface-2/70 hover:text-text"
+          >
+            {about.nav}
           </Link>
         </nav>
         <div className="flex items-center gap-1.5">
@@ -68,9 +75,24 @@ export function MarketingFooter() {
         <Link to="/" aria-label="DecisionForge AI home">
           <Logo />
         </Link>
-        <nav aria-label="Footer">
-          <Link to="/why" className="rounded-lg py-2 hover:text-primary">
+        <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5">
+          <Link
+            to="/why"
+            className="inline-flex min-h-11 items-center rounded-lg hover:text-primary"
+          >
             {marketing.nav.why}
+          </Link>
+          <Link
+            to="/about"
+            className="inline-flex min-h-11 items-center rounded-lg hover:text-primary"
+          >
+            {about.nav}
+          </Link>
+          <Link
+            to="/privacy"
+            className="inline-flex min-h-11 items-center rounded-lg hover:text-primary"
+          >
+            {privacy.nav}
           </Link>
         </nav>
         <p className="text-xs">{brand.signature}</p>

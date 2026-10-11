@@ -21,6 +21,8 @@ function page<K extends string>(loader: () => Promise<Record<K, ComponentType>>,
 
 const LandingPage = page(() => import("@/pages/LandingPage"), "LandingPage");
 const WhyPage = page(() => import("@/pages/WhyPage"), "WhyPage");
+const AboutPage = page(() => import("@/pages/AboutPage"), "AboutPage");
+const PrivacyPage = page(() => import("@/pages/PrivacyPage"), "PrivacyPage");
 const DashboardPage = page(() => import("@/pages/DashboardPage"), "DashboardPage");
 const NewDecisionPage = page(() => import("@/pages/NewDecisionPage"), "NewDecisionPage");
 const TemplatesPage = page(() => import("@/pages/TemplatesPage"), "TemplatesPage");
@@ -59,6 +61,8 @@ export function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/why" element={<WhyPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
