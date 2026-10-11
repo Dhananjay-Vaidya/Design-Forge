@@ -1,12 +1,25 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Check, Plus, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Plus,
+  X,
+  GitBranch,
+  SlidersHorizontal,
+  LayoutTemplate,
+  Target,
+  CircleDot,
+} from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
 import { Button } from "@/components/Button";
+import { DecisionDatePicker } from "@/components/DecisionDatePicker";
+import "./new-decision.css";
 import { FormField, TextAreaField } from "@/components/FormField";
 import * as api from "@/features/decisions/api";
 import {
@@ -41,40 +54,30 @@ let keySeq = 0;
 const nextKey = () => `k${++keySeq}`;
 
 function Stepper({ current }: { current: number }) {
+  const icons = [CircleDot, GitBranch, SlidersHorizontal];
+  const descriptions = ["Define the question", "Explore alternatives", "Set what matters"];
   return (
-    <ol className="flex items-center gap-2" aria-label="Progress">
+    <ol className="decision-progress" aria-label="Progress">
       {STEPS.map((label, i) => {
-        const done = i < current;
-        const active = i === current;
+        const Icon = icons[i];
         return (
           <li
             key={label}
-            className="flex flex-1 items-center gap-2 last:flex-none"
-            aria-current={active ? "step" : undefined}
+            className={`decision-progress-step ${i === current ? "is-active" : ""} ${i < current ? "is-complete" : ""}`}
+            aria-current={i === current ? "step" : undefined}
           >
-            <span
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
-                done
-                  ? "bg-primary text-on-primary"
-                  : active
-                    ? "bg-primary-soft text-primary ring-2 ring-primary"
-                    : "bg-surface-2 text-muted"
-              }`}
-            >
-              {done ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : i + 1}
+            <span className="decision-progress-icon">
+              {i < current ? (
+                <Check size={18} aria-hidden="true" />
+              ) : (
+                <Icon size={18} aria-hidden="true" />
+              )}
             </span>
-            <span
-              className={`text-sm font-medium ${active ? "text-text" : "text-muted"} max-sm:sr-only`}
-            >
-              {label}
-              {done && <span className="sr-only"> (completed)</span>}
+            <span className="decision-progress-copy">
+              <strong>{label}</strong>
+              <span>{descriptions[i]}</span>
             </span>
-            {i < STEPS.length - 1 && (
-              <span
-                className={`mx-1 h-px flex-1 ${done ? "bg-primary" : "bg-border"}`}
-                aria-hidden="true"
-              />
-            )}
+            <span className="decision-progress-number">0{i + 1}</span>
           </li>
         );
       })}
@@ -85,19 +88,30 @@ function Stepper({ current }: { current: number }) {
 function DetailsStep({
   initial,
   onNext,
+  onDraftChange,
 }: {
+  onDraftChange: (values: DecisionDetailsValues) => void;
   initial: DecisionDetailsValues;
   onNext: (values: DecisionDetailsValues) => void;
 }) {
   const listId = useId();
   const {
     register,
+    control,
+    watch,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<DecisionDetailsValues>({
     resolver: zodResolver(decisionDetailsSchema),
     defaultValues: initial,
   });
+
+  useEffect(() => {
+    const subscription = watch((values) => onDraftChange(values as DecisionDetailsValues));
+    return () => subscription.unsubscribe();
+  }, [watch, onDraftChange]);
+  const category = watch("category");
 
   return (
     <form
@@ -135,8 +149,31 @@ function DetailsStep({
               <option key={c} value={c} />
             ))}
           </datalist>
+          <div className="decision-category-shortcuts" aria-label="Suggested categories">
+            {CATEGORY_SUGGESTIONS.slice(0, 4).map((name) => (
+              <button
+                key={name}
+                type="button"
+                aria-pressed={category === name}
+                onClick={() =>
+                  setValue("category", category === name ? "" : name, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              >
+                {name}
+              </button>
+            ))}
+          </div>
         </div>
-        <FormField label="Decide by" optional type="date" {...register("deadline")} />
+        <Controller
+          name="deadline"
+          control={control}
+          render={({ field }) => (
+            <DecisionDatePicker value={field.value} onChange={field.onChange} />
+          )}
+        />
       </div>
     </form>
   );
@@ -461,7 +498,7 @@ export function NewDecisionPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="decision-builder">
       <Link
         to="/app"
         className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-text"
@@ -469,97 +506,180 @@ export function NewDecisionPage() {
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Dashboard
       </Link>
-      {step === 0 && (
-        <p className="mt-3 text-sm text-muted">
-          Deciding something common?{" "}
-          <Link
-            to="/app/templates"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Start from a template
-          </Link>{" "}
-          to preload the criteria.
-        </p>
-      )}
-
-      <div className="mt-6">
-        <Stepper current={step} />
-      </div>
-
-      <div className="card mt-6 p-6 shadow-soft sm:p-8">
+      <header className="decision-page-heading">
         <div>
-          <p className="eyebrow">
-            Step {step + 1} of {STEPS.length}
+          <p className="decision-kicker">
+            <span /> Decision workspace
           </p>
-          <h1
-            ref={headingRef}
-            tabIndex={-1}
-            className="mt-2 text-2xl font-semibold tracking-tight outline-none"
-          >
-            {STEP_COPY[step].title}
-          </h1>
-          <p className="mt-1.5 text-[15px] text-muted">{STEP_COPY[step].text}</p>
-          <div className="mt-7">
-            <div hidden={step !== 0}>
-              <DetailsStep initial={details} onNext={goToOptions} />
-            </div>
-            <div hidden={step !== 1}>
-              <OptionsStep
-                options={options}
-                setOptions={setOptions}
-                onNext={goToCriteria}
-                error={stepError}
-              />
-            </div>
-            <div hidden={step !== 2}>
-              <CriteriaStep
-                criteria={criteria}
-                setCriteria={setCriteria}
-                onNext={create}
-                error={stepError}
-              />
-              <section
-                aria-label="Setup review"
-                className="mt-6 rounded-xl border border-primary/20 bg-primary-soft/40 p-4"
-              >
-                <h2 className="text-sm font-semibold">Ready for the scoring table</h2>
-                <p className="mt-2 text-sm">{details.title}</p>
-                <p className="mt-1 text-xs text-muted">
-                  {options.length} options · {criteria.length} criteria. You can refine these in the
-                  workspace.
-                </p>
-              </section>
+          <h2>
+            A little structure.
+            <br />
+            <span>A clearer choice.</span>
+          </h2>
+          <p>Turn the question on your mind into a decision you can stand behind.</p>
+        </div>
+        <Link to="/app/templates" className="decision-template-link">
+          <LayoutTemplate size={18} aria-hidden="true" />
+          <span>
+            Skip the blank page<small>Start from a template</small>
+          </span>
+          <ArrowRight size={17} aria-hidden="true" />
+        </Link>
+      </header>
+      <Stepper current={step} />
+      <div className="decision-builder-grid">
+        <section className="decision-form-panel">
+          <div>
+            <p className="decision-kicker">
+              Step 0{step + 1} <span className="decision-step-divider">/</span> 0{STEPS.length}
+            </p>
+            <h1 ref={headingRef} tabIndex={-1} className="decision-form-title outline-none">
+              {STEP_COPY[step].title}
+            </h1>
+            <p className="mt-1.5 text-[15px] text-muted">{STEP_COPY[step].text}</p>
+            <div className="mt-7">
+              <div hidden={step !== 0}>
+                <DetailsStep initial={details} onNext={goToOptions} onDraftChange={setDetails} />
+              </div>
+              <div hidden={step !== 1}>
+                <OptionsStep
+                  options={options}
+                  setOptions={setOptions}
+                  onNext={goToCriteria}
+                  error={stepError}
+                />
+              </div>
+              <div hidden={step !== 2}>
+                <CriteriaStep
+                  criteria={criteria}
+                  setCriteria={setCriteria}
+                  onNext={create}
+                  error={stepError}
+                />
+                <section
+                  aria-label="Setup review"
+                  className="mt-6 rounded-xl border border-primary/20 bg-primary-soft/40 p-4"
+                >
+                  <h2 className="text-sm font-semibold">Ready for the scoring table</h2>
+                  <p className="mt-2 text-sm">{details.title}</p>
+                  <p className="mt-1 text-xs text-muted">
+                    {options.length} options · {criteria.length} criteria. You can refine these in
+                    the workspace.
+                  </p>
+                </section>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-6">
-          {step === 0 ? (
-            <Link to="/app" className="text-sm font-medium text-muted hover:text-text">
-              Cancel
-            </Link>
-          ) : (
+          <div className="decision-form-footer">
+            {step === 0 ? (
+              <Link to="/app" className="text-sm font-medium text-muted hover:text-text">
+                Cancel
+              </Link>
+            ) : (
+              <Button
+                variant="ghost"
+                disabled={isCreating}
+                onClick={() => {
+                  setStepError(null);
+                  setStep(step - 1);
+                }}
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Back
+              </Button>
+            )}
             <Button
-              variant="ghost"
-              disabled={isCreating}
-              onClick={() => {
-                setStepError(null);
-                setStep(step - 1);
-              }}
+              type="submit"
+              form={["wizard-details", "wizard-options", "wizard-criteria"][step]}
+              isLoading={isCreating}
             >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back
+              {step === 2 ? (isCreating ? "Creating…" : "Create decision") : "Continue"}
+              {step < 2 && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
             </Button>
+          </div>
+        </section>
+        <aside className="decision-companion" aria-label="Decision preview">
+          <div className="decision-companion-heading">
+            <Target size={17} aria-hidden="true" />
+            <span>Your decision, taking shape</span>
+          </div>
+          <div className="decision-map" aria-hidden="true">
+            <svg viewBox="0 0 260 160" fill="none">
+              <path
+                className="decision-map-line"
+                d="M130 39V70M130 70H48V109M130 70V109M130 70H212V109"
+              />
+              <circle className="decision-map-halo" cx="130" cy="27" r="24" />
+              <rect
+                className="decision-map-node main-node"
+                x="116"
+                y="13"
+                width="28"
+                height="28"
+                rx="8"
+              />
+              <path className="decision-map-mark" d="m124 27 4 4 8-8" />
+              {[48, 130, 212].map((x, i) => (
+                <g key={x}>
+                  <rect
+                    className={`decision-map-node ${step > 0 ? "filled-node" : ""}`}
+                    x={x - 17}
+                    y="110"
+                    width="34"
+                    height="30"
+                    rx="7"
+                  />
+                  <text x={x} y="130" textAnchor="middle">
+                    {String.fromCharCode(65 + i)}
+                  </text>
+                </g>
+              ))}
+            </svg>
+          </div>
+          <p className="decision-preview-label">The question</p>
+          <h3 className={details.title ? "" : "is-placeholder"}>
+            {details.title || "Your next clear decision starts here."}
+          </h3>
+          {details.category && (
+            <span className="decision-preview-category">{details.category}</span>
           )}
-          <Button
-            type="submit"
-            form={["wizard-details", "wizard-options", "wizard-criteria"][step]}
-            isLoading={isCreating}
-          >
-            {step === 2 ? (isCreating ? "Creating…" : "Create decision") : "Continue"}
-            {step < 2 && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
-          </Button>
-        </div>
+          <dl className="decision-preview-stats">
+            <div>
+              <dt>Options</dt>
+              <dd>{String(options.length).padStart(2, "0")}</dd>
+            </div>
+            <div>
+              <dt>Criteria</dt>
+              <dd>{String(criteria.length).padStart(2, "0")}</dd>
+            </div>
+          </dl>
+          {details.deadline && (
+            <p className="decision-preview-deadline">
+              Decide by{" "}
+              {new Date(`${details.deadline}T12:00:00`).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </p>
+          )}
+          <div className="decision-guidance">
+            <span className="decision-kicker">A useful starting point</span>
+            <p>
+              {
+                [
+                  'Ask a question with a real choice. "Which job offer should I accept?" works better than "My career."',
+                  "Include the option of doing nothing, if that's a real possibility. A fair comparison starts with the full picture.",
+                  "Choose criteria that distinguish your options. Give more weight to what you would regret compromising.",
+                ][step]
+              }
+            </p>
+          </div>
+          <p className="decision-companion-note">
+            <Check size={14} aria-hidden="true" /> You can refine everything before scoring.
+          </p>
+        </aside>
       </div>
     </div>
   );

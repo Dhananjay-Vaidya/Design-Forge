@@ -1,0 +1,513 @@
+.decision-builder {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-bottom: 2rem;
+}
+.decision-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  margin: 1.8rem 0 2rem;
+}
+.decision-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font:
+    500 0.65rem/1.5 "Geist Mono Variable",
+    monospace;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgb(var(--color-muted));
+}
+.decision-kicker > span:first-child:not(.decision-step-divider) {
+  width: 6px;
+  height: 6px;
+  background: rgb(var(--color-primary));
+  border-radius: 50%;
+}
+.decision-page-heading h2 {
+  font-size: clamp(1.9rem, 3vw, 2.8rem);
+  line-height: 1.13;
+  font-weight: 550;
+  letter-spacing: -0.055em;
+  margin: 0.8rem 0;
+}
+.decision-page-heading h2 span {
+  color: rgb(var(--color-primary));
+}
+.decision-page-heading > div > p:last-child {
+  color: rgb(var(--color-muted));
+  font-size: 0.88rem;
+  max-width: 32rem;
+  text-wrap: pretty;
+}
+.decision-template-link {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgb(var(--color-border));
+  border-radius: 10px;
+  font-size: 0.8rem;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.decision-template-link > svg:first-child {
+  color: rgb(var(--color-primary));
+}
+.decision-template-link small {
+  display: block;
+  color: rgb(var(--color-muted));
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+}
+.decision-template-link:hover {
+  background: rgb(var(--color-primary) / 0.05);
+  border-color: rgb(var(--color-primary) / 0.4);
+}
+.decision-progress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid rgb(var(--color-border));
+  background: rgb(var(--color-surface) / 0.7);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.2rem;
+}
+.decision-progress-step {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.05rem 1.3rem;
+  position: relative;
+  color: rgb(var(--color-muted));
+}
+.decision-progress-step + li {
+  border-left: 1px solid rgb(var(--color-border));
+}
+.decision-progress-step.is-active {
+  background: rgb(var(--color-primary) / 0.055);
+  box-shadow: inset 0 -2px rgb(var(--color-primary));
+}
+.decision-progress-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgb(var(--color-border-strong));
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.is-active .decision-progress-icon,
+.is-complete .decision-progress-icon {
+  background: rgb(var(--color-primary-soft));
+  color: rgb(var(--color-primary));
+  border-color: rgb(var(--color-primary) / 0.3);
+}
+.decision-progress-copy strong {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.is-active .decision-progress-copy strong {
+  color: rgb(var(--color-text));
+}
+.decision-progress-copy > span {
+  display: block;
+  font-size: 0.68rem;
+  margin-top: 0.15rem;
+}
+.decision-progress-number {
+  margin-left: auto;
+  font-family: "Geist Mono Variable", monospace;
+  font-size: 0.65rem;
+}
+.decision-builder-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+  border: 1px solid rgb(var(--color-border));
+  border-radius: 16px;
+  background: rgb(var(--color-surface));
+  box-shadow: 0 12px 40px rgb(var(--color-scrim) / 0.06);
+}
+.decision-form-panel {
+  min-width: 0;
+  padding: 2rem 2.25rem;
+}
+.decision-step-divider {
+  color: rgb(var(--color-border-strong));
+  margin: 0 0.15rem;
+}
+.decision-form-title {
+  margin-top: 0.65rem;
+  font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+}
+.decision-form-panel .input-base {
+  background: rgb(var(--color-bg) / 0.5);
+  min-height: 46px;
+  font-size: 0.85rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+}
+.decision-form-panel .input-base:hover {
+  background: rgb(var(--color-bg) / 0.85);
+}
+.decision-form-panel .input-base:focus {
+  background: rgb(var(--color-surface));
+  box-shadow: 0 0 0 3px rgb(var(--color-primary) / 0.09);
+}
+.decision-form-panel textarea.input-base {
+  min-height: 106px;
+}
+.decision-form-panel #wizard-details > div:first-child input {
+  font-size: 0.95rem;
+}
+.decision-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1.3rem;
+  margin-top: 1.8rem;
+  border-top: 1px solid rgb(var(--color-border));
+}
+.decision-form-footer > button:last-child {
+  min-width: 145px;
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+  box-shadow: 0 3px 14px rgb(var(--color-primary) / 0.12);
+}
+.decision-form-footer > button:last-child:active {
+  transform: translateY(1px);
+}
+.decision-category-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.decision-category-shortcuts button {
+  border: 1px solid rgb(var(--color-border));
+  border-radius: 5px;
+  padding: 0.2rem 0.45rem;
+  color: rgb(var(--color-muted));
+  font-size: 0.65rem;
+  transition:
+    color 0.2s,
+    background 0.2s;
+}
+.decision-category-shortcuts button:hover,
+.decision-category-shortcuts button[aria-pressed="true"] {
+  color: rgb(var(--color-primary));
+  border-color: rgb(var(--color-primary) / 0.35);
+  background: rgb(var(--color-primary-soft));
+}
+.decision-companion {
+  align-self: stretch;
+  padding: 1.6rem;
+  border-left: 1px solid rgb(var(--color-border));
+  border-radius: 0 16px 16px 0;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgb(var(--color-primary) / 0.065), transparent 50%),
+    rgb(var(--color-bg) / 0.65);
+}
+.decision-companion-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.68rem;
+  color: rgb(var(--color-muted));
+}
+.decision-companion-heading svg {
+  color: rgb(var(--color-primary));
+}
+.decision-map {
+  margin: 1rem -0.5rem 0.8rem;
+}
+.decision-map svg {
+  width: 100%;
+  max-height: 155px;
+}
+.decision-map-line {
+  stroke: rgb(var(--color-primary) / 0.3);
+  stroke-width: 1;
+}
+.decision-map-halo {
+  fill: rgb(var(--color-primary) / 0.06);
+  stroke: rgb(var(--color-primary) / 0.1);
+}
+.decision-map-node {
+  fill: rgb(var(--color-surface));
+  stroke: rgb(var(--color-border-strong));
+}
+.decision-map-node.main-node {
+  fill: rgb(var(--color-primary-soft));
+  stroke: rgb(var(--color-primary) / 0.65);
+}
+.decision-map-mark {
+  stroke: rgb(var(--color-primary));
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.decision-map-node.filled-node {
+  stroke: rgb(var(--color-primary) / 0.6);
+}
+.decision-map text {
+  fill: rgb(var(--color-muted));
+  font:
+    11px "Geist Mono Variable",
+    monospace;
+}
+.decision-preview-label {
+  font-size: 0.64rem;
+  color: rgb(var(--color-muted));
+  margin-bottom: 0.55rem;
+}
+.decision-companion h3 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.decision-companion h3.is-placeholder {
+  color: rgb(var(--color-muted));
+}
+.decision-preview-category {
+  display: inline-block;
+  font-size: 0.65rem;
+  margin-top: 0.75rem;
+  color: rgb(var(--color-primary));
+}
+.decision-preview-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-block: 1px solid rgb(var(--color-border));
+  padding-block: 1rem;
+  margin-top: 1.35rem;
+}
+.decision-preview-stats > div + div {
+  border-left: 1px solid rgb(var(--color-border));
+  padding-left: 1.2rem;
+}
+.decision-preview-stats dt {
+  color: rgb(var(--color-muted));
+  font-size: 0.65rem;
+}
+.decision-preview-stats dd {
+  font:
+    400 1.6rem/1.4 "Geist Mono Variable",
+    monospace;
+  margin-top: 0.15rem;
+}
+.decision-preview-deadline {
+  color: rgb(var(--color-muted));
+  font-size: 0.7rem;
+  margin-top: 0.75rem;
+}
+.decision-guidance {
+  margin-top: 1.6rem;
+}
+.decision-guidance .decision-kicker {
+  font-size: 0.57rem;
+  letter-spacing: 0.08em;
+}
+.decision-guidance > p {
+  margin-top: 0.6rem;
+  font-size: 0.76rem;
+  color: rgb(var(--color-muted));
+  line-height: 1.8;
+}
+.decision-companion-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 1.5rem;
+  font-size: 0.64rem;
+  line-height: 1.65;
+  color: rgb(var(--color-muted));
+}
+.decision-companion-note svg {
+  color: rgb(var(--color-primary));
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.decision-date {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.decision-date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  width: 100%;
+}
+.decision-calendar {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 20;
+  width: min(290px, 80vw);
+  padding: 0.85rem;
+  background: rgb(var(--color-surface));
+  border: 1px solid rgb(var(--color-border-strong));
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgb(var(--color-scrim) / 0.25);
+}
+.decision-calendar-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 550;
+  margin-bottom: 0.65rem;
+}
+.decision-calendar button {
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.decision-calendar button:hover {
+  background: rgb(var(--color-primary-soft));
+  color: rgb(var(--color-primary));
+}
+.decision-calendar-heading button {
+  padding: 0.4rem;
+}
+.decision-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.15rem;
+}
+.decision-calendar-weekday {
+  text-align: center;
+  padding: 0.4rem 0;
+  font-size: 0.62rem;
+  color: rgb(var(--color-muted));
+}
+.decision-calendar-grid button {
+  aspect-ratio: 1;
+  font-size: 0.75rem;
+}
+.decision-calendar-grid .outside-month {
+  color: rgb(var(--color-muted));
+}
+.decision-calendar-grid button[aria-current="date"] {
+  box-shadow: inset 0 0 0 1px rgb(var(--color-primary));
+}
+.decision-calendar-grid .selected-date {
+  background: rgb(var(--color-primary));
+  color: rgb(var(--color-on-primary));
+}
+.decision-calendar-footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid rgb(var(--color-border));
+  margin-top: 0.6rem;
+  padding-top: 0.55rem;
+}
+.decision-calendar-footer button {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  color: rgb(var(--color-primary));
+  font-size: 0.7rem;
+}
+@media (max-width: 1100px) {
+  .decision-builder-grid {
+    grid-template-columns: minmax(0, 1fr) 230px;
+  }
+  .decision-form-panel {
+    padding: 1.6rem;
+  }
+  .decision-companion {
+    padding: 1.2rem;
+  }
+  .decision-progress-step {
+    padding: 1rem;
+  }
+  .decision-progress-number {
+    display: none;
+  }
+}
+@media (max-width: 800px) {
+  .decision-builder-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .decision-companion {
+    border-left: 0;
+    border-top: 1px solid rgb(var(--color-border));
+    border-radius: 0 0 16px 16px;
+  }
+  .decision-map {
+    display: none;
+  }
+  .decision-companion h3 {
+    margin-top: 0.5rem;
+  }
+  .decision-preview-label {
+    margin-top: 1rem;
+  }
+  .decision-page-heading {
+    align-items: flex-start;
+  }
+  .decision-template-link {
+    max-width: 200px;
+  }
+}
+@media (max-width: 540px) {
+  .decision-page-heading {
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.2rem;
+  }
+  .decision-template-link {
+    max-width: none;
+    width: 100%;
+    padding: 0.7rem 0.85rem;
+  }
+  .decision-template-link > svg:last-child {
+    margin-left: auto;
+  }
+  .decision-progress-step {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.85rem 0.4rem;
+  }
+  .decision-progress-copy {
+    text-align: center;
+  }
+  .decision-progress-copy > span {
+    display: none;
+  }
+  .decision-form-panel {
+    padding: 1.3rem;
+  }
+  .decision-form-title {
+    font-size: 1.6rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .decision-builder *,
+  .decision-builder *::before,
+  .decision-builder *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
