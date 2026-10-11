@@ -128,6 +128,29 @@ including SSE. They never need real credentials or consume Gemini quota. Screens
 `frontend/test-results` (ignored by Git), named 0–9 in route order from `e2e/ui-effects.spec.ts`, plus
 AI-state captures. These are review artifacts, not pre-approved pixel-diff baselines.
 
+## Landing hero: 3D node network (doc 21)
+
+`frontend/src/features/landing/hero/`. A three.js node network behind the hero: teal nodes and links
+(`--color-primary`) with a violet pulse (`--color-ai`) that follows the cursor or drifts. Decorative only
+(`aria-hidden`, no pointer events).
+
+- **Who sees it:** screens ≥1024 px with a fine pointer, motion allowed and WebGL available. Everyone else,
+  and any start-up failure, gets the static hero (aurora + decision-network schematic). One fallback path.
+- **Cost controls:** three.js is a separate async chunk (initial bundle unchanged at 406.84 kB), loaded
+  2.5 s after the page `load` event and once idle; ~140 nodes; links built once with a spatial grid (≤3 per
+  node); pixel ratio ≤1.5; 60 fps cap that drops to 30 fps while frames are expensive; paused offscreen, on a
+  hidden tab and when effects are paused; theme changes applied after the toggled frame has painted; full
+  dispose on unmount.
+- **Measured (production builds, desktop, before vs after):** Lighthouse median of 5: LCP 779 → 797 ms (runs
+  overlap), TBT 10 → 55 ms, score 99 → 99. Lab INP with 4× CPU throttling, interleaved runs: no consistent
+  regression across five sessions (pooled ordinary-interaction median 56 → 80 ms, p75 168 → 136 ms; right as
+  the 3D starts, 0 ms median change); all medians under 200 ms.
+- **Worker option (not shipped):** an OffscreenCanvas Web Worker version is preserved on branch
+  `option/hero-synapse-worker`. It removed the start-up long task (TBT 0 ms) but did not improve INP and was
+  worse while animating (ordinary INP +32..+56 ms, theme toggle +56..+208 ms in two sessions), most likely
+  from compositing OffscreenCanvas frames. Revisit only if field INP shows the main-thread start-up cost.
+- **Source:** written in-house (the 21st.dev reference components were not fetched).
+
 ## Extending the system
 
 Add semantic colors to CSS first, then map Tailwind utilities. Reuse shared field/button/dialog helpers.

@@ -97,20 +97,6 @@ export function parseRgbToken(value: string): [number, number, number] | null {
   return [parts[0] / 255, parts[1] / 255, parts[2] / 255];
 }
 
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.min(Math.max((x - edge0) / (edge1 - edge0), 0), 1);
-  return t * t * (3 - 2 * t);
-}
-
-/**
- * How visible a node is at normalised position (nx, ny) in -1..1: fades out towards the left (where
- * the hero copy sits) and the top/bottom edges. Done per node in the scene instead of a CSS
- * mask-image, which would make the browser re-composite a masked layer every frame.
- */
-export function edgeFade(nx: number, ny: number): number {
-  return smoothstep(-0.55, 0.25, nx) * (1 - smoothstep(0.7, 1.05, Math.abs(ny)));
-}
-
 /** 0 at or beyond `radius`, 1 at the centre, smooth in between. */
 export function pulseWeight(distance: number, radius: number): number {
   if (distance >= radius) return 0;

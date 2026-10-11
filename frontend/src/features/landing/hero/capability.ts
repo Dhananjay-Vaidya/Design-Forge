@@ -9,22 +9,21 @@ function matches(query: string): boolean {
     : false;
 }
 
-/**
- * Can the scene run off the main thread? Needs Workers, OffscreenCanvas and a WebGL API. This only
- * checks that the APIs exist (cheap, no GL context is created on the main thread); if WebGL then
- * fails inside the worker, the component falls back to the static hero.
- */
-export function supportsOffscreenWebGL(): boolean {
-  return (
-    typeof Worker === "function" &&
-    typeof OffscreenCanvas === "function" &&
-    typeof HTMLCanvasElement !== "undefined" &&
-    "transferControlToOffscreen" in HTMLCanvasElement.prototype &&
-    (typeof WebGL2RenderingContext === "function" || typeof WebGLRenderingContext === "function")
-  );
+/** Can this browser create a WebGL context at all? The probe context is released straight away. */
+export function hasWebGL(): boolean {
+  try {
+    const canvas = document.createElement("canvas");
+    const gl = (canvas.getContext("webgl2") ?? canvas.getContext("webgl")) as
+      WebGLRenderingContext | WebGL2RenderingContext | null;
+    if (!gl) return false;
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-/** Desktop, fine pointer, motion allowed, off-main-thread WebGL possible. Else: the static hero. */
+/** Desktop, fine pointer, motion allowed, WebGL available. Everything else keeps the static hero. */
 export function canRenderSynapse(): boolean {
-  return matches(CAPABLE_QUERY) && !matches(REDUCED_QUERY) && supportsOffscreenWebGL();
+  return matches(CAPABLE_QUERY) && !matches(REDUCED_QUERY) && hasWebGL();
 }
