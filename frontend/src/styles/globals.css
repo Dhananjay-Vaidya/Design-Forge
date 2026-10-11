@@ -429,12 +429,22 @@
 
   /*
    * Guided tour: a ring around the target with a huge spread shadow that dims everything else.
-   * Position/size are set inline per step and change instantly (nothing animates layout).
+   * Teal for calculated steps, violet for AI-advisory ones. Between steps the ring glides; its size
+   * is the one animated layout property in the app, acceptable because the ring is a single fixed,
+   * empty element (nothing reflows around it). Reduced motion: it jumps.
    */
   .tour-spotlight {
+    --tour-ring: var(--color-primary);
     box-shadow:
-      0 0 0 2px rgb(var(--color-primary)),
+      0 0 0 2px rgb(var(--tour-ring)),
       0 0 0 100vmax rgb(var(--color-scrim) / 0.5);
+  }
+  .tour-spotlight[data-tone="ai"] {
+    --tour-ring: var(--color-ai);
+  }
+  /* Phone bottom sheet, clear of the home indicator. */
+  .tour-dock {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
 
   /* Primary AI action fill (Ask AI send button, avatar, icon tiles). Text uses on-ai. */

@@ -47,7 +47,7 @@ import {
 } from "@/features/decisions/hooks";
 import { DemoBanner } from "@/features/templates/components/DemoBanner";
 import { SaveTemplateDialog } from "@/features/templates/components/SaveTemplateDialog";
-import { GuidedTour, type TourStep } from "@/features/tour/GuidedTour";
+import { useTour } from "@/features/tour";
 import { deadlineLabel, timeAgo } from "@/lib/format";
 import {
   CATEGORY_SUGGESTIONS,
@@ -56,35 +56,6 @@ import {
 } from "@/schemas/decision";
 import { toast } from "@/stores/toastStore";
 import type { Decision } from "@/types/decision";
-
-/** Walks the ranking screen of the sample decision; targets are `data-tour` attributes. */
-const TOUR_STEPS: TourStep[] = [
-  {
-    target: '[data-tour="stage-tabs"]',
-    title: "Four stages, one flow",
-    body: "Options, Criteria, Scores, then Ranking. The badges show what is complete and what still needs work.",
-  },
-  {
-    target: '[data-tour="leader"]',
-    title: "The calculated leader",
-    body: "A weighted sum of your own scores. The same inputs always give the same answer, and no AI is involved.",
-  },
-  {
-    target: '[data-tour="stability"]',
-    title: "Is the lead safe?",
-    body: "This sample is a deliberate close call: a small change to a weight or score could flip the winner.",
-  },
-  {
-    target: '[data-tour="breakdown"]',
-    title: "Why it ranks this way",
-    body: "The points each criterion contributed to every option, so nothing is a black box.",
-  },
-  {
-    target: '[data-tour="ask-ai"]',
-    title: "Ask AI, as an advisor",
-    body: "Optional questions, risks and counter-arguments. It is clearly marked advisory and can never change your ranking.",
-  },
-];
 
 function EditDecisionDialog({
   decision,
@@ -334,7 +305,7 @@ export function DecisionWorkspacePage() {
   const remove = useDeleteDecision(decisionId);
   const [dialog, setDialog] = useState<"edit" | "archive" | "delete" | "template" | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
-  const [tourOpen, setTourOpen] = useState(false);
+  const { startTour: launchTour } = useTour();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const ready = !isLoading && !!decision;
@@ -342,14 +313,14 @@ export function DecisionWorkspacePage() {
   // Arriving from "Try a sample" (?tour=1) starts the tour once the screen has loaded.
   useEffect(() => {
     if (ready && searchParams.get("tour") === "1") {
-      setTourOpen(true);
+      launchTour("workspace");
       setSearchParams({}, { replace: true });
     }
-  }, [ready, searchParams, setSearchParams]);
+  }, [ready, searchParams, setSearchParams, launchTour]);
 
   const startTour = () => {
     if (!location.pathname.endsWith("/ranking")) navigate("ranking");
-    setTourOpen(true);
+    launchTour("workspace");
   };
 
   if (isLoading) return <HeaderSkeleton />;
@@ -498,7 +469,6 @@ export function DecisionWorkspacePage() {
         open={dialog === "template"}
         onClose={() => setDialog(null)}
       />
-      <GuidedTour steps={TOUR_STEPS} open={tourOpen} onClose={() => setTourOpen(false)} />
       <AskAiPanel
         decisionId={decision.id}
         decisionTitle={decision.title}

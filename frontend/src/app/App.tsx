@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/States";
 import { Toaster } from "@/components/Toaster";
 import { EffectsLifecycle } from "@/components/fx/EffectsLifecycle";
 import { useAuthBootstrap } from "@/features/auth/useAuthBootstrap";
+import { TourProvider } from "@/features/tour";
 import { WorkspaceIndex } from "@/features/decisions/components/WorkspaceIndex";
 import { LoginPage } from "@/pages/LoginPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -51,7 +52,7 @@ export function App() {
   useAuthBootstrap();
 
   return (
-    <>
+    <TourProvider>
       <EffectsLifecycle />
       <Suspense fallback={<div className="mx-auto max-w-6xl px-4 pt-28">{pageFallback}</div>}>
         <Routes>
@@ -86,6 +87,6 @@ export function App() {
         </Routes>
       </Suspense>
       <Toaster />
-    </>
+    </TourProvider>
   );
 }
