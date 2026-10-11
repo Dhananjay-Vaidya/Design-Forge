@@ -1,10 +1,8 @@
 import {
   type ReactNode,
   Suspense,
-  createContext,
   lazy,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -12,16 +10,11 @@ import {
 } from "react";
 
 import { markTourSeen } from "./seen";
+import { TourContext, type TourContextValue, loadOverlay, registerLauncher } from "./tourContext";
 import { tours as defaultTours } from "./tours";
 import type { TourId, TourStep } from "./types";
 
-const loadOverlay = () => import("./TourOverlay");
 const TourOverlay = lazy(() => loadOverlay().then((m) => ({ default: m.TourOverlay })));
-
-/** Warm the overlay chunk (e.g. on hover or focus of a tour trigger) so the first step opens instantly. */
-export function preloadTour() {
-  void loadOverlay();
-}
 
 interface TourState {
   id: TourId | null;
@@ -43,48 +36,6 @@ const prevOf = (s: TourState) => {
   return -1;
 };
 
-export interface TourContextValue {
-  /** The running tour, or null. */
-  activeTour: TourId | null;
-  steps: TourStep[];
-  activeIndex: number;
-  startTour: (id: TourId) => void;
-  /** Alias of startTour. */
-  start: (id: TourId) => void;
-  next: () => void;
-  back: () => void;
-  /** Close without finishing. */
-  skip: () => void;
-  /** Close as finished. */
-  end: () => void;
-}
-
-const noop = () => {};
-const TourContext = createContext<TourContextValue>({
-  activeTour: null,
-  steps: [],
-  activeIndex: 0,
-  startTour: (id) => startTour(id),
-  start: (id) => startTour(id),
-  next: noop,
-  back: noop,
-  skip: noop,
-  end: noop,
-});
-
-export const useTour = () => useContext(TourContext);
-
-// The mounted provider registers itself here, so code outside React (e.g. the landing Guide's
-// `start_tour` action) can launch a named tour.
-let launcher: ((id: TourId) => void) | null = null;
-
-/** Starts a named tour from anywhere. Returns false when no TourProvider is mounted. */
-export function startTour(id: TourId): boolean {
-  if (!launcher) return false;
-  launcher(id);
-  return true;
-}
-
 interface TourProviderProps {
   children: ReactNode;
   /** Override the registry (tests). */
@@ -97,7 +48,11 @@ interface TourProviderProps {
  * Holds the one tour that can run at a time. Starting a tour remembers what had focus (the trigger);
  * closing it, by Done, Skip or Esc, marks the tour as seen and returns focus there.
  */
-export function TourProvider({ children, tours = defaultTours, findTimeout = 1500 }: TourProviderProps) {
+export function TourProvider({
+  children,
+  tours = defaultTours,
+  findTimeout = 1500,
+}: TourProviderProps) {
   const [state, setState] = useState<TourState>(IDLE);
   const origin = useRef<HTMLElement | null>(null);
   const running = useRef<TourId | null>(null);
@@ -109,7 +64,8 @@ export function TourProvider({ children, tours = defaultTours, findTimeout = 150
     (id: TourId) => {
       if (!tours[id]?.length) return;
       if (!running.current) {
-        origin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        origin.current =
+          document.activeElement instanceof HTMLElement ? document.activeElement : null;
       }
       setState({ id, index: 0, dir: 1, missing: [] });
     },
@@ -165,12 +121,7 @@ export function TourProvider({ children, tours = defaultTours, findTimeout = 150
     if (el?.isConnected) el.focus();
   }, [state.id]);
 
-  useEffect(() => {
-    launcher = begin;
-    return () => {
-      if (launcher === begin) launcher = null;
-    };
-  }, [begin]);
+  useEffect(() => registerLauncher(begin), [begin]);
 
   const value = useMemo<TourContextValue>(
     () => ({
@@ -188,7 +139,9 @@ export function TourProvider({ children, tours = defaultTours, findTimeout = 150
   );
 
   const total = steps.length - state.missing.length;
-  const position = steps.slice(0, state.index + 1).filter((_, i) => !state.missing.includes(i)).length;
+  const position = steps
+    .slice(0, state.index + 1)
+    .filter((_, i) => !state.missing.includes(i)).length;
 
   return (
     <TourContext.Provider value={value}>

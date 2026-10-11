@@ -50,7 +50,9 @@ describe("tour under reduced motion", () => {
     const dialog = await screen.findByRole("dialog", {}, { timeout: 5000 });
     await waitFor(() => expect(dialog).toHaveAccessibleName("First"));
     expect(window.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: "instant" }));
-    expect(window.scrollTo).not.toHaveBeenCalledWith(expect.objectContaining({ behavior: "smooth" }));
+    expect(window.scrollTo).not.toHaveBeenCalledWith(
+      expect.objectContaining({ behavior: "smooth" }),
+    );
     expect(document.querySelector("[data-tour-ring]")).toHaveAttribute("data-motion", "instant");
 
     await userEvent.keyboard("{ArrowRight}");

@@ -15,6 +15,7 @@ import { Button } from "@/components/Button";
 import { trapDialogTab } from "@/lib/dialogKeyboard";
 import { motionPresets, springs } from "@/lib/motion";
 
+import { findTourTarget } from "./target";
 import type { TourStep } from "./types";
 
 /** Ring padding around the target, gap to the card, viewport margin, and the bottom-sheet breakpoint. */
@@ -30,14 +31,6 @@ interface Box {
   left: number;
   width: number;
   height: number;
-}
-
-/** First element carrying this `data-tour` id that is actually rendered (not display:none). */
-export function findTourTarget(id: string): HTMLElement | null {
-  for (const el of document.querySelectorAll<HTMLElement>(`[data-tour~="${id}"]`)) {
-    if (typeof el.checkVisibility !== "function" || el.checkVisibility()) return el;
-  }
-  return null;
 }
 
 const toBox = (r: DOMRect): Box => ({
@@ -154,7 +147,8 @@ export function TourOverlay({
     const card = cardRef.current;
     card?.focus({ preventScroll: true });
     const hold = (e: FocusEvent) => {
-      if (card && e.target instanceof Node && !card.contains(e.target)) card.focus({ preventScroll: true });
+      if (card && e.target instanceof Node && !card.contains(e.target))
+        card.focus({ preventScroll: true });
     };
     document.addEventListener("focusin", hold);
     return () => document.removeEventListener("focusin", hold);
@@ -191,7 +185,8 @@ export function TourOverlay({
         const reserved = docked ? (cardRef.current?.offsetHeight ?? 220) + MARGIN * 2 : 0;
         revealTarget(el, reduced, reserved);
         measure(true);
-        observer = typeof ResizeObserver === "function" ? new ResizeObserver(onViewportChange) : undefined;
+        observer =
+          typeof ResizeObserver === "function" ? new ResizeObserver(onViewportChange) : undefined;
         observer?.observe(el);
       } else if (Date.now() - started < findTimeout) {
         timer = window.setTimeout(find, 100);
@@ -230,7 +225,8 @@ export function TourOverlay({
   const at = spot && !narrow ? placeCard(spot, cardSize) : null;
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    const onControl = e.target instanceof Element && !!e.target.closest("button, a, input, select, textarea");
+    const onControl =
+      e.target instanceof Element && !!e.target.closest("button, a, input, select, textarea");
     if (e.key === "Escape") {
       e.preventDefault();
       onSkip();
@@ -280,7 +276,9 @@ export function TourOverlay({
         tabIndex={-1}
         onKeyDown={onKeyDown}
         className={`glass-strong fixed rounded-2xl p-5 outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
-          narrow ? "tour-dock inset-x-4 mx-auto max-w-md" : "left-0 top-0 w-[min(22.5rem,calc(100vw-2rem))]"
+          narrow
+            ? "tour-dock inset-x-4 mx-auto max-w-md"
+            : "left-0 top-0 w-[min(22.5rem,calc(100vw-2rem))]"
         }`}
         // Hidden (but focusable) until the first target is found and the card has a place.
         style={{ visibility: step ? "visible" : "hidden" }}
