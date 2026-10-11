@@ -1,17 +1,18 @@
 import {
   Calculator,
-  Keyboard,
-  LayoutTemplate,
-  type LucideIcon,
-  MoonStar,
   ShieldCheck,
   Sparkles,
-  TrendingDown,
+  History,
+  LayoutTemplate,
+  LockKeyhole,
+  type LucideIcon,
 } from "lucide-react";
 
 import { Reveal } from "@/components/fx/Reveal";
 import { Tilt } from "@/components/effects/Tilt";
 import { SpotlightCard } from "@/components/fx/SpotlightCard";
+
+import { marketing } from "@/content/marketing";
 
 interface Feature {
   icon: LucideIcon;
@@ -19,56 +20,24 @@ interface Feature {
   text: string;
   className?: string;
   accent?: "primary" | "ai";
-  visual?: "breakdown" | "keys";
+  visual?: "breakdown";
   /** Anchor for the landing tour. */
   tour?: string;
 }
 
 /** Every item here describes something the product actually does today. */
-const FEATURES: Feature[] = [
-  {
-    icon: Calculator,
-    title: "A ranking you can audit",
-    text: "Every total is broken down into the points each criterion contributed, so you can see exactly why the leader leads.",
-    className: "md:col-span-2",
-    visual: "breakdown",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Sensitivity check",
-    text: "Flags a close call when a small change in weights or scores could flip the winner.",
-  },
-  {
-    icon: TrendingDown,
-    title: "Plain-language criteria",
-    text: "Mark each criterion “higher is better” or “lower is better”. Weights normalise to 100% for you.",
-  },
-  {
-    icon: Keyboard,
-    title: "Keyboard-first scoring",
-    text: "Arrow keys and Enter move through the matrix. Scores save automatically as you type.",
-    className: "md:col-span-2",
-    visual: "keys",
-  },
-  {
-    icon: Sparkles,
-    title: "AI that stays advisory",
-    text: "Optional Gemini questions and risks are labelled and kept apart. They can never change the ranking.",
-    accent: "ai",
-    tour: "ai-advisory",
-  },
-  {
-    icon: LayoutTemplate,
-    title: "Start from a template",
-    text: "Ready-made structures for common choices, or a three-step wizard from the question to options and criteria.",
-    tour: "templates",
-  },
-  {
-    icon: MoonStar,
-    title: "Light and dark",
-    text: "Follows your system setting, or switch any time. Motion respects reduced-motion preferences.",
-  },
+const featurePresentation: Omit<Feature, "title" | "text">[] = [
+  { icon: Calculator, className: "md:col-span-2", visual: "breakdown" },
+  { icon: ShieldCheck },
+  { icon: Sparkles, accent: "ai", tour: "ai-advisory" },
+  { icon: History, className: "md:col-span-2" },
+  { icon: LayoutTemplate, tour: "templates" },
+  { icon: LockKeyhole, className: "md:col-span-2" },
 ];
+const FEATURES: Feature[] = marketing.benefits.items.map((copy, index) => ({
+  ...copy,
+  ...featurePresentation[index],
+}));
 
 function BreakdownVisual() {
   const rows = [
@@ -89,21 +58,6 @@ function BreakdownVisual() {
           </div>
           <span className="w-8 text-right font-mono tabular-nums">{r.pts}</span>
         </div>
-      ))}
-    </div>
-  );
-}
-
-function KeysVisual() {
-  return (
-    <div className="mt-5 flex gap-1.5" aria-hidden="true">
-      {["↑", "↓", "Enter"].map((k) => (
-        <kbd
-          key={k}
-          className="rounded-md border border-border-strong bg-surface px-2 py-1 font-mono text-xs shadow-keycap"
-        >
-          {k}
-        </kbd>
       ))}
     </div>
   );
@@ -132,7 +86,6 @@ export function FeatureGrid() {
               <h3 className="mt-5 font-semibold">{f.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted">{f.text}</p>
               {f.visual === "breakdown" && <BreakdownVisual />}
-              {f.visual === "keys" && <KeysVisual />}
             </SpotlightCard>
           </Tilt>
         </Reveal>

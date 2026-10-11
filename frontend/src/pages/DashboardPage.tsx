@@ -22,6 +22,7 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
+import { dashboardCopy, dashboardGreeting, dashboardQuotes } from "@/content/dashboard";
 import { Button, ButtonLink } from "@/components/Button";
 import { EmptyState, ErrorState, Skeleton } from "@/components/States";
 import { CountUp } from "@/components/fx/CountUp";
@@ -42,17 +43,17 @@ type Sort = "updated" | "created" | "title" | "deadline";
 type View = "grid" | "list";
 
 const filters: { value: Filter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "active", label: "In progress" },
-  { value: "completed", label: "Committed" },
-  { value: "archived", label: "Archived" },
+  { value: "all", label: dashboardCopy.filters.all },
+  { value: "active", label: dashboardCopy.filters.active },
+  { value: "completed", label: dashboardCopy.filters.completed },
+  { value: "archived", label: dashboardCopy.filters.archived },
 ];
 
 const sorts: { value: Sort; label: string }[] = [
-  { value: "updated", label: "Recently updated" },
-  { value: "created", label: "Newest first" },
-  { value: "deadline", label: "Deadline soonest" },
-  { value: "title", label: "Title A–Z" },
+  { value: "updated", label: dashboardCopy.sorts.updated },
+  { value: "created", label: dashboardCopy.sorts.created },
+  { value: "deadline", label: dashboardCopy.sorts.deadline },
+  { value: "title", label: dashboardCopy.sorts.title },
 ];
 
 const sortIcons: Record<Sort, LucideIcon> = {
@@ -117,7 +118,7 @@ function SortMenu({ value, onChange }: { value: Sort; onChange: (value: Sort) =>
             className="absolute right-0 top-[calc(100%+0.5rem)] w-full min-w-[15rem] overflow-hidden rounded-xl border border-border bg-surface shadow-xl ring-1 ring-primary/10"
           >
             <div className="border-b border-border/70 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-              Sort by
+              {dashboardCopy.sortBy}
             </div>
             <div className="p-1.5">
               {sorts.map((item) => {
@@ -196,31 +197,24 @@ function FirstRunActions() {
     demo.mutate(undefined, {
       onSuccess: (decision) => navigate(`/app/decisions/${decision.id}/ranking?tour=1`),
       onError: (e) =>
-        toast.error("Couldn't create the sample", e instanceof ApiError ? e.message : undefined),
+        toast.error(dashboardCopy.sampleError, e instanceof ApiError ? e.message : undefined),
     });
   return (
     <div className="flex flex-wrap justify-center gap-2">
       <ButtonLink to="/app/decisions/new">
         <Plus className="h-4 w-4" aria-hidden="true" />
-        Create your first decision
+        {dashboardCopy.newDecision}
       </ButtonLink>
       <ButtonLink to="/app/templates" variant="secondary">
         <LayoutTemplate className="h-4 w-4" aria-hidden="true" />
-        Use a template
+        {dashboardCopy.template}
       </ButtonLink>
       <Button variant="ghost" onClick={startSample} isLoading={demo.isPending}>
         <FlaskConical className="h-4 w-4" aria-hidden="true" />
-        Try a sample
+        {dashboardCopy.sample}
       </Button>
     </div>
   );
-}
-
-function greeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
 }
 
 function Meta({ decision }: { decision: Decision }) {
@@ -365,6 +359,10 @@ export function DashboardPage() {
   const [sort, setSort] = useState<Sort>("updated");
   const [view, setViewState] = useState<View>(readView);
   const [query, setQuery] = useState("");
+  // Pick once per visit; typing, filtering and background refreshes keep the line stable.
+  const [aphorism] = useState(
+    () => dashboardQuotes[Math.floor(Math.random() * dashboardQuotes.length)],
+  );
 
   const setView = (v: View) => {
     setViewState(v);
@@ -384,6 +382,7 @@ export function DashboardPage() {
       archived: decisions.filter((d) => matchesFilter(d, "archived")).length,
       draft: decisions.filter((d) => d.status === "DRAFT").length,
       ready: decisions.filter((d) => d.status === "SCORED").length,
+      reviewDue: decisions.filter((d) => d.status === "UNDER_REVIEW").length,
     }),
     [decisions],
   );
@@ -400,26 +399,24 @@ export function DashboardPage() {
   }, [decisions, filter, query, sort]);
 
   const name = user?.profile.display_name || user?.email.split("@")[0];
+  const dueReviews = decisions.filter((d) => d.status === "UNDER_REVIEW");
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm text-muted">
-            {greeting()}
-            {name ? `, ${name}` : ""}
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Your decisions</h1>
-          <p className="mt-2 max-w-lg text-sm text-muted">
-            A working library of questions, evidence, and reasoned choices.
-          </p>
+          <p className="text-sm text-muted">{dashboardGreeting(name)}</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+            {dashboardCopy.title}
+          </h1>
+          <p className="mt-2 max-w-lg text-sm text-muted">{aphorism}</p>
         </div>
         <ButtonLink to="/app/decisions/new" className="group shadow-glow-primary">
           <Plus
             className="h-4 w-4 transition-transform duration-base group-hover:rotate-90"
             aria-hidden="true"
           />
-          New decision
+          {dashboardCopy.newDecision}
         </ButtonLink>
       </div>
 
@@ -427,8 +424,8 @@ export function DashboardPage() {
 
       {isLoading ? (
         <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {Array.from({ length: 4 }, (_, i) => (
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+            {Array.from({ length: 5 }, (_, i) => (
               <Skeleton key={i} className="h-[92px] rounded-2xl" />
             ))}
           </div>
@@ -443,47 +440,57 @@ export function DashboardPage() {
           </div>
         </>
       ) : isError ? (
-        <ErrorState title="Couldn't load your decisions" error={error} onRetry={() => refetch()} />
+        <ErrorState title={dashboardCopy.error} error={error} onRetry={() => refetch()} />
       ) : decisions.length === 0 ? (
         <EmptyState
           icon={FolderOpen}
-          title="Frame your first decision"
-          description="Name what you're deciding, list the options, choose the criteria that matter, and get a ranking you can explain."
+          title={dashboardCopy.empty.title}
+          description={dashboardCopy.empty.text}
           action={<FirstRunActions />}
           className="glass py-16"
         />
       ) : (
         <>
-          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-3 xl:grid-cols-5">
             <StatTile
               index={0}
-              label="Open decisions"
-              value={counts.all}
+              label={dashboardCopy.stats.open}
+              value={counts.active}
               icon={FolderKanban}
               tone="bg-surface-2 text-text"
             />
             <StatTile
               index={1}
-              label="Drafting"
+              label={dashboardCopy.stats.draft}
               value={counts.draft}
               icon={CircleDashed}
               tone="bg-surface-2 text-muted"
             />
             <StatTile
               index={2}
-              label="Ready to rank"
+              label={dashboardCopy.stats.ready}
               value={counts.ready}
               icon={Calculator}
               tone="bg-primary-soft text-primary"
             />
             <StatTile
               index={3}
-              label="Committed"
+              label={dashboardCopy.stats.committed}
               value={counts.completed}
               icon={CircleCheck}
               tone="bg-success/10 text-success"
             />
+            <StatTile
+              index={4}
+              label={dashboardCopy.stats.reviewDue}
+              value={counts.reviewDue}
+              icon={CalendarDays}
+              tone="bg-warning/10 text-warning"
+            />
           </dl>
+          {data && data.count > decisions.length && (
+            <p className="-mt-5 text-xs text-muted">{dashboardCopy.scope}</p>
+          )}
 
           <div className="glass flex flex-col gap-3 rounded-2xl p-2 lg:flex-row lg:items-center lg:justify-between">
             <div role="group" aria-label="Filter decisions" className="flex gap-1 overflow-x-auto">
@@ -524,8 +531,8 @@ export function DashboardPage() {
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search decisions"
-                  aria-label="Search decisions"
+                  placeholder={dashboardCopy.search}
+                  aria-label={dashboardCopy.search}
                   className="input-base min-h-9 bg-surface/70 pl-9 text-sm"
                 />
               </div>
@@ -569,12 +576,8 @@ export function DashboardPage() {
           {visible.length === 0 ? (
             <EmptyState
               icon={Search}
-              title="Nothing matches"
-              description={
-                query
-                  ? `No decisions match “${query}” in this view.`
-                  : "There are no decisions in this view yet."
-              }
+              title={dashboardCopy.noMatches.title}
+              description={dashboardCopy.noMatches.text}
               action={
                 <button
                   type="button"
@@ -584,7 +587,7 @@ export function DashboardPage() {
                     setFilter("all");
                   }}
                 >
-                  Clear search and filters
+                  {dashboardCopy.noMatches.action}
                 </button>
               }
               className="glass"
@@ -609,6 +612,60 @@ export function DashboardPage() {
             </motion.ul>
           )}
         </>
+      )}
+      {!isLoading && !isError && decisions.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <section
+            className="rounded-xl border border-border px-5 py-4"
+            aria-labelledby="dashboard-reviews"
+          >
+            <h2 id="dashboard-reviews" className="text-sm font-semibold">
+              {dashboardCopy.reviews.title}
+            </h2>
+            {dueReviews.length > 0 ? (
+              <ul className="mt-3 space-y-2">
+                {dueReviews.map((decision) => (
+                  <li key={decision.id}>
+                    <Link
+                      to={`/app/decisions/${decision.id}/commit`}
+                      className="flex items-center justify-between gap-3 rounded-md py-1 text-sm hover:text-primary"
+                    >
+                      <span className="truncate">{decision.title}</span>
+                      <span className="shrink-0 text-xs text-primary">
+                        {dashboardCopy.reviews.action}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <>
+                <p className="mt-2 text-sm font-medium">{dashboardCopy.reviews.emptyTitle}</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  {dashboardCopy.reviews.emptyText}
+                </p>
+              </>
+            )}
+          </section>
+          <section
+            className="rounded-xl border border-border px-5 py-4"
+            aria-labelledby="dashboard-calibration"
+          >
+            <h2 id="dashboard-calibration" className="text-sm font-semibold">
+              {dashboardCopy.calibration.title}
+            </h2>
+            <p className="mt-2 text-xs leading-relaxed text-muted">
+              {dashboardCopy.calibration.text}
+            </p>
+            <Link
+              to="/app/calibration"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-md py-1 text-xs font-medium text-primary"
+            >
+              {dashboardCopy.calibration.action}
+              <ArrowUpRight size={14} aria-hidden="true" />
+            </Link>
+          </section>
+        </div>
       )}
     </div>
   );

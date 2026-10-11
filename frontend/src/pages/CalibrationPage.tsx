@@ -12,6 +12,7 @@ import {
 import { Link } from "react-router-dom";
 
 import { ButtonLink } from "@/components/Button";
+import { dashboardCopy } from "@/content/dashboard";
 import { EmptyState, ErrorState, Skeleton } from "@/components/States";
 import { useCalibration } from "@/features/commitments/hooks";
 import { CalculatedBadge } from "@/features/insights/components/CalculatedBadge";
@@ -300,6 +301,7 @@ export function CalibrationPage() {
           Calibration
         </p>
         <h1 className="text-title font-semibold tracking-tight">How well do you know your odds?</h1>
+        <p className="text-sm text-muted">{dashboardCopy.calibration.text}</p>
         <div>
           <CalculatedBadge>Calculated, not AI</CalculatedBadge>
         </div>

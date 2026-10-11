@@ -11,14 +11,14 @@ import {
   Trophy,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { ButtonLink } from "@/components/Button";
+import { MarketingHeader, MarketingFooter } from "@/components/MarketingChrome";
+import { marketing } from "@/content/marketing";
 import { Magnetic } from "@/components/effects/Magnetic";
 import { Tilt } from "@/components/effects/Tilt";
-import { Logo } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { AmbientBackground } from "@/components/fx/AmbientBackground";
 import { Marquee } from "@/components/fx/Marquee";
 import { Reveal } from "@/components/fx/Reveal";
@@ -47,96 +47,8 @@ const preview = rankOptions(
   ],
 );
 
-const steps = [
-  {
-    icon: Compass,
-    title: "Frame it",
-    text: "Name the decision, the context, and when it needs to be made.",
-  },
-  {
-    icon: Layers,
-    title: "List the options",
-    text: "Two or more real alternatives you're choosing between.",
-  },
-  {
-    icon: SlidersHorizontal,
-    title: "Weigh what matters",
-    text: "Criteria with weights, and whether higher or lower is better.",
-  },
-  {
-    icon: ListChecks,
-    title: "Score and rank",
-    text: "Score each option 1–10 and get a ranking with a stability check.",
-  },
-];
-
-/** Example questions people weigh up; shown as a ticker of use cases, not as customer claims. */
-const USE_CASES = [
-  "Which job offer should I accept?",
-  "Rent or buy?",
-  "Which university fits best?",
-  "Build it or buy it?",
-  "Which laptop is worth it?",
-  "Which city should we move to?",
-  "Which candidate should we hire?",
-  "Which cloud provider?",
-  "Which supplier should we sign with?",
-  "Which feature ships first?",
-];
-
-function Header() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  return (
-    <header className="sticky top-0 z-40 px-3 pt-3 sm:px-4">
-      <div
-        className={`mx-auto flex h-14 max-w-6xl items-center justify-between rounded-2xl px-3 transition-all duration-base ease-out sm:px-4 ${
-          scrolled ? "glass" : "border border-transparent"
-        }`}
-      >
-        <Link to="/" aria-label="DecisionForge AI — home" className="rounded-lg">
-          <Logo />
-        </Link>
-        <nav aria-label="Sections" className="hidden items-center gap-1 md:flex">
-          {[
-            ["#how", "How it works"],
-            ["#demo", "Live demo"],
-            ["#features", "Features"],
-            ["#faq", "FAQ"],
-          ].map(([href, label]) => (
-            <a
-              key={href}
-              href={href}
-              className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-2/70 hover:text-text"
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
-        <div className="flex items-center gap-1.5">
-          <ThemeToggle />
-          <Link
-            to="/login"
-            className="hidden h-9 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:text-text sm:inline-flex"
-          >
-            Sign in
-          </Link>
-          <Magnetic max={3}>
-            <ButtonLink to="/register" size="sm">
-              Get started
-            </ButtonLink>
-          </Magnetic>
-        </div>
-      </div>
-    </header>
-  );
-}
+const stepIcons = [Compass, ListChecks, SlidersHorizontal, Layers];
+const steps = marketing.how.steps.map((step, index) => ({ ...step, icon: stepIcons[index] }));
 
 function FloatingChip({
   className,
@@ -162,13 +74,13 @@ function RankingPreview() {
   return (
     <div className="relative">
       <FloatingChip className="-top-5 left-6 z-10" delay="0s">
-        <TrendingDown className="h-3.5 w-3.5 text-primary" /> Commute · lower is better
+        <TrendingDown className="h-3.5 w-3.5 text-primary" /> {marketing.example.commute}
       </FloatingChip>
       <FloatingChip className="-right-6 -top-5 z-10 lg:-right-8" delay="1.5s">
-        <ShieldCheck className="h-3.5 w-3.5 text-success" /> Leader stable
+        <ShieldCheck className="h-3.5 w-3.5 text-success" /> {marketing.example.stable}
       </FloatingChip>
       <FloatingChip className="-bottom-5 right-10 z-10" delay="3s">
-        <Sparkles className="h-3.5 w-3.5 text-ai" /> AI stays advisory
+        <Sparkles className="h-3.5 w-3.5 text-ai" /> {marketing.example.advisory}
       </FloatingChip>
 
       <Tilt max={2.5}>
@@ -186,10 +98,10 @@ function RankingPreview() {
                 <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
                 <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
               </span>
-              <span className="ml-2 text-sm font-medium">Which job offer should I accept?</span>
+              <span className="ml-2 text-sm font-medium">{marketing.example.question}</span>
             </div>
             <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted">
-              Example
+              {marketing.example.label}
             </span>
           </div>
           <div className="space-y-4 p-5">
@@ -219,9 +131,9 @@ function RankingPreview() {
           <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 bg-surface-2/50 px-5 py-3 text-xs text-muted">
             <span className="inline-flex items-center gap-1.5">
               <Calculator className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-              Calculated, not AI
+              {marketing.example.calculated}
             </span>
-            <span className="font-mono">Salary 40% · Growth 35% · Commute 25%</span>
+            <span className="font-mono">{marketing.example.weights}</span>
           </figcaption>
         </motion.figure>
       </Tilt>
@@ -247,7 +159,7 @@ function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
-            Decision intelligence laboratory
+            {marketing.hero.eyebrow}
           </motion.span>
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
@@ -255,9 +167,9 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.05, ease: EASE }}
             className="mt-6 text-4xl font-semibold leading-[1.06] tracking-tight sm:text-5xl lg:text-[3.6rem]"
           >
-            Hard choices.
+            {marketing.hero.headline}
             <br />
-            <span className="text-primary">Clear reasoning.</span>
+            <span className="text-primary">{marketing.hero.emphasis}</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -265,9 +177,7 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.12, ease: EASE }}
             className="mt-6 max-w-xl text-lg leading-relaxed text-muted"
           >
-            Score alternatives against weighted criteria and get a deterministic ranking you can
-            explain. Optionally add Gemini-powered questions, risks, and scenarios — advisory only,
-            never the final word.
+            {marketing.hero.text}
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -277,7 +187,7 @@ function Hero() {
           >
             <Magnetic>
               <ButtonLink to="/register" size="lg" className="group shadow-glow-primary">
-                Start deciding
+                {marketing.hero.primary}
                 <ArrowRight
                   className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                   aria-hidden="true"
@@ -296,9 +206,12 @@ function Hero() {
               onFocus={preloadTour}
               className="glass inline-flex h-12 items-center gap-2 rounded-lg px-5 text-[15px] font-medium transition-transform hover:-translate-y-0.5"
             >
-              Try the live demo
+              {marketing.hero.secondary}
             </a>
           </motion.div>
+          <p className="mt-5 max-w-lg text-xs leading-relaxed text-muted">
+            {marketing.hero.reassurance}
+          </p>
         </motion.div>
         <div className="min-w-0">
           <DecisionNetwork />
@@ -334,7 +247,7 @@ function SectionHeading({
 export function LandingPage() {
   return (
     <div className="min-h-dvh overflow-x-clip">
-      <Header />
+      <MarketingHeader />
       <main>
         <Hero />
 
@@ -344,12 +257,36 @@ export function LandingPage() {
         >
           <Marquee
             label="Example decisions"
-            items={USE_CASES.map((q) => (
+            items={marketing.useCases.map((q) => (
               <span className="glass inline-flex whitespace-nowrap rounded-full px-4 py-1.5 text-sm text-muted">
                 {q}
               </span>
             ))}
           />
+        </section>
+
+        <section
+          className="mx-auto grid max-w-6xl gap-12 px-4 pt-24 sm:px-6 lg:grid-cols-[1.15fr_1fr]"
+          aria-labelledby="problem-heading"
+        >
+          <SectionHeading
+            id="problem-heading"
+            eyebrow={marketing.problem.eyebrow}
+            title={marketing.problem.title}
+            text={marketing.problem.text}
+          />
+          <Reveal delay={0.08} className="border-l-2 border-primary/40 pl-6 lg:mt-10">
+            <p className="eyebrow">{marketing.whyNow.eyebrow}</p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight">{marketing.whyNow.title}</h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted">{marketing.whyNow.text}</p>
+            <Link
+              to="/why"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg py-2 text-sm font-medium text-primary"
+            >
+              {marketing.whyNow.link}
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </Reveal>
         </section>
 
         <section
@@ -359,9 +296,9 @@ export function LandingPage() {
         >
           <SectionHeading
             id="draft-heading"
-            eyebrow="Try it now, no account needed"
-            title="Turn a messy choice into a clear structure."
-            text="Describe it in a sentence. AI drafts the options and criteria; you score them, and the engine ranks them."
+            eyebrow={marketing.drafter.eyebrow}
+            title={marketing.drafter.title}
+            text={marketing.drafter.text}
           />
           <Reveal className="mt-10" delay={0.05} data-tour="drafter">
             <HomeDrafter />
@@ -375,8 +312,8 @@ export function LandingPage() {
         >
           <SectionHeading
             id="how-heading"
-            eyebrow="How it works"
-            title="Four steps from “I can't decide” to a reasoned choice."
+            eyebrow={marketing.how.eyebrow}
+            title={marketing.how.title}
           />
           <ol className="relative mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <motion.span
@@ -392,7 +329,9 @@ export function LandingPage() {
                 <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-on-primary shadow-glow-primary">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <p className="mt-5 font-mono text-xs text-muted">Step 0{i + 1}</p>
+                <p className="mt-5 font-mono text-xs text-muted">
+                  {marketing.how.stepLabel} 0{i + 1}
+                </p>
                 <h3 className="mt-1 font-semibold">{title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted">{text}</p>
               </Reveal>
@@ -409,9 +348,9 @@ export function LandingPage() {
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <SectionHeading
               id="demo-heading"
-              eyebrow="Live demo"
-              title="Drag the weights. Watch the answer move."
-              text="Same formula as the real engine. Notice how the stability check reacts when two offers get close."
+              eyebrow={marketing.demo.eyebrow}
+              title={marketing.demo.title}
+              text={marketing.demo.text}
             />
             <Reveal className="mt-12" delay={0.1}>
               <LiveDemo />
@@ -426,8 +365,8 @@ export function LandingPage() {
         >
           <SectionHeading
             id="features-heading"
-            eyebrow="Features"
-            title="Built for decisions you'll want to explain later."
+            eyebrow={marketing.benefits.eyebrow}
+            title={marketing.benefits.title}
           />
           <div className="mt-12">
             <FeatureGrid />
@@ -437,33 +376,55 @@ export function LandingPage() {
         <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6" aria-labelledby="trust-heading">
           <SectionHeading
             id="trust-heading"
-            eyebrow="Two kinds of output, never mixed"
-            title="You always know which answer came from maths and which from a model."
+            eyebrow={marketing.outputs.eyebrow}
+            title={marketing.outputs.title}
           />
           <div className="mt-12 grid gap-5 md:grid-cols-2">
             <Reveal className="card p-7">
               <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary">
                 <Calculator className="h-3.5 w-3.5" aria-hidden="true" />
-                Calculated
+                {marketing.outputs.calculated.label}
               </span>
-              <h3 className="mt-5 text-lg font-semibold">The ranking</h3>
+              <h3 className="mt-5 text-lg font-semibold">{marketing.outputs.calculated.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">
-                A weighted sum of your own scores. Identical inputs always produce the identical
-                ranking, with a sensitivity check that tells you when the leader could flip.
+                {marketing.outputs.calculated.text}
               </p>
             </Reveal>
             <Reveal delay={0.08} className="card border-ai/25 p-7">
               <span className="inline-flex items-center gap-2 rounded-full bg-ai/10 px-3 py-1 text-xs font-medium text-ai">
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                Advisory
+                {marketing.outputs.advisory.label}
               </span>
-              <h3 className="mt-5 text-lg font-semibold">The AI insights</h3>
+              <h3 className="mt-5 text-lg font-semibold">{marketing.outputs.advisory.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">
-                Optional questions, risks and scenarios to challenge your thinking. Clearly marked,
-                kept separate, and never able to change the ranking.
+                {marketing.outputs.advisory.text}
               </p>
             </Reveal>
           </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6" aria-labelledby="method-heading">
+          <Reveal className="border-y border-border py-12 sm:py-16">
+            <h2
+              id="method-heading"
+              className="max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl"
+            >
+              {marketing.differentiator.title}
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted">
+              {marketing.differentiator.text}
+            </p>
+          </Reveal>
+          <div className="mt-12 grid gap-8 md:grid-cols-[.7fr_1.3fr]">
+            <div>
+              <p className="eyebrow">{marketing.privacy.eyebrow}</p>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight">
+                {marketing.privacy.title}
+              </h2>
+            </div>
+            <p className="text-sm leading-relaxed text-muted">{marketing.privacy.text}</p>
+          </div>
+          {/* TODO: real testimonials. Publish only verified quotes with permission. */}
         </section>
 
         <section
@@ -471,7 +432,11 @@ export function LandingPage() {
           className="scroll-mt-24 mx-auto max-w-3xl px-4 pb-24 sm:px-6"
           aria-labelledby="faq-heading"
         >
-          <SectionHeading id="faq-heading" eyebrow="FAQ" title="Questions, answered." />
+          <SectionHeading
+            id="faq-heading"
+            eyebrow={marketing.faq.eyebrow}
+            title={marketing.faq.title}
+          />
           <Reveal className="mt-10">
             <Faq />
           </Reveal>
@@ -497,16 +462,14 @@ export function LandingPage() {
                 aria-hidden="true"
               />
               <h2 className="relative text-3xl font-semibold tracking-tight sm:text-4xl">
-                Your next hard call deserves a method.
+                {marketing.cta.title}
               </h2>
-              <p className="relative mx-auto mt-3 max-w-md opacity-85">
-                Create an account and frame your first decision in a couple of minutes.
-              </p>
+              <p className="relative mx-auto mt-3 max-w-md opacity-85">{marketing.cta.text}</p>
               <Link
                 to="/register"
                 className="group relative mt-8 inline-flex h-12 items-center gap-2 rounded-lg bg-on-primary px-6 text-[15px] font-medium text-primary transition-transform hover:scale-[1.03] active:scale-[0.98]"
               >
-                Create your account
+                {marketing.cta.button}
                 <ArrowRight
                   className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                   aria-hidden="true"
@@ -517,12 +480,7 @@ export function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:px-6">
-          <Logo />
-          <p>Deterministic ranking · advisory AI.</p>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

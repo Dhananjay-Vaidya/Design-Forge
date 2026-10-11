@@ -20,6 +20,7 @@ function page<K extends string>(loader: () => Promise<Record<K, ComponentType>>,
 }
 
 const LandingPage = page(() => import("@/pages/LandingPage"), "LandingPage");
+const WhyPage = page(() => import("@/pages/WhyPage"), "WhyPage");
 const DashboardPage = page(() => import("@/pages/DashboardPage"), "DashboardPage");
 const NewDecisionPage = page(() => import("@/pages/NewDecisionPage"), "NewDecisionPage");
 const TemplatesPage = page(() => import("@/pages/TemplatesPage"), "TemplatesPage");
@@ -57,6 +58,7 @@ export function App() {
       <Suspense fallback={<div className="mx-auto max-w-6xl px-4 pt-28">{pageFallback}</div>}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/why" element={<WhyPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
