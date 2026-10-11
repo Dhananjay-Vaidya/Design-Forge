@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ButtonLink } from "@/components/Button";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -8,6 +8,7 @@ import { brand, marketing } from "@/content/marketing";
 import { about, privacy } from "@/content/about";
 
 export function MarketingHeader() {
+  const { pathname } = useLocation();
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -38,12 +39,14 @@ export function MarketingHeader() {
           ))}
           <Link
             to="/why"
+            aria-current={pathname === "/why" ? "page" : undefined}
             className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm text-muted transition-colors hover:bg-surface-2/70 hover:text-text"
           >
             {marketing.nav.why}
           </Link>
           <Link
             to="/about"
+            aria-current={pathname === "/about" ? "page" : undefined}
             className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm text-muted transition-colors hover:bg-surface-2/70 hover:text-text"
           >
             {about.nav}
@@ -69,6 +72,7 @@ export function MarketingHeader() {
 }
 
 export function MarketingFooter() {
+  const { pathname } = useLocation();
   return (
     <footer className="border-t border-border">
       <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:px-6">
@@ -78,18 +82,21 @@ export function MarketingFooter() {
         <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5">
           <Link
             to="/why"
+            aria-current={pathname === "/why" ? "page" : undefined}
             className="inline-flex min-h-11 items-center rounded-lg hover:text-primary"
           >
             {marketing.nav.why}
           </Link>
           <Link
             to="/about"
+            aria-current={pathname === "/about" ? "page" : undefined}
             className="inline-flex min-h-11 items-center rounded-lg hover:text-primary"
           >
             {about.nav}
           </Link>
           <Link
             to="/privacy"
+            aria-current={pathname === "/privacy" ? "page" : undefined}
             className="inline-flex min-h-11 items-center rounded-lg hover:text-primary"
           >
             {privacy.nav}
