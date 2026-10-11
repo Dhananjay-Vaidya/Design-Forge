@@ -8,7 +8,7 @@ import { site } from "@/content/site";
 export function PrivacyPage() {
   useEffect(() => {
     const previous = document.title;
-    document.title = "Privacy | DecisionForge AI";
+    document.title = privacy.pageTitle;
     window.scrollTo(0, 0);
     return () => {
       document.title = previous;

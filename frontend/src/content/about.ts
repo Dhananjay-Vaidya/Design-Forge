@@ -1,5 +1,6 @@
 /** Brief 25, with claims scoped to the product and details confirmed by its owner. */
 export const about = {
+  pageTitle: "About | DecisionForge AI",
   nav: "About",
   guideLink: "About DecisionForge & contact",
   hero: {
@@ -56,6 +57,10 @@ export const about = {
     ],
   },
   contact: {
+    formLabel: "Contact DecisionForge",
+    legend: "Send a message",
+    honeypotLabel: "Website",
+    characterCount: (count: number) => `${count} of 2000 characters`,
     label: "Connect",
     title: "Let's talk.",
     text: "Feedback, a feature you wish existed, a partnership, or a question about the product — send a message to the person building DecisionForge.",
@@ -117,6 +122,7 @@ export const about = {
 };
 
 export const privacy = {
+  pageTitle: "Privacy | DecisionForge AI",
   nav: "Privacy",
   title: "How your data is used.",
   lead: "A plain-language account of what this version of DecisionForge collects and how its features use it.",

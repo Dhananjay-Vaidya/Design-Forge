@@ -8,12 +8,15 @@ import { Reveal } from "@/components/fx/Reveal";
 import { about } from "@/content/about";
 import { brand } from "@/content/marketing";
 import { site } from "@/content/site";
+import { ContactEmail } from "@/features/contact/ContactEmail";
+import { ContactForm } from "@/features/contact/ContactForm";
+import { OnboardingPaths } from "@/features/contact/OnboardingPaths";
 
 export function AboutPage() {
   const { hash } = useLocation();
   useEffect(() => {
     const previous = document.title;
-    document.title = "About | DecisionForge AI";
+    document.title = about.pageTitle;
     return () => {
       document.title = previous;
     };
@@ -138,15 +141,42 @@ export function AboutPage() {
         <section
           id="connect"
           aria-labelledby="about-connect"
-          className="scroll-mt-28 border-t border-border py-12"
+          className="grid scroll-mt-28 gap-8 border-t border-border py-12 sm:py-16 lg:grid-cols-[.85fr_1.15fr] lg:gap-14"
         >
-          <p className="eyebrow">{about.contact.label}</p>
-          <h2 id="about-connect" className="mt-3 text-3xl font-semibold tracking-tight">
-            {about.contact.title}
-          </h2>
-          <p className="mt-5 max-w-xl leading-relaxed text-muted">{about.contact.text}</p>
-          <p className="mt-5 break-all font-medium text-primary">{site.contactEmail}</p>
+          <div className="min-w-0">
+            <p className="eyebrow">{about.contact.label}</p>
+            <h2 id="about-connect" className="mt-3 text-3xl font-semibold tracking-tight">
+              {about.contact.title}
+            </h2>
+            <p className="mt-5 max-w-xl leading-relaxed text-muted">{about.contact.text}</p>
+            <div className="mt-7">
+              <ContactEmail />
+            </div>
+            {site.responseExpectation && (
+              <p className="mt-3 text-sm text-muted">{site.responseExpectation}</p>
+            )}
+            {site.socialLinks.length > 0 && (
+              <nav aria-label="Connect on social media" className="mt-4 flex flex-wrap gap-4">
+                {site.socialLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center rounded-lg text-sm font-medium text-primary"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+            )}
+            <p className="mt-6 max-w-sm text-xs leading-relaxed text-muted">
+              {about.contact.privacyNote}
+            </p>
+          </div>
+          <ContactForm />
         </section>
+        <OnboardingPaths />
       </main>
       <MarketingFooter />
     </div>

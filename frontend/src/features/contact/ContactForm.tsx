@@ -71,6 +71,7 @@ export function ContactForm() {
   if (sentTo !== null)
     return (
       <div
+        id="contact-receipt"
         ref={receiptRef}
         tabIndex={-1}
         className="rounded-2xl border border-primary/25 bg-primary-soft p-6 sm:p-8"
@@ -99,13 +100,13 @@ export function ContactForm() {
 
   return (
     <form
-      aria-label="Contact DecisionForge"
+      aria-label={about.contact.formLabel}
       noValidate
       onSubmit={handleSubmit(send, () => setNotice(about.contact.invalid))}
       className="min-w-0 rounded-2xl border border-border bg-surface p-5 shadow-lift sm:p-8"
     >
       <fieldset disabled={isSubmitting} className="min-w-0 space-y-5">
-        <legend className="sr-only">Send a message</legend>
+        <legend className="sr-only">{about.contact.legend}</legend>
         <div className="grid gap-5 sm:grid-cols-2">
           <FormField
             id="contact-name"
@@ -163,13 +164,13 @@ export function ContactForm() {
           />
           <p
             className="mt-2 text-right font-mono text-xs text-muted"
-            aria-label={`${message.length} of 2000 characters`}
+            aria-label={about.contact.characterCount(message.length)}
           >
             {message.length} / 2,000
           </p>
         </div>
         <div className="sr-only" aria-hidden="true">
-          <label htmlFor="contact-website">Website</label>
+          <label htmlFor="contact-website">{about.contact.honeypotLabel}</label>
           <input
             id="contact-website"
             type="text"

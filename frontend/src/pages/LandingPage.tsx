@@ -11,8 +11,8 @@ import {
   Trophy,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { type ReactNode, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { ButtonLink } from "@/components/Button";
 import { MarketingHeader, MarketingFooter } from "@/components/MarketingChrome";
@@ -245,6 +245,21 @@ function SectionHeading({
 }
 
 export function LandingPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { startTour } = useTour();
+
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("tour") !== "landing") return;
+    void preloadTour();
+    // About's explicit tour button navigates here first, so the real targets have mounted.
+    const frame = requestAnimationFrame(() => {
+      startTour("landing");
+      navigate({ pathname: "/", search: "", hash: "" }, { replace: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [location.search, navigate, startTour]);
+
   return (
     <div className="min-h-dvh overflow-x-clip">
       <MarketingHeader />

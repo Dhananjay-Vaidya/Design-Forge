@@ -69,3 +69,5 @@ command because this repository uses FastAPI, SQLAlchemy, and Alembic.
 
 The focused contact and OpenAPI contract run passed all 19 checks against a disposable database
 on local PostgreSQL. A fresh migration followed by `alembic check` reported no missing operations.
+
+Final verification: all 471 backend tests passed locally with isolated PostgreSQL and Redis; no checks were skipped. The live honeypot check returned 200, saved no row, allowed the frontend origin, and emitted the spam counter.
